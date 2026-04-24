@@ -1,0 +1,22 @@
+{
+    "name": "arena-homes",
+    "version": "1.0.0",
+    "description": "Arena Homes - Student Housing Platform",
+    "private": true,
+    "scripts": {
+        "dev:backend": "cd arena-server && npm run dev",
+        "dev:frontend": "cd arena-web && npm run dev",
+        "install:all": "cd arena-server && npm install && cd ../arena-web && npm install",
+        "setup": "npm run install:all",
+        "db:setup": "cd arena-server && npm run db:push && npm run seed:minimal",
+        "verify": "cd arena-server && npm run dev:verify",
+        "dev:all": "start-dev.bat"
+    },
+    "keywords": [
+        "student-housing",
+        "property-management",
+        "rental-platform"
+    ],
+    "author": "Arena Homes",
+    "license": "PRIVATE"
+}

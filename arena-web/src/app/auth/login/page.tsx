@@ -1,0 +1,221 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { loginAction } from '../actions';
+import { Button } from '@/components/ui/button';
+import { getRedirectPath } from '@/lib/rbac/access';
+import { UserRole } from '@/lib/rbac/types';
+import { Home, ArrowRight, Eye, EyeOff, AlertCircle, ArrowLeft, Send } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function LoginPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [isTenantError, setIsTenantError] = useState(false);
+
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setLoading(true);
+        setError('');
+        setIsTenantError(false);
+
+        const formData = new FormData(event.currentTarget);
+        const result = await loginAction(formData);
+
+        if (result.error) {
+            // Check if it's the tenant-only error
+            if (result.error.includes('NOT_A_TENANT') || result.error.includes('need to be a tenant') || result.error.includes('apply')) {
+                setIsTenantError(true);
+                setError('You need to be a tenant to login. Apply for a property first!');
+            } else {
+                setError(result.error);
+            }
+            setLoading(false);
+        } else if (result.success && result.role) {
+            // Check if onboarding is required
+            if (result.requiresOnboarding) {
+                router.push('/tenant/onboarding');
+            } else {
+                const target = getRedirectPath(result.role as UserRole);
+                router.push(target);
+            }
+        }
+    }
+
+    return (
+        <div className="min-h-screen flex">
+            {/* Left Side - Image */}
+            <div className="hidden lg:flex lg:w-1/2 relative">
+                <Image
+                    src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80"
+                    alt="Student housing"
+                    fill
+                    className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/40" />
+                <div className="absolute inset-0 flex flex-col justify-center p-12">
+                    <Link href="/" className="flex items-center gap-2.5 mb-8">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm text-white">
+                            <Home size={22} />
+                        </div>
+                        <span className="text-2xl font-bold text-white">
+                            Arena<span className="text-primary">Homes</span>
+                        </span>
+                    </Link>
+                    <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
+                        Welcome Back
+                    </h2>
+                    <p className="text-lg text-white/80 max-w-md">
+                        Sign in to access your dashboard, manage your bookings, and find your perfect student home.
+                    </p>
+                </div>
+            </div>
+
+            {/* Right Side - Form */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-white dark:bg-slate-950">
+                <div className="w-full max-w-md">
+                    {/* Mobile Logo */}
+                    <div className="lg:hidden mb-8">
+                        <Link href="/" className="flex items-center gap-2.5">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-premium text-white">
+                                <Home size={22} />
+                            </div>
+                            <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                                Arena<span className="text-primary">Homes</span>
+                            </span>
+                        </Link>
+                    </div>
+
+                    <div className="mb-8">
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                            Sign In
+                        </h1>
+                        <p className="text-slate-600 dark:text-slate-400">
+                            Enter your credentials to access your account
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className={`mb-6 p-4 rounded-xl border text-sm ${isTenantError 
+                            ? 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300' 
+                            : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
+                        }`}>
+                            <div className="flex items-start gap-3">
+                                <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="font-medium">{error}</p>
+                                    {isTenantError && (
+                                        <div className="mt-3 space-y-2">
+                                            <p className="text-xs font-medium">How to become a tenant:</p>
+                                            <ol className="text-xs space-y-1.5 list-decimal list-inside">
+                                                <li>Go back to <Link href="/" className="underline font-semibold">homepage</Link> and find a property you like</li>
+                                                <li>Click <strong>&quot;Apply / Show Interest&quot;</strong> on the property card</li>
+                                                <li>Fill in your details and submit the application</li>
+                                                <li>Wait for the caretaker to <strong>approve</strong> your application</li>
+                                                <li>Once approved, you&apos;ll receive login credentials via email</li>
+                                                <li>Complete your profile, change password, and accept the user agreement</li>
+                                            </ol>
+                                            <div className="pt-2">
+                                                <Link 
+                                                    href="/" 
+                                                    className="inline-flex items-center gap-1.5 text-xs font-semibold underline hover:no-underline"
+                                                >
+                                                    <ArrowLeft size={12} />
+                                                    Go to Homepage to Apply
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Email Address
+                            </label>
+                            <input
+                                name="email"
+                                type="email"
+                                required
+                                placeholder="you@example.com"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <input
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    placeholder="Enter your password"
+                                    className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm">
+                            <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 cursor-pointer">
+                                <input type="checkbox" className="rounded border-slate-300" />
+                                <span>Remember me</span>
+                            </label>
+                            <a href="#" className="text-primary hover:underline font-medium">
+                                Forgot password?
+                            </a>
+                        </div>
+
+                        <Button 
+                            type="submit" 
+                            className="w-full h-12 rounded-xl bg-gradient-premium hover:opacity-90 text-white font-semibold transition-all"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <span className="flex items-center gap-2">
+                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    Signing in...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    Sign In <ArrowRight size={18} />
+                                </span>
+                            )}
+                        </Button>
+                    </form>
+
+                    <div className="mt-8 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+                            <strong>New here?</strong> You need to apply for a property first.
+                        </p>
+                        <Link 
+                            href="/" 
+                            className="mt-2 flex items-center justify-center gap-2 text-sm text-primary hover:underline font-semibold"
+                        >
+                            <Send size={14} />
+                            Browse Properties & Apply
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
