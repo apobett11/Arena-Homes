@@ -1,0 +1,9 @@
+{
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "cd arena-server && npm install && npm run build"
+  },
+  "deploy": {
+    "startCommand": "cd arena-server && npm start"
+  }
+}
