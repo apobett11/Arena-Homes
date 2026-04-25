@@ -23,17 +23,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Validate Environment
-  if (typeof window === 'undefined') {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      console.error("❌ CRITICAL: NEXT_PUBLIC_API_URL is invalid or missing!");
-      // In dev we might want to throw, in prod we might handle gracefully or fail build
-      if (process.env.NODE_ENV === 'development') {
-        throw new Error("NEXT_PUBLIC_API_URL is missing in .env.local");
-      }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (typeof window === "undefined") {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error(
+        "[Arena Web] Supabase env vars are missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      );
     } else {
-      console.log(`✅ Arena Web connected to API: ${apiUrl}`);
+      console.log(`[Arena Web] Supabase configured: ${supabaseUrl}`);
     }
   }
 

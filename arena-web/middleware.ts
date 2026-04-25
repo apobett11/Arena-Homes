@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { UserRole } from './lib/rbac/types';
-import { canAccessRoute, getRedirectPath } from './lib/rbac/access';
+import { UserRole } from './src/lib/rbac/types';
+import { canAccessRoute, getRedirectPath } from './src/lib/rbac/access';
 
 export function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;

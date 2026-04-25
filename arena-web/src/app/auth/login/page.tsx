@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginAction } from '../actions';
+import { AuthApi } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
 import { getRedirectPath } from '@/lib/rbac/access';
 import { UserRole } from '@/lib/rbac/types';
@@ -24,7 +24,20 @@ export default function LoginPage() {
         setIsTenantError(false);
 
         const formData = new FormData(event.currentTarget);
-        const result = await loginAction(formData);
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+        let result: { error?: string; success?: boolean; role?: string; requiresOnboarding?: boolean };
+
+        try {
+            const response = await AuthApi.login(email, password);
+            result = {
+                success: true,
+                role: response.user.roleId,
+                requiresOnboarding: response.requiresOnboarding,
+            };
+        } catch (err: any) {
+            result = { error: err.message };
+        }
 
         if (result.error) {
             // Check if it's the tenant-only error

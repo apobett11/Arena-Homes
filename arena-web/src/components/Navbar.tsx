@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Moon, Sun, Menu, X, Home, LogOut, User, Search } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
-import { logoutAction } from "@/app/auth/actions";
+import { AuthApi } from "@/lib/api/auth";
+import { useRouter } from "next/navigation";
 
 export const Navbar = () => {
+    const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const { theme, setTheme } = useTheme();
     const [isScrolled, setIsScrolled] = useState(false);
@@ -31,7 +33,9 @@ export const Navbar = () => {
     }, []);
 
     const handleLogout = async () => {
-        await logoutAction();
+        await AuthApi.logout();
+        setRole(null);
+        router.push('/auth/login');
     };
 
     if (!mounted) return null;

@@ -5,7 +5,8 @@
 
 export function validateEnv() {
     const requiredEnvVars = {
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     };
 
     const missing: string[] = [];
@@ -24,5 +25,5 @@ export function validateEnv() {
     }
 
     console.log('✅ Environment variables validated');
-    console.log(`📡 API Base URL: ${requiredEnvVars.NEXT_PUBLIC_API_URL}`);
+    console.log(`📡 Supabase URL: ${requiredEnvVars.NEXT_PUBLIC_SUPABASE_URL}`);
 }

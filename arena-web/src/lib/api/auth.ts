@@ -1,4 +1,4 @@
-import { fetchClient } from './client';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 export interface User {
     id: string;
@@ -8,8 +8,6 @@ export interface User {
 
 export interface AuthResponse {
     user: User;
-    accessToken: string;
-    refreshToken: string;
     requiresOnboarding?: boolean;
     onboardingStatus?: {
         hasSetPassword: boolean;
@@ -20,28 +18,80 @@ export interface AuthResponse {
 
 export const AuthApi = {
     login: async (email: string, password: string): Promise<AuthResponse> => {
-        return fetchClient<AuthResponse>('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-        });
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error || !data.user) {
+            throw new Error(error?.message ?? 'Login failed');
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role_id')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            throw new Error(profileError.message);
+        }
+
+        const roleId = (profileData as { role_id?: string } | null)?.role_id ?? 'TENANT';
+
+        return {
+            user: {
+                id: data.user.id,
+                email: data.user.email ?? email,
+                roleId,
+            },
+        };
     },
 
     register: async (data: any): Promise<{ userId: string }> => {
-        return fetchClient('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify(data),
+        const supabase = getSupabaseClient();
+        const { data: authData, error } = await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+            options: {
+                data: {
+                    role_id: data.roleId ?? 'TENANT',
+                },
+            },
         });
+        if (error || !authData.user) {
+            throw new Error(error?.message ?? 'Registration failed');
+        }
+        return { userId: authData.user.id };
     },
 
     refreshToken: async (token: string): Promise<{ accessToken: string; refreshToken: string }> => {
-        return fetchClient('/auth/refresh', {
-            method: 'POST',
-            body: JSON.stringify({ refreshToken: token }),
-        });
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase.auth.refreshSession({ refresh_token: token });
+        if (error || !data.session) {
+            throw new Error(error?.message ?? 'Failed to refresh session');
+        }
+        return {
+            accessToken: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+        };
     },
 
     logout: async () => {
-        // We do this to signal backend, but client also clears cookies
-        return fetchClient('/auth/logout', { method: 'POST' }); // Authenticated request needed? Yes usually.
-    }
+        const supabase = getSupabaseClient();
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            throw new Error(error.message);
+        }
+    },
+
+    getSession: async () => {
+        const supabase = getSupabaseClient();
+        return supabase.auth.getSession();
+    },
+    getUser: async () => {
+        const supabase = getSupabaseClient();
+        return supabase.auth.getUser();
+    },
+    onAuthStateChange: (callback: Parameters<ReturnType<typeof getSupabaseClient>['auth']['onAuthStateChange']>[0]) => {
+        const supabase = getSupabaseClient();
+        return supabase.auth.onAuthStateChange(callback);
+    },
 };
