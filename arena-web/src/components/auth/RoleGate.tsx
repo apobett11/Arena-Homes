@@ -14,6 +14,15 @@ interface RoleGateProps {
   children: React.ReactNode;
 }
 
+function devLog(message: string, details?: Record<string, unknown>) {
+  if (process.env.NODE_ENV !== "development") return;
+  if (details) {
+    console.log(`[role-gate] ${message}`, details);
+    return;
+  }
+  console.log(`[role-gate] ${message}`);
+}
+
 export default function RoleGate({ allowedRoles, children }: RoleGateProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -28,11 +37,18 @@ export default function RoleGate({ allowedRoles, children }: RoleGateProps) {
     let isMounted = true;
 
     const enforceRole = async () => {
+      devLog("checking session/role", { pathname, allowedRoles: allowed });
       const result = await getCurrentUserRoleProfile();
       if (!isMounted) return;
 
       if (!result.ok) {
+        devLog("session found", { hasSession: false, code: result.code });
         if (result.code === "NOT_AUTHENTICATED") {
+          devLog("final redirect route", {
+            to: "/auth/login",
+            from: pathname || "/",
+            reason: "NOT_AUTHENTICATED",
+          });
           router.replace(`/auth/login?from=${encodeURIComponent(pathname || "/")}`);
           return;
         }
@@ -53,9 +69,12 @@ export default function RoleGate({ allowedRoles, children }: RoleGateProps) {
         return;
       }
 
+      devLog("session found", { hasSession: true });
+      devLog("role found", { role: result.role, source: result.source });
       if (!allowed.includes(result.role)) {
         const redirectRoute = getHomeRouteForRole(result.role);
         if (redirectRoute) {
+          devLog("final redirect route", { to: redirectRoute, reason: "ROLE_NOT_ALLOWED" });
           router.replace(redirectRoute);
           return;
         }
