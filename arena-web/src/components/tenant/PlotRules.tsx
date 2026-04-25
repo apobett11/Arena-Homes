@@ -4,42 +4,26 @@ import React, { useState } from 'react';
 import { Shield, Clock, Trash2, Users, Volume2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const rules = [
-    {
-        id: 1,
-        title: 'Quiet Hours',
-        desc: 'Strict silence observed from 10:00 PM to 6:00 AM daily to ensure a restful environment for all students.',
-        icon: Volume2,
-        color: 'text-blue-500',
-        bg: 'bg-blue-500/10'
-    },
-    {
-        id: 2,
-        title: 'Gate Closing Time',
-        desc: 'Main gate is locked at 11:00 PM. Late entry requires prior notification to the caretaker.',
-        icon: Clock,
-        color: 'text-orange-500',
-        bg: 'bg-orange-500/10'
-    },
-    {
-        id: 3,
-        title: 'Waste Disposal',
-        desc: 'Garbage must be segregated and placed in the designated bins at the back of Block C before 9:00 AM.',
-        icon: Trash2,
-        color: 'text-green-500',
-        bg: 'bg-green-500/10'
-    },
-    {
-        id: 4,
-        title: 'Visitors Policy',
-        desc: 'Guests are allowed between 9:00 AM and 9:00 PM. No overnight guests without admin approval.',
-        icon: Users,
-        color: 'text-purple-500',
-        bg: 'bg-purple-500/10'
-    },
+export interface TenantRuleItem {
+    id: string;
+    title: string;
+    desc: string;
+}
+
+interface PlotRulesProps {
+    rules: TenantRuleItem[];
+    loading: boolean;
+}
+
+const iconSet = [Volume2, Clock, Trash2, Users];
+const colorSet = [
+    { color: "text-blue-500", bg: "bg-blue-500/10" },
+    { color: "text-orange-500", bg: "bg-orange-500/10" },
+    { color: "text-green-500", bg: "bg-green-500/10" },
+    { color: "text-purple-500", bg: "bg-purple-500/10" },
 ];
 
-const PlotRules = () => {
+const PlotRules = ({ rules, loading }: PlotRulesProps) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -66,21 +50,31 @@ const PlotRules = () => {
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className="overflow-hidden"
                     >
-                        <div className="grid gap-4">
-                            {rules.map((rule) => (
-                                <div key={rule.id} className="flex gap-4 p-4 rounded-2xl bg-[#0f172a] border border-white/10 shadow-lg">
-                                    <div className={`shrink-0 p-3 rounded-xl h-fit ${rule.bg} ${rule.color}`}>
-                                        <rule.icon size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-white">{rule.title}</h3>
-                                        <p className="text-sm text-gray-300 leading-relaxed mt-1">
-                                            {rule.desc}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        {loading ? (
+                            <div className="p-4 text-sm text-slate-400">Loading rules and guidelines...</div>
+                        ) : rules.length === 0 ? (
+                            <div className="p-4 text-sm text-slate-400">No rules or guidelines available yet.</div>
+                        ) : (
+                            <div className="grid gap-4">
+                                {rules.map((rule, index) => {
+                                    const Icon = iconSet[index % iconSet.length];
+                                    const colors = colorSet[index % colorSet.length];
+                                    return (
+                                        <div key={rule.id} className="flex gap-4 p-4 rounded-2xl bg-[#0f172a] border border-white/10 shadow-lg">
+                                            <div className={`shrink-0 p-3 rounded-xl h-fit ${colors.bg} ${colors.color}`}>
+                                                <Icon size={24} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-white">{rule.title}</h3>
+                                                <p className="text-sm text-gray-300 leading-relaxed mt-1">
+                                                    {rule.desc}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -91,7 +85,7 @@ const PlotRules = () => {
                         <Shield size={20} />
                     </div>
                     <div className="flex-1">
-                        <p className="text-sm font-medium text-white">View 4 active house rules</p>
+                        <p className="text-sm font-medium text-white">{loading ? "Loading rules..." : `View ${rules.length} active house rules`}</p>
                     </div>
                     <ChevronDown size={16} className="text-gray-400" />
                 </div>

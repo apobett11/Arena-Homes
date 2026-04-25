@@ -3,24 +3,33 @@
 import React from 'react';
 import { CheckCircle, AlertTriangle, Info, Clock } from 'lucide-react';
 
-const activities = [
-    { id: 1, type: 'payment', title: 'Rent Paid', date: 'Oct 27, 2025', amount: 'KES 12,000', status: 'success' },
-    { id: 2, type: 'announcement', title: 'Water Maintenance', date: 'Oct 25, 2025', desc: 'Water supply interruption 2pm-5pm', status: 'warning' },
-    { id: 3, type: 'maintenance', title: 'Leaking Tap Fixed', date: 'Oct 20, 2025', desc: 'Resolved by Maintenance Team', status: 'info' },
-    { id: 4, type: 'payment', title: 'Rent Paid', date: 'Sep 27, 2025', amount: 'KES 12,000', status: 'success' },
-];
+export interface TenantActivityItem {
+    id: string;
+    type: string;
+    title: string;
+    date: string;
+    amount?: string;
+    desc?: string;
+}
 
-const RecentActivity = () => {
+interface RecentActivityProps {
+    activities: TenantActivityItem[];
+    onViewAll: () => void;
+}
+
+const RecentActivity = ({ activities, onViewAll }: RecentActivityProps) => {
     return (
         <div className="mb-24 md:mb-8">
             <div className="flex justify-between items-center mb-4 px-1">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white">Recent Activity</h2>
-                <button className="text-sm text-blue-600 font-medium hover:underline">View All</button>
+                <button onClick={onViewAll} className="text-sm text-blue-600 font-medium hover:underline">View All</button>
             </div>
 
-            {/* Horizontal Scroll / Swipeable */}
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar px-1">
-                {activities.map((item) => (
+            {activities.length === 0 ? (
+                <div className="px-1 py-5 text-sm text-slate-400">No recent activity yet.</div>
+            ) : (
+                <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar px-1">
+                    {activities.map((item) => (
                     <div
                         key={item.id}
                         className="snap-center shrink-0 w-64 p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between"
@@ -43,8 +52,9 @@ const RecentActivity = () => {
                             {item.desc && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.desc}</p>}
                         </div>
                     </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

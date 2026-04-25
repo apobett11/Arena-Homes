@@ -2,24 +2,38 @@
 
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { User, MapPin, Calendar, CreditCard, ChevronRight } from 'lucide-react';
+import { User, MapPin, Calendar, CreditCard, MessageSquare } from 'lucide-react';
 
 interface TenantIdentityCardProps {
   tenantName: string;
-  plotName: string;
+  propertyName: string;
   roomNumber: string;
   leaseStart: string;
   leaseEnd: string;
   monthsPaid: number;
+  daysRemaining: number | null;
+  caretakerName: string;
+  caretakerPhone: string;
+  avatarUrl?: string | null;
+  onPayRent: () => void;
+  onReportIssue: () => void;
+  onMessageCaretaker: () => void;
 }
 
 const TenantIdentityCard: React.FC<TenantIdentityCardProps> = ({
   tenantName,
-  plotName,
+  propertyName,
   roomNumber,
   leaseStart,
   leaseEnd,
   monthsPaid,
+  daysRemaining,
+  caretakerName,
+  caretakerPhone,
+  avatarUrl,
+  onPayRent,
+  onReportIssue,
+  onMessageCaretaker,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -47,15 +61,17 @@ const TenantIdentityCard: React.FC<TenantIdentityCardProps> = ({
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
               <MapPin size={14} />
-              {plotName} • {roomNumber}
+              {propertyName} • {roomNumber}
             </p>
           </div>
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <div className="relative">
-              <User size={24} className="text-gray-700 dark:text-gray-300" />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
-            </div>
-          </button>
+          <div className="h-12 w-12 rounded-full border border-white/20 overflow-hidden bg-slate-700/30 flex items-center justify-center">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="Tenant avatar" className="h-full w-full object-cover" />
+            ) : (
+              <User size={24} className="text-gray-300" />
+            )}
+          </div>
         </div>
 
         {/* Lease Info Grid */}
@@ -81,16 +97,26 @@ const TenantIdentityCard: React.FC<TenantIdentityCardProps> = ({
           </div>
         </div>
 
+        <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-800/50 p-3 text-sm">
+          <p className="font-semibold text-slate-200">Lease renews automatically after two months unless otherwise stated.</p>
+          <p className="mt-1 text-slate-300">
+            {daysRemaining === null ? "Days remaining until next due date: Not available yet" : `Days remaining until rent due date: ${daysRemaining}`}
+          </p>
+          <p className="mt-2 text-slate-200">
+            Caretaker: <span className="font-semibold">{caretakerName}</span> ({caretakerPhone})
+          </p>
+        </div>
+
         {/* Quick Actions */}
         <div className="flex gap-3">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
+          <button onClick={onPayRent} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
             Pay Rent
           </button>
-          <button className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 py-2.5 px-4 rounded-xl text-sm font-medium transition-all hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 flex items-center justify-center gap-2">
-            Report
+          <button onClick={onReportIssue} className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 py-2.5 px-4 rounded-xl text-sm font-medium transition-all hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 flex items-center justify-center gap-2">
+            Report Issue
           </button>
-          <button className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 p-2.5 rounded-xl transition-all hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95">
-            <ChevronRight size={20} />
+          <button onClick={onMessageCaretaker} className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 p-2.5 rounded-xl transition-all hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95" title="Message caretaker">
+            <MessageSquare size={20} />
           </button>
         </div>
       </div>

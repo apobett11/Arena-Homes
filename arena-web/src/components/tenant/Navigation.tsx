@@ -1,56 +1,62 @@
 'use client';
 
 import React from 'react';
-import { Home, CreditCard, FileText, Settings, User, Bell, Moon, Sun, MessageSquare } from 'lucide-react';
+import { Home, CreditCard, FileText, Settings, User, Bell, Moon, Sun, MessageSquare, Megaphone, Users, Star } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export const MobileNav = () => {
+interface TenantNavigationProps {
+    onAction: (actionId: string) => void;
+}
+
+export const MobileNav = ({ onAction }: TenantNavigationProps) => {
     const pathname = usePathname();
     const isActive = (path: string) => pathname === path;
     const navItems = [
-        { icon: Home, label: 'Home', href: '/tenant/dashboard' },
-        { icon: CreditCard, label: 'Pay', href: '/tenant/dashboard' },
-        { icon: MessageSquare, label: 'Report', href: '/tenant/chat' },
-        { icon: FileText, label: 'Lease', href: '/tenant/dashboard' },
-        { icon: Settings, label: 'Settings', href: '/tenant/dashboard' },
+        { icon: Home, label: 'Home', actionId: 'home' },
+        { icon: CreditCard, label: 'Pay', actionId: 'pay_sidebar' },
+        { icon: MessageSquare, label: 'Report', actionId: 'report' },
+        { icon: FileText, label: 'Lease', actionId: 'lease' },
+        { icon: Settings, label: 'Settings', actionId: 'settings' },
     ];
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 pb-safe z-50 md:hidden">
             <div className="flex justify-around items-center p-3">
                 {navItems.map((item) => (
-                    <Link href={item.href} key={item.label} className={`flex flex-col items-center gap-1 transition-colors ${isActive(item.href) ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}>
-                        <item.icon size={22} strokeWidth={isActive(item.href) ? 2.5 : 2} />
+                    <button key={item.label} onClick={() => onAction(item.actionId)} className={`flex flex-col items-center gap-1 transition-colors ${item.actionId === "home" && isActive('/tenant/dashboard') ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                        <item.icon size={22} strokeWidth={item.actionId === "home" && isActive('/tenant/dashboard') ? 2.5 : 2} />
                         <span className="text-[10px] font-medium">{item.label}</span>
-                    </Link>
+                    </button>
                 ))}
             </div>
         </div>
     );
 };
 
-export const DesktopSidebar = () => {
+export const DesktopSidebar = ({ onAction }: TenantNavigationProps) => {
     const pathname = usePathname();
     const isActive = (path: string) => pathname === path;
 
     const navItems = [
-        { icon: Home, label: 'Dashboard', href: '/tenant/dashboard' },
-        { icon: CreditCard, label: 'Payments', href: '/tenant/dashboard' },
-        { icon: MessageSquare, label: 'Report Issue', href: '/tenant/chat' },
-        { icon: FileText, label: 'Lease Agreement', href: '/tenant/dashboard' },
-        { icon: Settings, label: 'Settings', href: '/tenant/dashboard' },
+        { icon: Home, label: 'Dashboard', actionId: 'home' },
+        { icon: CreditCard, label: 'Pay Rent', actionId: 'pay_sidebar' },
+        { icon: MessageSquare, label: 'Report Issue', actionId: 'report' },
+        { icon: FileText, label: 'View Lease', actionId: 'lease' },
+        { icon: Megaphone, label: 'Announcements', actionId: 'announcements' },
+        { icon: Users, label: 'Community', actionId: 'community' },
+        { icon: Star, label: 'Feedback', actionId: 'feedback' },
+        { icon: Settings, label: 'Settings', actionId: 'settings' },
     ];
 
     return (
         <aside className="hidden md:flex flex-col w-64 fixed top-0 bottom-0 left-0 bg-white dark:bg-[#020617] border-r border-gray-200 dark:border-gray-800 z-40 pt-20 px-4">
             <div className="space-y-2 mt-6">
                 {navItems.map((item) => (
-                    <Link href={item.href} key={item.label} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive(item.href) ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-semibold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+                    <button onClick={() => onAction(item.actionId)} key={item.label} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${item.actionId === "home" && isActive('/tenant/dashboard') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-semibold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
                         <item.icon size={20} />
                         <span>{item.label}</span>
-                    </Link>
+                    </button>
                 ))}
             </div>
 
@@ -58,7 +64,7 @@ export const DesktopSidebar = () => {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
                 <h4 className="font-bold relative z-10">Need Help?</h4>
                 <p className="text-xs text-blue-100 mt-1 relative z-10 mb-3">Contact the caretaker directly.</p>
-                <button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2 rounded-lg text-xs font-semibold transition-colors">Chat Now</button>
+                <button onClick={() => onAction("message_caretaker")} className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2 rounded-lg text-xs font-semibold transition-colors">Chat Now</button>
             </div>
         </aside>
     );
