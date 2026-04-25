@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Menu } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,7 @@ const navItems = [
     { icon: Building2, label: "Properties", href: "/admin/properties" },
     { icon: Wallet, label: "Finance", href: "/admin/finance" },
     { icon: Megaphone, label: "Broadcast", href: "/admin/broadcast" },
+    { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
 export default function AdminBottomNav() {
@@ -17,7 +18,7 @@ export default function AdminBottomNav() {
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/50 pb-safe">
-            <div className="flex items-center justify-around h-16 px-2">
+            <div className="grid h-16 grid-cols-6 items-center px-2">
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -36,10 +37,6 @@ export default function AdminBottomNav() {
                         </Link>
                     );
                 })}
-                <button className="flex flex-col items-center justify-center gap-1 px-2 py-1 text-slate-400 hover:text-white">
-                    <Menu className="w-5 h-5" />
-                    <span className="text-[10px] font-medium tracking-wide">More</span>
-                </button>
             </div>
         </nav>
     );

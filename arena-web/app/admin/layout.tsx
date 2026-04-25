@@ -20,7 +20,7 @@ export default function AdminLayout({
                 {/* Main Content Wrapper */}
                 <div className="lg:ml-64 min-h-screen flex flex-col">
                     {/* Page Content */}
-                    <main className="flex-1 p-4 md:p-6 lg:p-8">
+                    <main className="flex-1 p-4 md:p-6 lg:p-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-8">
                         {children}
                     </main>
                 </div>
@@ -29,9 +29,6 @@ export default function AdminLayout({
                 <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
                     <AdminBottomNav />
                 </div>
-                
-                {/* Mobile padding for bottom nav */}
-                <div className="lg:hidden h-20" />
             </div>
         </RoleGate>
     );

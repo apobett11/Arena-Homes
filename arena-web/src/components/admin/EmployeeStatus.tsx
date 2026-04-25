@@ -2,7 +2,8 @@
 
 import { MoreHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
-import { UsersApi, User } from "@/lib/api/domains/users";
+import { safeSelect } from "@/lib/supabase/safe";
+import { useRouter } from "next/navigation";
 
 interface EmployeeStatusProps {
     count?: number;
@@ -10,22 +11,34 @@ interface EmployeeStatusProps {
 }
 
 export default function EmployeeStatus({ count, loading }: EmployeeStatusProps) {
+    const router = useRouter();
     const [staff, setStaff] = useState<any[]>([]);
 
     useEffect(() => {
         if (!loading) {
-            // If count is provided, it implies parent loaded data. 
-            // We can fetch details here or assume parent should have passed them.
-            // For now, let's fetch top 5 staff members
-            UsersApi.getAll().then(users => {
-                // Filter out tenants
-                const employees = users.filter((u: User) => u.roleId !== 'TENANT').slice(0, 5);
-                setStaff(employees.map(u => ({
-                    name: u.email.split('@')[0], // Placeholder name
-                    role: u.roleId,
-                    status: u.isActive ? 'Active' : 'Inactive',
-                    dot: u.isActive ? 'bg-emerald-500' : 'bg-slate-500'
-                })));
+            Promise.all([
+                safeSelect<any>("employees", (q) =>
+                    q.select("id,user_id,role_id,status,full_name,email").order("created_at", { ascending: false }).limit(5)
+                ),
+                safeSelect<any>("profiles", (q) => q.select("user_id,full_name,email")),
+            ]).then(([employees, profiles]) => {
+                const profileByUser = new Map(profiles.map((p) => [p.user_id, p]));
+                setStaff(employees.map((employee) => {
+                    const profile = profileByUser.get(employee.user_id);
+                    const status = employee.status || "INACTIVE";
+                    const dot =
+                        status === "ACTIVE"
+                            ? "bg-emerald-500"
+                            : status === "SUSPENDED"
+                            ? "bg-rose-500"
+                            : "bg-amber-500";
+                    return {
+                        name: employee.full_name || profile?.full_name || employee.email || profile?.email || "Unknown",
+                        role: employee.role_id,
+                        status,
+                        dot,
+                    };
+                }));
             }).catch(console.error);
         }
     }, [loading]);
@@ -37,7 +50,7 @@ export default function EmployeeStatus({ count, loading }: EmployeeStatusProps) 
                     <span className="w-1 h-6 bg-[#00D084] rounded-full" />
                     Key Staff {count !== undefined && <span className="text-slate-500 text-sm">({count})</span>}
                 </h3>
-                <button className="text-xs text-[#0066FF] font-medium hover:text-[#00D084] transition-colors">View Directory</button>
+                <button onClick={() => router.push("/admin/employees")} className="text-xs text-[#0066FF] font-medium hover:text-[#00D084] transition-colors">View Directory</button>
             </div>
 
             <div className="space-y-4">

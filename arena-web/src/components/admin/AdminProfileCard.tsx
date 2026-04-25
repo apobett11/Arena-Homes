@@ -3,9 +3,11 @@
 import { Shield, Edit, Activity, Globe } from "lucide-react";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { useRouter } from "next/navigation";
 
 export default function AdminProfileCard() {
     const cardRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (cardRef.current) {
@@ -48,11 +50,11 @@ export default function AdminProfileCard() {
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-all hover:text-white">
+                    <button onClick={() => router.push("/admin/settings")} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-all hover:text-white active:scale-95">
                         <Globe className="w-4 h-4" />
                         <span className="text-sm font-medium">Public Face</span>
                     </button>
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0066FF]/10 hover:bg-[#0066FF]/20 border border-[#0066FF]/30 text-[#0066FF] hover:text-[#0066FF] transition-all">
+                    <button onClick={() => router.push("/admin/settings")} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0066FF]/10 hover:bg-[#0066FF]/20 border border-[#0066FF]/30 text-[#0066FF] hover:text-[#0066FF] transition-all active:scale-95">
                         <Edit className="w-4 h-4" />
                         <span className="text-sm font-medium">Edit Profile</span>
                     </button>

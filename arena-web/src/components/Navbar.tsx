@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AuthApi } from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
 import { getHomeRouteForRole, getCurrentUserRoleProfile } from "@/lib/auth/role-routing";
+import { safeMaybeSingle } from "@/lib/supabase/safe";
 
 export const Navbar = () => {
     const router = useRouter();
@@ -17,6 +18,8 @@ export const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [role, setRole] = useState<string | null>(null);
     const [dashboardRoute, setDashboardRoute] = useState<string>("/auth/login");
+    const [brandName, setBrandName] = useState("ArenaHomes");
+    const [brandLogo, setBrandLogo] = useState<string>("");
 
     useEffect(() => {
         setMounted(true);
@@ -36,6 +39,19 @@ export const Navbar = () => {
             setDashboardRoute(getHomeRouteForRole(result.role) ?? '/auth/login');
         };
         void hydrateRole();
+        const hydrateBrand = async () => {
+            const site = await safeMaybeSingle<any>("site_settings", (q) => q.select("*").eq("id", "default").maybeSingle());
+            if (site) {
+                setBrandName(site.site_name || "ArenaHomes");
+                setBrandLogo(site.logo_url || "");
+                return;
+            }
+            const fallback = await safeMaybeSingle<any>("app_settings", (q) => q.select("*").eq("key", "site_brand").maybeSingle());
+            const value = fallback?.value || {};
+            setBrandName(value.site_name || "ArenaHomes");
+            setBrandLogo(value.logo_url || "");
+        };
+        void hydrateBrand();
 
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
@@ -71,11 +87,15 @@ export const Navbar = () => {
         >
             <div className="container mx-auto flex items-center justify-between px-4 md:px-6">
                 <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-premium text-white shadow-lg group-hover:scale-105 transition-transform">
-                        <Home size={22} />
-                    </div>
+                    {brandLogo ? (
+                        <img src={brandLogo} alt="Brand logo" className="h-10 w-10 rounded-xl object-cover shadow-lg" />
+                    ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-premium text-white shadow-lg group-hover:scale-105 transition-transform">
+                            <Home size={22} />
+                        </div>
+                    )}
                     <span className={`text-xl md:text-2xl font-bold tracking-tight transition-colors duration-300 ${isScrolled ? "text-slate-900 dark:text-white" : "text-white"}`}>
-                        Arena<span className="text-primary">Homes</span>
+                        {brandName}
                     </span>
                 </Link>
 

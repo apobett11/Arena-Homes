@@ -1,13 +1,16 @@
 "use client";
 
-import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, UserCog, Key } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, UserCog, Key, FileText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { safeMaybeSingle } from "@/lib/supabase/safe";
 
 const navItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin/dashboard" },
     { icon: Users, label: "Employees", href: "/admin/employees" },
     { icon: Building2, label: "Properties", href: "/admin/properties" },
+    { icon: FileText, label: "Leases", href: "/admin/leases" },
     { icon: Wallet, label: "Finance", href: "/admin/finance" },
     { icon: Megaphone, label: "Broadcast", href: "/admin/broadcast" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
@@ -15,6 +18,21 @@ const navItems = [
 
 export default function AdminSidebar() {
     const pathname = usePathname();
+    const [brandName, setBrandName] = useState("ArenaHomes");
+
+    useEffect(() => {
+        const loadBrand = async () => {
+            const site = await safeMaybeSingle<any>("site_settings", (q) => q.select("*").eq("id", "default").maybeSingle());
+            if (site?.site_name) {
+                setBrandName(site.site_name);
+                return;
+            }
+            const fallback = await safeMaybeSingle<any>("app_settings", (q) => q.select("*").eq("key", "site_brand").maybeSingle());
+            const value = fallback?.value || {};
+            if (value.site_name) setBrandName(value.site_name);
+        };
+        void loadBrand();
+    }, []);
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 border-r border-slate-800 z-50">
@@ -23,7 +41,7 @@ export default function AdminSidebar() {
                 <div className="p-6 border-b border-slate-800">
                     <Link href="/" className="block">
                         <h1 className="text-xl font-bold text-white">
-                            Arena<span className="text-primary">Homes</span>
+                            {brandName}
                         </h1>
                     </Link>
                     <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">Super Admin</p>
