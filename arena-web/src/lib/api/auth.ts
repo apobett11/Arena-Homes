@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { getCurrentUserRoleProfile } from '@/lib/auth/role-routing';
 
 export interface User {
     id: string;
@@ -23,18 +24,8 @@ export const AuthApi = {
         if (error || !data.user) {
             throw new Error(error?.message ?? 'Login failed');
         }
-
-        const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role_id')
-            .eq('user_id', data.user.id)
-            .maybeSingle();
-
-        if (profileError) {
-            throw new Error(profileError.message);
-        }
-
-        const roleId = (profileData as { role_id?: string } | null)?.role_id ?? 'TENANT';
+        const roleResult = await getCurrentUserRoleProfile();
+        const roleId = roleResult.ok ? roleResult.role : '';
 
         return {
             user: {

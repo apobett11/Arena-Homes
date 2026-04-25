@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthApi } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
-import { getRedirectPath } from '@/lib/rbac/access';
-import { UserRole } from '@/lib/rbac/types';
+import { getSupabaseClient } from '@/lib/supabase/client';
+import { getCurrentUserRoleProfile, redirectToRoleHome } from '@/lib/auth/role-routing';
 import { Home, ArrowRight, Eye, EyeOff, AlertCircle, ArrowLeft, Send } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,36 +26,45 @@ export default function LoginPage() {
         const formData = new FormData(event.currentTarget);
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
-        let result: { error?: string; success?: boolean; role?: string; requiresOnboarding?: boolean };
-
         try {
-            const response = await AuthApi.login(email, password);
-            result = {
-                success: true,
-                role: response.user.roleId,
-                requiresOnboarding: response.requiresOnboarding,
-            };
-        } catch (err: any) {
-            result = { error: err.message };
-        }
+            await AuthApi.login(email, password);
+            const roleResult = await getCurrentUserRoleProfile();
 
-        if (result.error) {
-            // Check if it's the tenant-only error
-            if (result.error.includes('NOT_A_TENANT') || result.error.includes('need to be a tenant') || result.error.includes('apply')) {
+            if (!roleResult.ok) {
+                if (roleResult.code === 'ACCOUNT_INACTIVE') {
+                    await getSupabaseClient().auth.signOut();
+                    setError('Your account is inactive. Contact admin.');
+                    setLoading(false);
+                    return;
+                }
+                if (roleResult.code === 'MISSING_ROLE') {
+                    setError('Your account exists but has no assigned role. Contact admin.');
+                    setLoading(false);
+                    return;
+                }
+                setError(roleResult.message);
+                setLoading(false);
+                return;
+            }
+
+            const targetRoute = redirectToRoleHome(roleResult.role);
+            if (!targetRoute) {
+                setError('Your account role is not mapped to a dashboard route. Contact admin.');
+                setLoading(false);
+                return;
+            }
+
+            router.replace(targetRoute);
+            return;
+        } catch (err: any) {
+            const errorMessage = err?.message ?? 'Login failed';
+            if (errorMessage.includes('NOT_A_TENANT') || errorMessage.includes('need to be a tenant') || errorMessage.includes('apply')) {
                 setIsTenantError(true);
                 setError('You need to be a tenant to login. Apply for a property first!');
             } else {
-                setError(result.error);
+                setError(errorMessage);
             }
             setLoading(false);
-        } else if (result.success && result.role) {
-            // Check if onboarding is required
-            if (result.requiresOnboarding) {
-                router.push('/tenant/onboarding');
-            } else {
-                const target = getRedirectPath(result.role as UserRole);
-                router.push(target);
-            }
         }
     }
 

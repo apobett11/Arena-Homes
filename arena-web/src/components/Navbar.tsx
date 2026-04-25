@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Moon, Sun, Menu, X, Home, LogOut, User, Search } from "lucide-react";
+import { Moon, Sun, Menu, X, Home, LogOut, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthApi } from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
+import { getHomeRouteForRole, getCurrentUserRoleProfile } from "@/lib/auth/role-routing";
 
 export const Navbar = () => {
     const router = useRouter();
@@ -15,6 +16,7 @@ export const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [role, setRole] = useState<string | null>(null);
+    const [dashboardRoute, setDashboardRoute] = useState<string>("/auth/login");
 
     useEffect(() => {
         setMounted(true);
@@ -23,19 +25,32 @@ export const Navbar = () => {
         };
         window.addEventListener("scroll", handleScroll);
 
-        // Simple cookie check for UI (not security)
-        const match = document.cookie.match(/(^|;)\s*user_role\s*=\s*([^;]+)/);
-        if (match) {
-            setRole(match[2]);
-        }
+        const hydrateRole = async () => {
+            const result = await getCurrentUserRoleProfile();
+            if (!result.ok) {
+                setRole(null);
+                setDashboardRoute('/auth/login');
+                return;
+            }
+            setRole(result.role);
+            setDashboardRoute(getHomeRouteForRole(result.role) ?? '/auth/login');
+        };
+        void hydrateRole();
 
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const handleLogout = async () => {
         await AuthApi.logout();
+        localStorage.removeItem('user_role');
+        sessionStorage.removeItem('user_role');
+        localStorage.removeItem('access_token');
+        sessionStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('refresh_token');
         setRole(null);
-        router.push('/auth/login');
+        setDashboardRoute('/auth/login');
+        router.replace('/auth/login');
     };
 
     if (!mounted) return null;
@@ -86,7 +101,7 @@ export const Navbar = () => {
 
                         {role ? (
                             <div className="flex gap-2">
-                                <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+                                <Link href={dashboardRoute} className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
                                     <User size={16} /> Dashboard
                                 </Link>
                                 <button onClick={handleLogout} className="flex items-center justify-center rounded-xl bg-red-50 px-3 py-2.5 text-red-600 transition-all hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400">
@@ -143,7 +158,7 @@ export const Navbar = () => {
                             <div className="pt-4 border-t border-slate-200/50 dark:border-slate-700/50 mt-2">
                                 {role ? (
                                     <div className="flex flex-col gap-2">
-                                        <Link href="/auth/login" className="w-full text-center rounded-xl bg-primary/10 py-3 text-base font-semibold text-primary dark:bg-primary/20">
+                                        <Link href={dashboardRoute} className="w-full text-center rounded-xl bg-primary/10 py-3 text-base font-semibold text-primary dark:bg-primary/20">
                                             Dashboard
                                         </Link>
                                         <button onClick={handleLogout} className="w-full rounded-xl bg-red-50 py-3 text-base font-semibold text-red-600 dark:bg-red-900/20">
