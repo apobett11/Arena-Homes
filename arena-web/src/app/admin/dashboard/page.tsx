@@ -50,14 +50,16 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         // Animation
         const ctx = gsap.context(() => {
-            gsap.from(".animate-section", {
-                opacity: 0,
-                y: 30,
-                duration: 0.8,
-                stagger: 0.2,
-                ease: "power2.out",
-                delay: 0.3
-            });
+            gsap.fromTo(
+              ".animate-section",
+              { opacity: 1, y: 0 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.01,
+                clearProps: "opacity,transform",
+              }
+            );
         });
 
         async function loadData() {
