@@ -125,21 +125,21 @@ export default function GlobalAnalytics({
                     <button
                         key={idx}
                         onClick={metric.onClick}
-                        className="group relative overflow-hidden rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-700 p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#0066FF]/10 active:scale-[0.99] cursor-pointer"
+                        className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 text-left shadow-[0_8px_24px_rgba(15,23,42,0.18)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_14px_34px_rgba(15,23,42,0.24)] active:scale-[0.99] cursor-pointer"
                     >
                         <div className="flex justify-between items-start mb-4">
-                            <div className={`p-3 rounded-lg bg-opacity-10`} style={{ backgroundColor: `${metric.color}20` }}>
+                            <div className="rounded-xl border border-slate-200 p-3" style={{ backgroundColor: `${metric.color}14` }}>
                                 <Icon className="w-6 h-6" style={{ color: metric.color }} />
                             </div>
                         </div>
 
                         <div>
-                            <h3 className="text-2xl font-bold text-white mb-1">{metric.value}</h3>
-                            <p className="text-sm text-slate-400 font-medium">{metric.label}</p>
-                            <p className="mt-2 text-xs text-slate-400">{metric.change}</p>
+                            <h3 className="text-3xl font-bold text-slate-900 mb-1">{metric.value}</h3>
+                            <p className="text-sm text-slate-700 font-semibold">{metric.label}</p>
+                            <p className="mt-2 text-xs text-slate-600">{metric.change}</p>
                         </div>
 
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 bg-gradient-to-br from-black/[0.03] to-transparent" />
                     </button>
                 );
             })}

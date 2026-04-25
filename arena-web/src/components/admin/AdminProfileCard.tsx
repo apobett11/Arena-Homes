@@ -23,7 +23,7 @@ export default function AdminProfileCard() {
 
     return (
         <div ref={cardRef} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 p-6 shadow-2xl">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+            <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.25),transparent_35%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_50%_80%,rgba(255,255,255,0.14),transparent_35%)]"></div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#0066FF]/10 rounded-full blur-[80px]"></div>
 
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
