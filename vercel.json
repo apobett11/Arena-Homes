@@ -1,5 +1,6 @@
 {
+  "framework": "nextjs",
+  "installCommand": "npm install && cd arena-web && npm install",
   "buildCommand": "cd arena-web && npm run build",
-  "installCommand": "cd arena-web && npm install",
-  "framework": "nextjs"
+  "outputDirectory": "arena-web/.next"
 }
