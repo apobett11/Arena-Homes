@@ -48,7 +48,11 @@ export default function TenantDashboard() {
 
     useEffect(() => {
         const ctx = gsap.context(() => {
-            gsap.fromTo(mainRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+            // Fade in content smoothly without hiding it initially
+            gsap.fromTo(mainRef.current, 
+                { opacity: 0.3 }, 
+                { opacity: 1, duration: 0.4, ease: 'power2.out' }
+            );
         });
 
         async function load() {

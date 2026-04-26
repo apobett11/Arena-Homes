@@ -12,6 +12,7 @@ interface LiveMapProps {
     houseLng: number | null;
     onShareLocation: () => void;
     sharing: boolean;
+    shareCode?: string | null;
 }
 
 const LiveMap = ({
@@ -23,6 +24,7 @@ const LiveMap = ({
     houseLng,
     onShareLocation,
     sharing,
+    shareCode,
 }: LiveMapProps) => {
     const hasCoordinates =
         gateLat !== null &&
@@ -55,14 +57,25 @@ const LiveMap = ({
                 <div className="rounded-lg bg-slate-950/80 px-3 py-2 text-xs text-slate-200">
                     Start pin: {gateLabel} | Destination pin: {plotLabel}
                 </div>
-                <button
-                    onClick={onShareLocation}
-                    disabled={sharing}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 font-medium transition-transform active:scale-95 w-full justify-center"
-                >
-                    <Share2 size={18} />
-                    {sharing ? "Generating code..." : "Share Location"}
-                </button>
+                
+                {shareCode ? (
+                    <div className="rounded-xl bg-emerald-900/80 border border-emerald-500/30 p-4">
+                        <p className="text-emerald-300 text-sm font-semibold mb-2">Share code generated!</p>
+                        <p className="text-2xl font-bold text-white tracking-wider mb-2">{shareCode}</p>
+                        <p className="text-emerald-200/70 text-xs">
+                            Send this code to your visitor. They can search it on the listings page to find your location.
+                        </p>
+                    </div>
+                ) : (
+                    <button
+                        onClick={onShareLocation}
+                        disabled={sharing}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 font-medium transition-transform active:scale-95 w-full justify-center"
+                    >
+                        <Share2 size={18} />
+                        {sharing ? "Generating code..." : "Share Location"}
+                    </button>
+                )}
             </div>
         </div>
     );

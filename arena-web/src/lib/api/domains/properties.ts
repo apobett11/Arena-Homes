@@ -29,6 +29,14 @@ export interface Property {
     logoUrl?: string;
     facilities?: PropertyFacilities;
     units?: Unit[];
+    // Trust/Verification fields
+    verificationStatus?: 'UNVERIFIED' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'SUSPENDED' | 'FLAGGED';
+    latitude?: number;
+    longitude?: number;
+    gateLatitude?: number;
+    gateLongitude?: number;
+    schoolGateDistanceMeters?: number;
+    landmark?: string;
 }
 
 export interface Unit {
@@ -38,6 +46,17 @@ export interface Unit {
     description: string;
     basePrice: string;
     status: 'VACANT' | 'TAKEN';
+    // Enhanced availability fields
+    availabilityStatus?: 'AVAILABLE' | 'RESERVED' | 'OCCUPIED' | 'UNDER_MAINTENANCE' | 'UNAVAILABLE';
+    depositAmount?: number;
+    amenities?: {
+        water?: boolean;
+        electricity?: boolean;
+        security?: boolean;
+        internet?: boolean;
+    };
+    photos?: string[];
+    lastUpdated?: string;
 }
 
 export interface CreatePropertyPayload {

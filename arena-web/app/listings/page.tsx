@@ -8,7 +8,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { PropertyApi, Property, Unit } from "@/lib/api/domains/properties";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const unitTypeToLabel: Record<string, string> = {
     SINGLE: "Single Room",
@@ -18,17 +18,53 @@ const unitTypeToLabel: Record<string, string> = {
     APARTMENT: "Apartment",
 };
 
-// Helper to map API data to UI props
-const mapToHouseProps = (property: Property, unit: Unit): HouseProps => ({
-    id: unit.id,
-    title: `${property.name} - ${unitTypeToLabel[unit.type] || unit.type}`,
-    location: property.location,
-    price: parseFloat(unit.basePrice),
-    type: unitTypeToLabel[unit.type] || unit.type,
-    image: property.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`, // Fallback
-    distance: "0.5km", // Placeholder, backend API needs geo logic
-    vacancy: unit.status === 'VACANT' ? 'Available' : 'Limited',
-    water: true // Placeholder
+// Public listing data from database view
+interface PublicListing {
+    unit_id: string;
+    property_id: string;
+    unit_type: string;
+    unit_description: string | null;
+    rent_amount: number;
+    deposit_amount: number | null;
+    availability_status: 'AVAILABLE' | 'RESERVED' | 'OCCUPIED' | 'UNDER_MAINTENANCE' | 'UNAVAILABLE';
+    unit_amenities: { water?: boolean; electricity?: boolean; security?: boolean; internet?: boolean } | null;
+    unit_photos: string[] | null;
+    last_updated: string | null;
+    property_name: string;
+    property_location: string;
+    property_latitude: number | null;
+    property_longitude: number | null;
+    gate_latitude: number | null;
+    gate_longitude: number | null;
+    school_gate_distance_meters: number | null;
+    landmark: string | null;
+    property_verification_status: string;
+    property_logo: string | null;
+    walking_time_minutes: number | null;
+    primary_photo_url: string | null;
+}
+
+// Helper to map public listing data to UI props
+const mapPublicListingToHouseProps = (listing: PublicListing): HouseProps => ({
+    id: listing.unit_id,
+    title: `${listing.property_name} - ${unitTypeToLabel[listing.unit_type] || listing.unit_type}`,
+    location: listing.property_location,
+    price: listing.rent_amount,
+    type: unitTypeToLabel[listing.unit_type] || listing.unit_type,
+    image: listing.primary_photo_url || listing.property_logo || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
+    distance: listing.school_gate_distance_meters 
+        ? `${(listing.school_gate_distance_meters / 1000).toFixed(1)}km` 
+        : "Near Campus",
+    vacancy: listing.availability_status === 'AVAILABLE' ? 'Available' : 'Limited',
+    water: listing.unit_amenities?.water ?? true,
+    // Trust signals
+    isVerified: listing.property_verification_status === 'VERIFIED',
+    verificationStatus: listing.property_verification_status,
+    availabilityStatus: listing.availability_status,
+    depositAmount: listing.deposit_amount ?? undefined,
+    walkingTimeMinutes: listing.walking_time_minutes,
+    lastUpdated: listing.last_updated ?? undefined,
+    amenities: listing.unit_amenities ?? undefined,
 });
 
 function ListingsContent() {
@@ -65,35 +101,67 @@ function ListingsContent() {
         }
     }, [searchParams]);
 
-    // Data Fetching
+    // Data Fetching - Use public_listings view for safe, public data
     useEffect(() => {
         async function fetchListings() {
             try {
-                // Fetch properties (with units implied or separate?)
-                // Assuming properties endpoint returns basic info. We might need units.
-                // Let's try fetching properties, and if they have units, good.
-                // If not, we might need a specific '/listings' endpoint in real world.
-                // Phase 4 Backend `PropertyRepository.get` returns units, `list` might not.
-                // I'll fetch units directly via `getUnits` and properties via `getAll`.
-                const [properties, units] = await Promise.all([
-                    PropertyApi.getAll(),
-                    PropertyApi.getUnits()
-                ]);
+                const supabase = getSupabaseClient();
+                
+                // Query the public_listings view for safe, public data
+                const { data: publicListings, error } = await supabase
+                    .from('public_listings')
+                    .select('*')
+                    .order('rent_amount', { ascending: true });
 
-                // Map units to houses
-                const mapped: HouseProps[] = [];
-
-                // Index properties for faster lookup
-                const propMap = new Map(properties.map(p => [p.id, p]));
-
-                units.forEach(u => {
-                    const p = propMap.get(u.propertyId);
-                    if (p) {
-                        mapped.push(mapToHouseProps(p, u));
-                    }
-                });
-
-                setListings(mapped);
+                if (error) {
+                    console.error("Failed to fetch listings:", error);
+                    // Fallback to direct tables if view not available
+                    const { data: unitsData, error: unitsError } = await supabase
+                        .from('units')
+                        .select(`
+                            id,
+                            property_id,
+                            type,
+                            description,
+                            base_price,
+                            deposit_amount,
+                            availability_status,
+                            amenities,
+                            last_updated,
+                            properties!inner(
+                                id, name, location, logo_url, verification_status,
+                                latitude, longitude, school_gate_distance_meters, landmark
+                            )
+                        `)
+                        .not('properties.verification_status', 'eq', 'SUSPENDED');
+                    
+                    if (unitsError) throw unitsError;
+                    
+                    const fallbackListings: HouseProps[] = (unitsData || []).map((u: any) => ({
+                        id: u.id,
+                        title: `${u.properties.name} - ${unitTypeToLabel[u.type] || u.type}`,
+                        location: u.properties.location,
+                        price: parseFloat(u.base_price) || 0,
+                        type: unitTypeToLabel[u.type] || u.type,
+                        image: u.properties.logo_url || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
+                        distance: u.properties.school_gate_distance_meters 
+                            ? `${(u.properties.school_gate_distance_meters / 1000).toFixed(1)}km` 
+                            : "Near Campus",
+                        vacancy: u.availability_status === 'AVAILABLE' ? 'Available' : 'Limited',
+                        water: u.amenities?.water ?? true,
+                        isVerified: u.properties.verification_status === 'VERIFIED',
+                        verificationStatus: u.properties.verification_status,
+                        availabilityStatus: u.availability_status,
+                        depositAmount: u.deposit_amount ?? undefined,
+                        lastUpdated: u.last_updated ?? undefined,
+                        amenities: u.amenities ?? undefined,
+                    }));
+                    
+                    setListings(fallbackListings);
+                } else {
+                    const mapped: HouseProps[] = (publicListings || []).map(mapPublicListingToHouseProps);
+                    setListings(mapped);
+                }
             } catch (err) {
                 console.error("Failed to fetch listings", err);
             } finally {
@@ -107,7 +175,33 @@ function ListingsContent() {
         if (!pinCode.trim()) return;
         setPinSearchError("");
         try {
-            const property = await PropertyApi.getByPinCode(pinCode.trim().toUpperCase());
+            const supabase = getSupabaseClient();
+            
+            // First try to find by location_share_codes
+            const { data: shareCodeData, error: shareError } = await (supabase as any)
+                .rpc('get_location_share_code', { p_code: pinCode.trim().toUpperCase() });
+            
+            const shareCode = shareCodeData?.[0] as { unit_id: string } | undefined;
+            if (shareCode && !shareError && shareCode.unit_id) {
+                // Found a valid share code, navigate to that unit
+                router.push(`/listings/${shareCode.unit_id}?pin=${encodeURIComponent(pinCode.trim().toUpperCase())}`);
+                return;
+            }
+            
+            // Fallback: Try to find by property facilities invitePinCode (legacy)
+            const { data: propertyData, error: propError } = await (supabase as any)
+                .from('properties')
+                .select('id, facilities, units(id)')
+                .filter('facilities->invitePinCode', 'eq', pinCode.trim().toUpperCase())
+                .maybeSingle();
+            
+            const property = propertyData as { id: string; facilities: any; units?: { id: string }[] } | null;
+            
+            if (propError || !property) {
+                setPinSearchError("Invalid PIN code. Please check with the host and try again.");
+                return;
+            }
+            
             const firstUnit = property.units?.[0];
             if (!firstUnit) {
                 setPinSearchError("No unit is currently attached to this house.");

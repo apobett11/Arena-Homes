@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MapPin, Droplets, Home, Footprints, ArrowRight } from "lucide-react";
+import { Heart, MapPin, Droplets, Home, Footprints, ArrowRight, ShieldCheck, Zap, Shield, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface HouseProps {
@@ -13,8 +13,21 @@ export interface HouseProps {
     price: number;
     type: string;
     distance?: string;
-    vacancy?: "Available" | "Limited";
+    vacancy?: "Available" | "Limited" | "Reserved" | "Occupied" | "Under Maintenance";
     water?: boolean;
+    // Trust signals
+    isVerified?: boolean;
+    verificationStatus?: string;
+    availabilityStatus?: 'AVAILABLE' | 'RESERVED' | 'OCCUPIED' | 'UNDER_MAINTENANCE' | 'UNAVAILABLE';
+    depositAmount?: number;
+    walkingTimeMinutes?: number | null;
+    lastUpdated?: string;
+    amenities?: {
+        water?: boolean;
+        electricity?: boolean;
+        security?: boolean;
+        internet?: boolean;
+    };
 }
 
 export const HouseCard = ({
@@ -26,8 +39,49 @@ export const HouseCard = ({
     type,
     distance = "Near Campus",
     vacancy = "Available",
-    water = true
+    water = true,
+    isVerified = false,
+    verificationStatus,
+    availabilityStatus,
+    depositAmount,
+    walkingTimeMinutes,
+    lastUpdated,
+    amenities
 }: HouseProps) => {
+    // Determine badge color based on availability
+    const getAvailabilityBadge = () => {
+        const status = availabilityStatus || (vacancy === "Available" ? 'AVAILABLE' : 'OCCUPIED');
+        switch (status) {
+            case 'AVAILABLE':
+                return { text: "Available", class: "bg-emerald-500 text-white" };
+            case 'RESERVED':
+                return { text: "Reserved", class: "bg-amber-500 text-white" };
+            case 'OCCUPIED':
+                return { text: "Occupied", class: "bg-slate-500 text-white" };
+            case 'UNDER_MAINTENANCE':
+                return { text: "Maintenance", class: "bg-rose-500 text-white" };
+            default:
+                return { text: vacancy, class: "bg-emerald-500 text-white" };
+        }
+    };
+
+    const badge = getAvailabilityBadge();
+    const displayDistance = walkingTimeMinutes 
+        ? `${walkingTimeMinutes} min walk` 
+        : distance;
+
+    // Format last updated
+    const getLastUpdatedText = () => {
+        if (!lastUpdated) return null;
+        const date = new Date(lastUpdated);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) return "Updated today";
+        if (diffDays === 1) return "Updated yesterday";
+        if (diffDays < 7) return `Updated ${diffDays} days ago`;
+        return `Updated ${date.toLocaleDateString()}`;
+    };
+
     return (
         <Link href={`/listings/${id}`} className="block group h-full">
             <div className="card-premium h-full flex flex-col overflow-hidden">
@@ -45,14 +99,20 @@ export const HouseCard = ({
 
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                        {/* Availability Badge */}
                         <span className={cn(
                             "px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide",
-                            vacancy === "Available"
-                                ? "bg-emerald-500 text-white"
-                                : "bg-amber-500 text-white"
+                            badge.class
                         )}>
-                            {vacancy}
+                            {badge.text}
                         </span>
+                        {/* Verified Badge */}
+                        {(isVerified || verificationStatus === 'VERIFIED') && (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-500 text-white flex items-center gap-1">
+                                <ShieldCheck size={10} />
+                                Verified
+                            </span>
+                        )}
                     </div>
 
                     {/* Favorite Button */}
@@ -80,7 +140,7 @@ export const HouseCard = ({
                         </div>
                         <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
                             <Footprints size={12} />
-                            {distance}
+                            {displayDistance}
                         </div>
                     </div>
 
@@ -88,15 +148,50 @@ export const HouseCard = ({
                         {title}
                     </h3>
 
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-sm mb-4">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-sm mb-3">
                         <MapPin size={14} className="text-primary" />
                         {location}
                     </div>
 
-                    {water && (
-                        <div className="flex items-center gap-1.5 text-primary text-xs font-medium bg-primary/10 px-2 py-1 rounded-md w-fit">
-                            <Droplets size={12} />
-                            <span>Water Available</span>
+                    {/* Amenities Row */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                        {(amenities?.water || water) && (
+                            <div className="flex items-center gap-1 text-primary text-xs font-medium bg-primary/10 px-2 py-1 rounded-md">
+                                <Droplets size={10} />
+                                <span>Water</span>
+                            </div>
+                        )}
+                        {amenities?.electricity && (
+                            <div className="flex items-center gap-1 text-amber-600 text-xs font-medium bg-amber-100 px-2 py-1 rounded-md">
+                                <Zap size={10} />
+                                <span>Power</span>
+                            </div>
+                        )}
+                        {amenities?.security && (
+                            <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium bg-emerald-100 px-2 py-1 rounded-md">
+                                <Shield size={10} />
+                                <span>Secure</span>
+                            </div>
+                        )}
+                        {amenities?.internet && (
+                            <div className="flex items-center gap-1 text-blue-600 text-xs font-medium bg-blue-100 px-2 py-1 rounded-md">
+                                <Wifi size={10} />
+                                <span>WiFi</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Deposit Info */}
+                    {depositAmount && depositAmount > 0 && (
+                        <div className="text-xs text-slate-500 mb-2">
+                            Deposit: KSh {depositAmount.toLocaleString()}
+                        </div>
+                    )}
+
+                    {/* Last Updated */}
+                    {getLastUpdatedText() && (
+                        <div className="text-[10px] text-slate-400 mb-2">
+                            {getLastUpdatedText()}
                         </div>
                     )}
 

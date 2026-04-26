@@ -97,13 +97,38 @@ const TenantIdentityCard: React.FC<TenantIdentityCardProps> = ({
           </div>
         </div>
 
-        <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-800/50 p-3 text-sm">
-          <p className="font-semibold text-slate-200">Lease renews automatically after two months unless otherwise stated.</p>
-          <p className="mt-1 text-slate-300">
-            {daysRemaining === null ? "Days remaining until next due date: Not available yet" : `Days remaining until rent due date: ${daysRemaining}`}
+        <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-800/50 p-4 text-sm">
+          <p className="font-medium text-slate-700 dark:text-slate-200">
+            Lease renews automatically after two months unless otherwise stated.
           </p>
-          <p className="mt-2 text-slate-200">
-            Caretaker: <span className="font-semibold">{caretakerName}</span> ({caretakerPhone})
+          {daysRemaining !== null && (
+            <div className={`mt-3 p-2.5 rounded-lg flex items-center gap-2 ${
+              daysRemaining > 14 
+                ? 'bg-emerald-100/50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' 
+                : daysRemaining > 7 
+                  ? 'bg-amber-100/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                  : 'bg-rose-100/50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'
+            }`}>
+              <span className="font-semibold">
+                {daysRemaining > 14 && '✓ '}
+                {daysRemaining > 7 && daysRemaining <= 14 && '⚠ '}
+                {daysRemaining <= 7 && '!'}
+              </span>
+              <span>
+                {daysRemaining > 0 
+                  ? `${daysRemaining} days until rent is due` 
+                  : `Rent is ${Math.abs(daysRemaining)} days overdue`}
+              </span>
+            </div>
+          )}
+          {daysRemaining === null && (
+            <p className="mt-2 text-slate-400">Days remaining: Not available yet</p>
+          )}
+          <p className="mt-3 text-slate-600 dark:text-slate-300">
+            Caretaker: <span className="font-semibold text-slate-800 dark:text-slate-200">{caretakerName}</span>
+            {caretakerPhone && caretakerPhone !== 'Not assigned yet' && (
+              <span className="text-slate-500 dark:text-slate-400"> ({caretakerPhone})</span>
+            )}
           </p>
         </div>
 
