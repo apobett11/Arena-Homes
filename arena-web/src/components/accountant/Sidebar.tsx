@@ -2,7 +2,8 @@
 
 import { LayoutDashboard, BookOpen, PieChart, FileText, MessageSquare, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { AuthApi } from "@/lib/api/auth";
 
 const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/accountant/dashboard" },
@@ -14,6 +15,7 @@ const navItems = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-800/50 z-50">
@@ -50,7 +52,15 @@ export default function Sidebar() {
 
                 {/* Logout */}
                 <div className="p-4 border-t border-slate-800/50">
-                    <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all w-full">
+                    <button 
+                        onClick={async () => {
+                            await AuthApi.logout();
+                            localStorage.removeItem('user_role');
+                            sessionStorage.removeItem('user_role');
+                            router.replace('/auth/login');
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all w-full"
+                    >
                         <LogOut className="w-5 h-5" />
                         <span className="font-medium">Logout</span>
                     </button>

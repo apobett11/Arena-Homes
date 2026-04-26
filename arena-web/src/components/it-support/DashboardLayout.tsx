@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useState } from "react"
-import { LayoutDashboard, Activity, Users, Puzzle, Settings, Bell, UserCircle, Menu, X } from "lucide-react"
+import { LayoutDashboard, Activity, Users, Puzzle, Settings, Bell, UserCircle, Menu, X, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { AuthApi } from "@/lib/api/auth"
 
 interface DashboardLayoutProps {
     children: React.ReactNode
@@ -12,6 +14,14 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const router = useRouter()
+    
+    const handleLogout = async () => {
+        await AuthApi.logout()
+        localStorage.removeItem('user_role')
+        sessionStorage.removeItem('user_role')
+        router.replace('/auth/login')
+    }
 
     const navItems = [
         { icon: LayoutDashboard, label: "Home", href: "/it-support/dashboard" },
@@ -46,11 +56,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-white/10">
+                <div className="p-4 border-t border-white/10 space-y-2">
                     <div className="flex items-center gap-3 px-4 py-2">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         <span className="text-xs text-green-500 font-mono">SYSTEM OPTIMAL</span>
                     </div>
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-all text-sm"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                    </button>
                 </div>
             </aside>
 
@@ -82,10 +99,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
                         </Button>
-                        <div className="h-8 w-[1px] bg-white/10" />
-                        <Button variant="ghost" className="text-sm font-medium text-gray-300 hover:text-white gap-2">
-                            <UserCircle className="w-5 h-5" />
-                            <span className="hidden md:inline">Admin</span>
+                        <div className="h-8 w-[1px] bg-white/10 hidden md:block" />
+                        <Button 
+                            variant="ghost" 
+                            onClick={handleLogout}
+                            className="text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 gap-2"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            <span className="hidden md:inline">Logout</span>
                         </Button>
                     </div>
                 </header>

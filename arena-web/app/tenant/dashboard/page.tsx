@@ -10,6 +10,7 @@ import ActionGrid from '@/components/tenant/ActionGrid';
 import RecentActivity, { TenantActivityItem } from '@/components/tenant/RecentActivity';
 import PlotRules, { TenantRuleItem } from '@/components/tenant/PlotRules';
 import TenantModal from '@/components/tenant/TenantModal';
+import { Footer } from '@/components/Footer';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 type ModalType = null | 'pay_dashboard' | 'pay_sidebar' | 'complaint' | 'lease' | 'announcements' | 'community' | 'feedback' | 'activity' | 'settings' | 'share';
@@ -87,11 +88,14 @@ export default function TenantDashboard() {
                     if (docs?.[0]?.file_url) setLeaseDocumentUrl(docs[0].file_url);
                 }
 
+                let propertyId: string | null = null;
+
                 if (activeLease?.unit_id) {
                     const { data: unitRecordRaw } = await supabase.from('units').select('id, property_id, type').eq('id', activeLease.unit_id).maybeSingle();
                     const unitRecord = unitRecordRaw as any;
                     setUnit(unitRecord);
                     if (unitRecord?.property_id) {
+                        propertyId = unitRecord.property_id;
                         const { data: propertyRecordRaw } = await supabase.from('properties').select('id, name, logo_url, caretaker_id').eq('id', unitRecord.property_id).maybeSingle();
                         const propertyRecord = propertyRecordRaw as any;
                         setProperty(propertyRecord);
@@ -114,12 +118,22 @@ export default function TenantDashboard() {
                     }
                 }
 
+                // Fetch property-specific data. If property_id is available, filter by it
                 const [{ data: paymentRowsRaw }, { data: announcementsRowsRaw }, { data: issueRowsRaw }, { data: commentRowsRaw }, { data: ruleRowsRaw }] = await Promise.all([
                     supabase.from('payments').select('id, amount, status, created_at').eq('tenant_id', tenantRecord.id).order('created_at', { ascending: false }),
-                    supabase.from('announcements').select('id, title, content, target_role, created_at').eq('is_active', true).order('created_at', { ascending: false }).limit(20),
+                    // Fetch announcements for tenant's property or global ones (null property_id)
+                    supabase.from('announcements')
+                        .select('id, title, content, target_role, property_id, created_at')
+                        .eq('is_active', true)
+                        .or(`property_id.eq.${propertyId},property_id.is.null`)
+                        .order('created_at', { ascending: false })
+                        .limit(20),
                     supabase.from('issues').select('id, title, description, created_at').eq('reporter_id', authData.user.id).order('created_at', { ascending: false }).limit(20),
                     supabase.from('tenant_comments').select('id, comment_text, rating, created_at').eq('tenant_id', tenantRecord.id).order('created_at', { ascending: false }).limit(20),
-                    supabase.from('rules').select('id, title, description').order('created_at', { ascending: false }).limit(50),
+                    // Fetch property-specific rules from property_rules table
+                    propertyId
+                        ? supabase.from('property_rules').select('id, title, details').eq('property_id', propertyId).eq('is_active', true).order('sort_order', { ascending: true }).limit(50)
+                        : Promise.resolve({ data: [] }),
                 ]);
                 const paymentRows = (paymentRowsRaw ?? []) as any[];
                 const announcementsRows = (announcementsRowsRaw ?? []) as any[];
@@ -438,6 +452,11 @@ export default function TenantDashboard() {
                     </ol>
                 </div>
             </TenantModal>
+
+            {/* Footer */}
+            <div className="md:ml-64">
+                <Footer />
+            </div>
         </div>
     );
 }

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     Home,
     DoorOpen,
@@ -14,6 +14,7 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { gsap } from "gsap";
+import { AuthApi } from "@/lib/api/auth";
 
 const navItems = [
     { name: "Home", icon: Home, href: "/caretaker/dashboard" },
@@ -24,6 +25,7 @@ const navItems = [
 
 export const Sidebar = () => {
     const sidebarRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (sidebarRef.current) {
@@ -75,6 +77,12 @@ export const Sidebar = () => {
                     <span className="font-bold">Settings</span>
                 </Link>
                 <button
+                    onClick={async () => {
+                        await AuthApi.logout();
+                        localStorage.removeItem('user_role');
+                        sessionStorage.removeItem('user_role');
+                        router.replace('/auth/login');
+                    }}
                     className="w-full flex items-center gap-3 p-3 rounded-2xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
                 >
                     <LogOut className="w-5 h-5" />

@@ -42,6 +42,11 @@ interface PublicListing {
     property_logo: string | null;
     walking_time_minutes: number | null;
     primary_photo_url: string | null;
+    // New fields for vacancy tracking
+    available_rooms: number;
+    total_rooms: number;
+    likes_count: number;
+    max_occupancy: number;
 }
 
 // Helper to map public listing data to UI props
@@ -55,7 +60,7 @@ const mapPublicListingToHouseProps = (listing: PublicListing): HouseProps => ({
     distance: listing.school_gate_distance_meters 
         ? `${(listing.school_gate_distance_meters / 1000).toFixed(1)}km` 
         : "Near Campus",
-    vacancy: listing.availability_status === 'AVAILABLE' ? 'Available' : 'Limited',
+    vacancy: listing.available_rooms > 0 ? 'Available' : 'Occupied',
     water: listing.unit_amenities?.water ?? true,
     // Trust signals
     isVerified: listing.property_verification_status === 'VERIFIED',
@@ -65,6 +70,10 @@ const mapPublicListingToHouseProps = (listing: PublicListing): HouseProps => ({
     walkingTimeMinutes: listing.walking_time_minutes,
     lastUpdated: listing.last_updated ?? undefined,
     amenities: listing.unit_amenities ?? undefined,
+    // New vacancy fields
+    availableRooms: listing.available_rooms,
+    totalRooms: listing.total_rooms,
+    likesCount: listing.likes_count,
 });
 
 function ListingsContent() {
@@ -108,9 +117,11 @@ function ListingsContent() {
                 const supabase = getSupabaseClient();
                 
                 // Query the public_listings view for safe, public data
+                // Only get properties with available rooms (vacant)
                 const { data: publicListings, error } = await supabase
                     .from('public_listings')
                     .select('*')
+                    .gt('available_rooms', 0)
                     .order('rent_amount', { ascending: true });
 
                 if (error) {
@@ -137,25 +148,30 @@ function ListingsContent() {
                     
                     if (unitsError) throw unitsError;
                     
-                    const fallbackListings: HouseProps[] = (unitsData || []).map((u: any) => ({
-                        id: u.id,
-                        title: `${u.properties.name} - ${unitTypeToLabel[u.type] || u.type}`,
-                        location: u.properties.location,
-                        price: parseFloat(u.base_price) || 0,
-                        type: unitTypeToLabel[u.type] || u.type,
-                        image: u.properties.logo_url || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
-                        distance: u.properties.school_gate_distance_meters 
-                            ? `${(u.properties.school_gate_distance_meters / 1000).toFixed(1)}km` 
-                            : "Near Campus",
-                        vacancy: u.availability_status === 'AVAILABLE' ? 'Available' : 'Limited',
-                        water: u.amenities?.water ?? true,
-                        isVerified: u.properties.verification_status === 'VERIFIED',
-                        verificationStatus: u.properties.verification_status,
-                        availabilityStatus: u.availability_status,
-                        depositAmount: u.deposit_amount ?? undefined,
-                        lastUpdated: u.last_updated ?? undefined,
-                        amenities: u.amenities ?? undefined,
-                    }));
+                    const fallbackListings: HouseProps[] = (unitsData || [])
+                        .filter((u: any) => u.availability_status === 'AVAILABLE' || u.status === 'VACANT')
+                        .map((u: any) => ({
+                            id: u.id,
+                            title: `${u.properties.name} - ${unitTypeToLabel[u.type] || u.type}`,
+                            location: u.properties.location,
+                            price: parseFloat(u.base_price) || 0,
+                            type: unitTypeToLabel[u.type] || u.type,
+                            image: u.properties.logo_url || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
+                            distance: u.properties.school_gate_distance_meters 
+                                ? `${(u.properties.school_gate_distance_meters / 1000).toFixed(1)}km` 
+                                : "Near Campus",
+                            vacancy: 'Available',
+                            water: u.amenities?.water ?? true,
+                            isVerified: u.properties.verification_status === 'VERIFIED',
+                            verificationStatus: u.properties.verification_status,
+                            availabilityStatus: u.availability_status,
+                            depositAmount: u.deposit_amount ?? undefined,
+                            lastUpdated: u.last_updated ?? undefined,
+                            amenities: u.amenities ?? undefined,
+                            availableRooms: u.total_rooms && u.occupied_rooms ? u.total_rooms - u.occupied_rooms : 1,
+                            totalRooms: u.total_rooms ?? 1,
+                            likesCount: u.likes_count ?? 0,
+                        }));
                     
                     setListings(fallbackListings);
                 } else {

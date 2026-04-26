@@ -14,6 +14,16 @@ export default function AdminSettingsPage() {
     const [tagline, setTagline] = useState("");
     const [contactEmail, setContactEmail] = useState("");
     const [contactPhone, setContactPhone] = useState("");
+    // New social/contact fields
+    const [whatsappNumber, setWhatsappNumber] = useState("");
+    const [facebookUrl, setFacebookUrl] = useState("");
+    const [instagramUrl, setInstagramUrl] = useState("");
+    const [twitterUrl, setTwitterUrl] = useState("");
+    const [youtubeUrl, setYoutubeUrl] = useState("");
+    const [tiktokUrl, setTiktokUrl] = useState("");
+    const [telegramUrl, setTelegramUrl] = useState("");
+    const [officeAddress, setOfficeAddress] = useState("");
+    const [businessHours, setBusinessHours] = useState("");
 
     const [rules, setRules] = useState<any[]>([]);
     const [faqs, setFaqs] = useState<any[]>([]);
@@ -38,6 +48,16 @@ export default function AdminSettingsPage() {
                 setTagline(brand.tagline || "");
                 setContactEmail(brand.contact_email || "");
                 setContactPhone(brand.contact_phone || "");
+                // New fields
+                setWhatsappNumber(brand.whatsapp_number || "");
+                setFacebookUrl(brand.facebook_url || "");
+                setInstagramUrl(brand.instagram_url || "");
+                setTwitterUrl(brand.twitter_url || "");
+                setYoutubeUrl(brand.youtube_url || "");
+                setTiktokUrl(brand.tiktok_url || "");
+                setTelegramUrl(brand.telegram_url || "");
+                setOfficeAddress(brand.office_address || "");
+                setBusinessHours(brand.business_hours || "");
             } else {
                 const fallbackBrand = await safeMaybeSingle<any>("app_settings", (q) =>
                     q.select("*").eq("key", "site_brand").maybeSingle()
@@ -78,6 +98,16 @@ export default function AdminSettingsPage() {
             tagline,
             contact_email: contactEmail,
             contact_phone: contactPhone,
+            // New fields
+            whatsapp_number: whatsappNumber,
+            facebook_url: facebookUrl,
+            instagram_url: instagramUrl,
+            twitter_url: twitterUrl,
+            youtube_url: youtubeUrl,
+            tiktok_url: tiktokUrl,
+            telegram_url: telegramUrl,
+            office_address: officeAddress,
+            business_hours: businessHours,
             updated_by: userId,
         };
         const result = await supabase.from("site_settings").upsert(payload, { onConflict: "id" });
@@ -175,12 +205,79 @@ export default function AdminSettingsPage() {
                 {tab === "brand" && (
                     <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-900/50 p-6 space-y-4">
                         <h2 className="text-lg font-semibold text-white">Public Face / Brand Settings</h2>
-                        <input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="Site name" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                        <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="Logo URL" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                        <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Tagline" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                        <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="Contact email" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                        <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="Contact phone" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                        <button onClick={saveBrand} className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                        
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label className="block text-xs text-slate-400 mb-1">Site Name</label>
+                                <input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="Site name" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-slate-400 mb-1">Logo URL</label>
+                                <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="Logo URL" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs text-slate-400 mb-1">Tagline</label>
+                                <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Tagline" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                            </div>
+                        </div>
+
+                        <div className="border-t border-slate-800 pt-4 mt-4">
+                            <h3 className="text-sm font-semibold text-slate-300 mb-3">Contact Information</h3>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Contact Email</label>
+                                    <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="Contact email" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Contact Phone</label>
+                                    <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="Contact phone" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">WhatsApp Number</label>
+                                    <input value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="e.g., +254700000000" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Office Address</label>
+                                    <input value={officeAddress} onChange={(e) => setOfficeAddress(e.target.value)} placeholder="Office address" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs text-slate-400 mb-1">Business Hours</label>
+                                    <input value={businessHours} onChange={(e) => setBusinessHours(e.target.value)} placeholder="e.g., Mon-Fri 9AM-6PM, Sat 10AM-4PM" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-slate-800 pt-4 mt-4">
+                            <h3 className="text-sm font-semibold text-slate-300 mb-3">Social Media Links</h3>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Facebook URL</label>
+                                    <input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/..." className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Instagram URL</label>
+                                    <input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/..." className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Twitter URL</label>
+                                    <input value={twitterUrl} onChange={(e) => setTwitterUrl(e.target.value)} placeholder="https://twitter.com/..." className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">YouTube URL</label>
+                                    <input value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/..." className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">TikTok URL</label>
+                                    <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="https://tiktok.com/@..." className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Telegram URL</label>
+                                    <input value={telegramUrl} onChange={(e) => setTelegramUrl(e.target.value)} placeholder="https://t.me/..." className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onClick={saveBrand} className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white mt-4">
                             Save brand settings
                         </button>
                     </div>

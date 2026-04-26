@@ -11,6 +11,7 @@ import ActionGrid from "@/components/admin/ActionGrid";
 import EmployeeStatus from "@/components/admin/EmployeeStatus";
 import IssueFeed from "@/components/admin/IssueFeed";
 import AdminModal from "@/components/admin/AdminModal";
+import { Footer } from "@/components/Footer";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { safeSelect } from "@/lib/supabase/safe";
 
@@ -183,10 +184,8 @@ export default function AdminDashboardPage() {
                     </div>
                 </section>
 
-                {/* 4. Footer Note */}
-                <footer className="pt-8 text-center text-slate-600 text-xs">
-                    <p>Arena Homes Operating System v2.4.0 • Authorized Personnel Only</p>
-                </footer>
+                {/* 4. Footer */}
+                <Footer />
             </div>
             <AdminModal
                 open={openModal === "tenants"}

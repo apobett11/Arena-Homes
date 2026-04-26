@@ -10,6 +10,7 @@ import { RecentActivity, LogsViewer, DiagnosticsPanel } from "@/components/it-su
 import { TicketQueue, IntegrationsMonitor } from "@/components/it-support/ManagementWidgets"
 import { SearchAnalytics, SecurityNexus } from "@/components/it-support/AnalyticsWidgets"
 import { PerformanceMonitor } from "@/components/it-support/PerformanceMonitor"
+import { Footer } from "@/components/Footer"
 import { SystemApi, SystemHealth, SystemLog } from "@/lib/api/domains/system"
 import { IssueApi } from "@/lib/api/domains/issues"
 
@@ -108,6 +109,9 @@ export default function ITDashboardPage() {
                     </div>
 
                 </section>
+
+                {/* Footer */}
+                <Footer />
             </div>
         </DashboardLayout>
     )

@@ -10,6 +10,7 @@ import SystemAlerts from "@/components/accountant/SystemAlerts";
 import BudgetManager from "@/components/accountant/BudgetManager";
 import FinancialReports from "@/components/accountant/FinancialReports";
 import LedgerPreview from "@/components/accountant/LedgerPreview";
+import { Footer } from "@/components/Footer";
 import { FinanceApi } from "@/lib/api/domains/finance";
 import { PropertyApi } from "@/lib/api/domains/properties";
 
@@ -112,6 +113,9 @@ export default function AccountantDashboard() {
                     </section>
                 </div>
             </div>
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 }

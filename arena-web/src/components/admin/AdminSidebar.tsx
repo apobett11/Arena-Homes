@@ -1,10 +1,11 @@
 "use client";
 
-import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, UserCog, Key, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, UserCog, Key, FileText, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { safeMaybeSingle } from "@/lib/supabase/safe";
+import { AuthApi } from "@/lib/api/auth";
 
 const navItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin/dashboard" },
@@ -18,7 +19,15 @@ const navItems = [
 
 export default function AdminSidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [brandName, setBrandName] = useState("ArenaHomes");
+    
+    const handleLogout = async () => {
+        await AuthApi.logout();
+        localStorage.removeItem('user_role');
+        sessionStorage.removeItem('user_role');
+        router.replace('/auth/login');
+    };
 
     useEffect(() => {
         const loadBrand = async () => {
@@ -86,7 +95,7 @@ export default function AdminSidebar() {
 
                 {/* Admin User Profile */}
                 <div className="p-4 border-t border-slate-800 bg-slate-900">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-premium flex items-center justify-center text-sm font-bold text-white">
                             SA
                         </div>
@@ -98,6 +107,13 @@ export default function AdminSidebar() {
                             </div>
                         </div>
                     </div>
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-all text-sm"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                    </button>
                 </div>
             </div>
         </aside>

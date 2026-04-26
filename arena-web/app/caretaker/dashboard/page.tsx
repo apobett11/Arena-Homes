@@ -12,6 +12,7 @@ import { RoomsInventory } from "@/components/caretaker/RoomsInventory";
 import { IssuesTable } from "@/components/caretaker/IssuesTable";
 import { AnalyticsModule } from "@/components/caretaker/AnalyticsModule";
 import { ApplicationManager } from "@/components/caretaker/ApplicationManager";
+import { Footer } from "@/components/Footer";
 
 import { IssueApi } from "@/lib/api/domains/issues";
 import { MaintenanceApi } from "@/lib/api/domains/maintenance";
@@ -150,6 +151,9 @@ export default function CaretakerDashboard() {
                     </div>
                 </div>
             </section>
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 }

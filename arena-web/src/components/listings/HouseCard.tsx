@@ -28,6 +28,10 @@ export interface HouseProps {
         security?: boolean;
         internet?: boolean;
     };
+    // New fields
+    availableRooms?: number;
+    totalRooms?: number;
+    likesCount?: number;
 }
 
 export const HouseCard = ({
@@ -46,7 +50,10 @@ export const HouseCard = ({
     depositAmount,
     walkingTimeMinutes,
     lastUpdated,
-    amenities
+    amenities,
+    availableRooms,
+    totalRooms,
+    likesCount = 0
 }: HouseProps) => {
     // Determine badge color based on availability
     const getAvailabilityBadge = () => {
@@ -69,6 +76,11 @@ export const HouseCard = ({
     const displayDistance = walkingTimeMinutes 
         ? `${walkingTimeMinutes} min walk` 
         : distance;
+    
+    // Show available rooms text
+    const availableRoomsText = availableRooms !== undefined 
+        ? `${availableRooms} room${availableRooms !== 1 ? 's' : ''} avail.`
+        : vacancy;
 
     // Format last updated
     const getLastUpdatedText = () => {
@@ -99,13 +111,12 @@ export const HouseCard = ({
 
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                        {/* Availability Badge */}
-                        <span className={cn(
-                            "px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide",
-                            badge.class
-                        )}>
-                            {badge.text}
-                        </span>
+                        {/* Available Rooms Badge */}
+                        {availableRooms !== undefined && availableRooms > 0 && (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-emerald-500 text-white">
+                                {availableRoomsText}
+                            </span>
+                        )}
                         {/* Verified Badge */}
                         {(isVerified || verificationStatus === 'VERIFIED') && (
                             <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-500 text-white flex items-center gap-1">
@@ -115,12 +126,15 @@ export const HouseCard = ({
                         )}
                     </div>
 
-                    {/* Favorite Button */}
+                    {/* Favorite Button with Count */}
                     <button 
                         onClick={(e) => e.preventDefault()}
-                        className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/90 dark:bg-slate-800/90 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-md"
+                        className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-md"
                     >
-                        <Heart size={16} />
+                        <Heart size={14} />
+                        {likesCount > 0 && (
+                            <span className="text-xs font-semibold">{likesCount}</span>
+                        )}
                     </button>
 
                     {/* Price Badge */}
@@ -131,8 +145,8 @@ export const HouseCard = ({
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-5 flex-1 flex flex-col">
+                {/* Content - Smaller padding */}
+                <div className="p-3 flex-1 flex flex-col">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                             <Home size={14} className="text-primary" />
@@ -144,64 +158,64 @@ export const HouseCard = ({
                         </div>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors line-clamp-1">
                         {title}
                     </h3>
 
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-sm mb-3">
-                        <MapPin size={14} className="text-primary" />
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs mb-2">
+                        <MapPin size={12} className="text-primary" />
                         {location}
                     </div>
 
-                    {/* Amenities Row */}
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    {/* Amenities Row - Smaller */}
+                    <div className="flex flex-wrap gap-1.5 mb-2">
                         {(amenities?.water || water) && (
-                            <div className="flex items-center gap-1 text-primary text-xs font-medium bg-primary/10 px-2 py-1 rounded-md">
-                                <Droplets size={10} />
+                            <div className="flex items-center gap-1 text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded">
+                                <Droplets size={8} />
                                 <span>Water</span>
                             </div>
                         )}
                         {amenities?.electricity && (
-                            <div className="flex items-center gap-1 text-amber-600 text-xs font-medium bg-amber-100 px-2 py-1 rounded-md">
-                                <Zap size={10} />
+                            <div className="flex items-center gap-1 text-amber-600 text-[10px] font-medium bg-amber-100 px-1.5 py-0.5 rounded">
+                                <Zap size={8} />
                                 <span>Power</span>
                             </div>
                         )}
                         {amenities?.security && (
-                            <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium bg-emerald-100 px-2 py-1 rounded-md">
-                                <Shield size={10} />
+                            <div className="flex items-center gap-1 text-emerald-600 text-[10px] font-medium bg-emerald-100 px-1.5 py-0.5 rounded">
+                                <Shield size={8} />
                                 <span>Secure</span>
                             </div>
                         )}
                         {amenities?.internet && (
-                            <div className="flex items-center gap-1 text-blue-600 text-xs font-medium bg-blue-100 px-2 py-1 rounded-md">
-                                <Wifi size={10} />
+                            <div className="flex items-center gap-1 text-blue-600 text-[10px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">
+                                <Wifi size={8} />
                                 <span>WiFi</span>
                             </div>
                         )}
                     </div>
 
-                    {/* Deposit Info */}
+                    {/* Deposit Info - Smaller */}
                     {depositAmount && depositAmount > 0 && (
-                        <div className="text-xs text-slate-500 mb-2">
+                        <div className="text-[10px] text-slate-500 mb-1">
                             Deposit: KSh {depositAmount.toLocaleString()}
                         </div>
                     )}
 
-                    {/* Last Updated */}
+                    {/* Last Updated - Smaller margin */}
                     {getLastUpdatedText() && (
-                        <div className="text-[10px] text-slate-400 mb-2">
+                        <div className="text-[9px] text-slate-400 mb-1">
                             {getLastUpdatedText()}
                         </div>
                     )}
 
-                    {/* CTA */}
-                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">
+                    {/* CTA - Smaller */}
+                    <div className="mt-auto pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">
                             View Details
                         </span>
-                        <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all text-slate-400">
-                            <ArrowRight size={14} />
+                        <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all text-slate-400">
+                            <ArrowRight size={12} />
                         </div>
                     </div>
                 </div>

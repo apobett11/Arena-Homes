@@ -1,10 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Twitter, Instagram, Facebook, Mail, MapPin, Phone } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Home, Twitter, Instagram, Facebook, Mail, MapPin, Phone, LogOut } from "lucide-react";
+import { AuthApi } from "@/lib/api/auth";
 
 export const Footer = () => {
     const currentYear = new Date().getFullYear();
+    const router = useRouter();
+    
+    const handleLogout = async () => {
+        await AuthApi.logout();
+        localStorage.removeItem('user_role');
+        sessionStorage.removeItem('user_role');
+        router.replace('/auth/login');
+    };
     
     return (
         <footer className="bg-slate-900 text-slate-300">
@@ -42,14 +52,14 @@ export const Footer = () => {
                         <h4 className="text-white font-semibold text-sm mb-3">Quick Links</h4>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                             <ul className="space-y-2 text-xs">
-                                <li><Link href="/listings" className="text-slate-400 hover:text-primary transition-colors">Browse</Link></li>
-                                <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">How It Works</Link></li>
-                                <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">Resources</Link></li>
-                                <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">Safety</Link></li>
+                                <li><Link href="/listings" className="text-slate-400 hover:text-primary transition-colors">Browse Houses</Link></li>
+                                <li><Link href="/auth/login" className="text-slate-400 hover:text-primary transition-colors">Login</Link></li>
+                                <li><Link href="/tenant/dashboard" className="text-slate-400 hover:text-primary transition-colors">Tenant Portal</Link></li>
+                                <li><Link href="/caretaker/dashboard" className="text-slate-400 hover:text-primary transition-colors">Caretaker</Link></li>
                             </ul>
                             <ul className="space-y-2 text-xs">
-                                <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">List Property</Link></li>
-                                <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">Dashboard</Link></li>
+                                <li><Link href="/admin/dashboard" className="text-slate-400 hover:text-primary transition-colors">Admin</Link></li>
+                                <li><Link href="/accountant/dashboard" className="text-slate-400 hover:text-primary transition-colors">Accountant</Link></li>
                                 <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">Support</Link></li>
                                 <li><Link href="#" className="text-slate-400 hover:text-primary transition-colors">FAQs</Link></li>
                             </ul>
@@ -84,12 +94,19 @@ export const Footer = () => {
             {/* Bottom Bar */}
             <div className="border-t border-slate-800">
                 <div className="container mx-auto px-4 md:px-6 py-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-slate-500">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-500">
                         <p>© {currentYear} Arena Homes. All rights reserved.</p>
-                        <div className="flex gap-4">
+                        <div className="flex items-center gap-4">
                             <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
                             <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
                             <Link href="#" className="hover:text-primary transition-colors">Cookies</Link>
+                            <button 
+                                onClick={handleLogout}
+                                className="flex items-center gap-1.5 text-rose-400 hover:text-rose-300 transition-colors"
+                            >
+                                <LogOut size={12} />
+                                <span>Logout</span>
+                            </button>
                         </div>
                     </div>
                 </div>
