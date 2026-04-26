@@ -143,11 +143,11 @@ export default function LoginPage() {
                                             </ol>
                                             <div className="pt-2">
                                                 <Link 
-                                                    href="/" 
+                                                    href="/listings" 
                                                     className="inline-flex items-center gap-1.5 text-xs font-semibold underline hover:no-underline"
                                                 >
                                                     <ArrowLeft size={12} />
-                                                    Go to Homepage to Apply
+                                                    Go to Listings to Apply
                                                 </Link>
                                             </div>
                                         </div>
@@ -229,7 +229,7 @@ export default function LoginPage() {
                             <strong>New here?</strong> You need to apply for a property first.
                         </p>
                         <Link 
-                            href="/" 
+                            href="/listings" 
                             className="mt-2 flex items-center justify-center gap-2 text-sm text-primary hover:underline font-semibold"
                         >
                             <Send size={14} />

@@ -167,6 +167,12 @@ export default function AdminPropertiesPage() {
                                     const propertyUnits = units.filter((u) => u.property_id === property.id);
                                     const occupied = propertyUnits.filter((u) => u.status === "TAKEN").length;
                                     const occupancyRate = propertyUnits.length > 0 ? Math.round((occupied / propertyUnits.length) * 100) : 0;
+                                    // Use caretaker from relationship join if available
+                                    const caretakerName = property.caretaker?.full_name 
+                                        || property.caretaker?.email 
+                                        || (property.caretaker_employee_id ? "Caretaker Assigned" : null)
+                                        || property.facilities?.caretakerName 
+                                        || "Unassigned";
                                     return (
                                         <tr key={property.id} className="border-t border-slate-800">
                                             <td className="px-4 py-3 font-semibold text-white">{property.name || "Unnamed"}</td>
@@ -175,7 +181,14 @@ export default function AdminPropertiesPage() {
                                             <td className="px-4 py-3 text-slate-300">
                                                 {propertyUnits.length > 0 ? `${occupancyRate}% (${occupied}/${propertyUnits.length})` : "0% / N/A"}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-300">{property.facilities?.caretakerName || "Unassigned"}</td>
+                                            <td className="px-4 py-3 text-slate-300">
+                                                <div className="flex flex-col">
+                                                    <span>{caretakerName}</span>
+                                                    {property.caretaker?.phone_number && (
+                                                        <span className="text-xs text-slate-500">{property.caretaker.phone_number}</span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <button className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200">
                                                     Manage

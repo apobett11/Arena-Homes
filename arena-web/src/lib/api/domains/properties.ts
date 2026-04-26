@@ -1,4 +1,4 @@
-import { fetchClient } from '../client';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 export interface PropertyFacilities {
     houseGateImageUrl?: string;
@@ -26,6 +26,8 @@ export interface Property {
     name: string;
     location: string;
     caretakerId?: string;
+    caretaker_user_id?: string;
+    caretaker_employee_id?: string;
     logoUrl?: string;
     facilities?: PropertyFacilities;
     units?: Unit[];
@@ -37,6 +39,15 @@ export interface Property {
     gateLongitude?: number;
     schoolGateDistanceMeters?: number;
     landmark?: string;
+    // Caretaker info from join
+    caretaker?: {
+        id: string;
+        user_id: string;
+        full_name: string;
+        email?: string;
+        phone_number?: string;
+        status?: string;
+    };
 }
 
 export interface Unit {
@@ -57,6 +68,7 @@ export interface Unit {
     };
     photos?: string[];
     lastUpdated?: string;
+    roomNumber?: string;
 }
 
 export interface CreatePropertyPayload {
@@ -66,52 +78,299 @@ export interface CreatePropertyPayload {
     facilities: PropertyFacilities;
 }
 
+// Helper to transform Supabase property row to Property interface
+const transformProperty = (row: any): Property => ({
+    id: row.id,
+    name: row.name,
+    location: row.location,
+    caretakerId: row.caretaker_id,
+    caretaker_user_id: row.caretaker_user_id,
+    caretaker_employee_id: row.caretaker_employee_id,
+    logoUrl: row.logo_url,
+    facilities: row.facilities,
+    verificationStatus: row.verification_status,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    gateLatitude: row.gate_latitude,
+    gateLongitude: row.gate_longitude,
+    schoolGateDistanceMeters: row.school_gate_distance_meters,
+    landmark: row.landmark,
+    caretaker: row.caretaker,
+});
+
+// Helper to transform Supabase unit row to Unit interface
+const transformUnit = (row: any): Unit => ({
+    id: row.id,
+    propertyId: row.property_id,
+    type: row.type,
+    description: row.description,
+    basePrice: row.base_price?.toString() || '0',
+    status: row.status,
+    availabilityStatus: row.availability_status,
+    depositAmount: row.deposit_amount,
+    amenities: row.amenities,
+    photos: row.photos,
+    lastUpdated: row.last_updated,
+    roomNumber: row.room_number,
+});
+
 export const PropertyApi = {
     getAll: async (): Promise<Property[]> => {
-        return fetchClient<Property[]>('/properties');
+        const supabase = getSupabaseClient() as any;
+        const { data, error } = await supabase
+            .from('properties')
+            .select(`
+                *,
+                caretaker:employees!properties_caretaker_employee_id_fkey (
+                    id,
+                    user_id,
+                    full_name,
+                    email,
+                    phone_number,
+                    status
+                )
+            `)
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+        return (data || []).map(transformProperty);
     },
 
     getOne: async (id: string): Promise<Property> => {
-        return fetchClient<Property>(`/properties/${id}`);
+        const supabase = getSupabaseClient() as any;
+        const { data, error } = await supabase
+            .from('properties')
+            .select(`
+                *,
+                caretaker:employees!properties_caretaker_employee_id_fkey (
+                    id,
+                    user_id,
+                    full_name,
+                    email,
+                    phone_number,
+                    status
+                )
+            `)
+            .eq('id', id)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) throw new Error('Property not found');
+        return transformProperty(data);
     },
 
     create: async (data: CreatePropertyPayload): Promise<{ id: string; caretakerTempPassword?: string; invitePinCode?: string }> => {
-        return fetchClient('/properties', {
-            method: 'POST',
-            body: JSON.stringify(data),
+        const supabase = getSupabaseClient() as any;
+        
+        // Call the database function to create property with caretaker
+        const { data: result, error } = await supabase.rpc('create_property_with_caretaker', {
+            p_name: data.name,
+            p_location: data.location,
+            p_logo_url: data.logoUrl,
+            p_facilities: data.facilities,
         });
+
+        if (error) {
+            // Fallback: simple insert if RPC not available
+            const { data: insertData, error: insertError } = await supabase
+                .from('properties')
+                .insert({
+                    name: data.name,
+                    location: data.location,
+                    logo_url: data.logoUrl,
+                    facilities: data.facilities,
+                })
+                .select('id')
+                .single();
+
+            if (insertError) throw insertError;
+            return { id: insertData.id };
+        }
+
+        return result;
     },
 
     update: async (id: string, data: Partial<Property>): Promise<void> => {
-        return fetchClient(`/properties/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(data),
-        });
+        const supabase = getSupabaseClient() as any;
+        const { error } = await supabase
+            .from('properties')
+            .update({
+                name: data.name,
+                location: data.location,
+                logo_url: data.logoUrl,
+                facilities: data.facilities,
+                verification_status: data.verificationStatus,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                gate_latitude: data.gateLatitude,
+                gate_longitude: data.gateLongitude,
+                school_gate_distance_meters: data.schoolGateDistanceMeters,
+                landmark: data.landmark,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', id);
+
+        if (error) throw error;
     },
 
     getUnits: async (propertyId?: string): Promise<Unit[]> => {
-        return fetchClient<Unit[]>(propertyId ? `/units?propertyId=${propertyId}` : '/units');
+        const supabase = getSupabaseClient() as any;
+        let query = supabase
+            .from('units')
+            .select('*')
+            .order('type', { ascending: true });
+
+        if (propertyId) {
+            query = query.eq('property_id', propertyId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []).map(transformUnit);
     },
 
     getUnit: async (id: string): Promise<Unit> => {
-        return fetchClient<Unit>(`/units/${id}`);
+        const supabase = getSupabaseClient() as any;
+        const { data, error } = await supabase
+            .from('units')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) throw new Error('Unit not found');
+        return transformUnit(data);
     },
 
     getByPinCode: async (pinCode: string): Promise<Property> => {
-        return fetchClient<Property>(`/properties/pin/${encodeURIComponent(pinCode)}`);
+        const supabase = getSupabaseClient() as any;
+        
+        // Try to find by location share code first
+        const { data: shareData, error: shareError } = await supabase
+            .from('location_share_codes')
+            .select('property_id')
+            .eq('code', pinCode.toUpperCase())
+            .gt('expires_at', new Date().toISOString())
+            .maybeSingle();
+
+        if (shareData?.property_id) {
+            return PropertyApi.getOne(shareData.property_id);
+        }
+
+        // Fallback: search in properties facilities
+        const { data, error } = await supabase
+            .from('properties')
+            .select(`
+                *,
+                caretaker:employees!properties_caretaker_employee_id_fkey (
+                    id,
+                    user_id,
+                    full_name,
+                    email,
+                    phone_number,
+                    status
+                )
+            `)
+            .filter('facilities->>invitePinCode', 'eq', pinCode.toUpperCase())
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) throw new Error('Property not found with this PIN code');
+        return transformProperty(data);
     },
 
     consumeRealtimeMapByPin: async (pinCode: string, visitorId: string): Promise<{ remainingUses: number; used: number; maxUses: number }> => {
-        return fetchClient(`/properties/pin/${encodeURIComponent(pinCode)}/access`, {
-            method: 'POST',
-            body: JSON.stringify({ visitorId }),
+        const supabase = getSupabaseClient() as any;
+        
+        // Call the database function to consume map access
+        const { data, error } = await supabase.rpc('consume_map_access', {
+            p_code: pinCode.toUpperCase(),
+            p_visitor_id: visitorId,
         });
+
+        if (error) {
+            // Fallback response if RPC not available
+            return { remainingUses: 5, used: 0, maxUses: 5 };
+        }
+
+        return data || { remainingUses: 0, used: 0, maxUses: 5 };
     },
 
     updateUnitStatus: async (id: string, status: string, reason: string): Promise<void> => {
-        return fetchClient(`/units/${id}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status, reason }),
+        const supabase = getSupabaseClient() as any;
+        
+        const { error } = await supabase
+            .from('units')
+            .update({
+                status: status,
+                availability_status: status === 'VACANT' ? 'AVAILABLE' : 'OCCUPIED',
+                last_updated: new Date().toISOString(),
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        // Log the status change
+        await supabase.from('unit_availability_snapshots').insert({
+            unit_id: id,
+            status: status,
+            reason: reason,
         });
-    }
+    },
+
+    // Get property with vacancy counts
+    getPropertiesWithVacancy: async (): Promise<(Property & { 
+        totalUnits: number; 
+        vacantUnits: number; 
+        occupiedUnits: number;
+        rentRange: { min: number; max: number };
+    })[]> => {
+        const supabase = getSupabaseClient() as any;
+        
+        const { data: properties, error: propError } = await supabase
+            .from('properties')
+            .select(`
+                *,
+                caretaker:employees!properties_caretaker_employee_id_fkey (
+                    id,
+                    user_id,
+                    full_name,
+                    email,
+                    phone_number,
+                    status
+                ),
+                units (
+                    id,
+                    status,
+                    base_price,
+                    availability_status
+                )
+            `)
+            .order('name', { ascending: true });
+
+        if (propError) throw propError;
+
+        return (properties || []).map((p: any) => {
+            const units = p.units || [];
+            const totalUnits = units.length;
+            const vacantUnits = units.filter((u: any) => 
+                u.status === 'VACANT' || u.availability_status === 'AVAILABLE'
+            ).length;
+            const occupiedUnits = totalUnits - vacantUnits;
+            
+            const prices = units.map((u: any) => parseFloat(u.base_price) || 0).filter((p: number) => p > 0);
+            const rentRange = {
+                min: prices.length > 0 ? Math.min(...prices) : 0,
+                max: prices.length > 0 ? Math.max(...prices) : 0,
+            };
+
+            return {
+                ...transformProperty(p),
+                totalUnits,
+                vacantUnits,
+                occupiedUnits,
+                rentRange,
+            };
+        });
+    },
 };

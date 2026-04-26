@@ -71,12 +71,22 @@ export default function TenantDashboard() {
                 setProfileName(userProfile?.full_name || "");
                 setProfilePhone(userProfile?.phone_number || "");
 
-                const { data: tenantRecordRaw } = await supabase.from('tenants').select('id, user_id, total_months_paid').eq('user_id', authData.user.id).maybeSingle();
+                // Fetch tenant with relationship columns
+                const { data: tenantRecordRaw } = await supabase
+                    .from('tenants')
+                    .select('id, user_id, total_months_paid, property_id, unit_id, caretaker_user_id, caretaker_employee_id, room_number')
+                    .eq('user_id', authData.user.id)
+                    .maybeSingle();
                 const tenantRecord = tenantRecordRaw as any;
                 setTenant(tenantRecord);
                 if (!tenantRecord?.id) return;
 
-                const { data: leaseRowsRaw } = await supabase.from('leases').select('id, tenant_id, unit_id, start_date, end_date, status, pdf_url').eq('tenant_id', tenantRecord.id).order('created_at', { ascending: false });
+                // Get lease for this tenant
+                const { data: leaseRowsRaw } = await supabase
+                    .from('leases')
+                    .select('id, tenant_id, unit_id, start_date, end_date, status, pdf_url')
+                    .eq('tenant_id', tenantRecord.id)
+                    .order('created_at', { ascending: false });
                 const leaseRows = (leaseRowsRaw ?? []) as any[];
                 const activeLease = leaseRows?.find((row) => row.status === 'ACTIVE') ?? leaseRows?.[0] ?? null;
                 setLease(activeLease);
@@ -88,33 +98,86 @@ export default function TenantDashboard() {
                     if (docs?.[0]?.file_url) setLeaseDocumentUrl(docs[0].file_url);
                 }
 
-                let propertyId: string | null = null;
+                // Use tenant relationship columns for property and unit
+                let propertyId: string | null = tenantRecord?.property_id || null;
+                let unitId: string | null = tenantRecord?.unit_id || activeLease?.unit_id || null;
 
-                if (activeLease?.unit_id) {
-                    const { data: unitRecordRaw } = await supabase.from('units').select('id, property_id, type').eq('id', activeLease.unit_id).maybeSingle();
+                // Fetch property using tenant's assigned property_id
+                if (propertyId) {
+                    const { data: propertyRecordRaw } = await supabase
+                        .from('properties')
+                        .select('id, name, logo_url, caretaker_id, caretaker_user_id, caretaker_employee_id')
+                        .eq('id', propertyId)
+                        .maybeSingle();
+                    const propertyRecord = propertyRecordRaw as any;
+                    setProperty(propertyRecord);
+                    
+                    // Fetch map location for property
+                    const { data: mapRaw } = await supabase
+                        .from('house_map_locations')
+                        .select('gate_label, plot_label, gate_lat, gate_lng, house_lat, house_lng')
+                        .eq('property_id', propertyId)
+                        .maybeSingle();
+                    const map = mapRaw as any;
+                    setMapLocation(map);
+                }
+
+                // Fetch unit using tenant's assigned unit_id
+                if (unitId) {
+                    const { data: unitRecordRaw } = await supabase
+                        .from('units')
+                        .select('id, property_id, type, room_number')
+                        .eq('id', unitId)
+                        .maybeSingle();
                     const unitRecord = unitRecordRaw as any;
                     setUnit(unitRecord);
-                    if (unitRecord?.property_id) {
+                    // Override property ID if unit has different property
+                    if (unitRecord?.property_id && !propertyId) {
                         propertyId = unitRecord.property_id;
-                        const { data: propertyRecordRaw } = await supabase.from('properties').select('id, name, logo_url, caretaker_id').eq('id', unitRecord.property_id).maybeSingle();
-                        const propertyRecord = propertyRecordRaw as any;
-                        setProperty(propertyRecord);
-                        const { data: mapRaw } = await supabase.from('house_map_locations').select('gate_label, plot_label, gate_lat, gate_lng, house_lat, house_lng').eq('property_id', unitRecord.property_id).maybeSingle();
-                        const map = mapRaw as any;
-                        setMapLocation(map);
+                    }
+                }
 
-                        if (propertyRecord?.caretaker_id) {
-                            const [{ data: caretakerProfileRaw }, { data: caretakerEmployeeRaw }] = await Promise.all([
-                                supabase.from('profiles').select('full_name, phone_number').eq('user_id', propertyRecord.caretaker_id).maybeSingle(),
-                                supabase.from('employees').select('full_name, phone_number').eq('user_id', propertyRecord.caretaker_id).maybeSingle(),
-                            ]);
-                            const caretakerProfile = caretakerProfileRaw as any;
-                            const caretakerEmployee = caretakerEmployeeRaw as any;
-                            setCaretaker({
-                                name: caretakerEmployee?.full_name || caretakerProfile?.full_name || 'Not assigned yet',
-                                phone: caretakerEmployee?.phone_number || caretakerProfile?.phone_number || 'Not assigned yet',
-                            });
-                        }
+                // Fetch caretaker using tenant's assigned caretaker IDs
+                const tenantCaretakerUserId = tenantRecord?.caretaker_user_id;
+                const tenantCaretakerEmployeeId = tenantRecord?.caretaker_employee_id;
+                
+                if (tenantCaretakerEmployeeId || tenantCaretakerUserId) {
+                    // Try employee lookup first (preferred)
+                    let caretakerData: any = null;
+                    
+                    if (tenantCaretakerEmployeeId) {
+                        const { data: empData } = await supabase
+                            .from('employees')
+                            .select('full_name, phone_number, email')
+                            .eq('id', tenantCaretakerEmployeeId)
+                            .maybeSingle();
+                        if (empData) caretakerData = empData;
+                    }
+                    
+                    // Fallback to profile lookup
+                    if (!caretakerData && tenantCaretakerUserId) {
+                        const { data: profileData } = await supabase
+                            .from('profiles')
+                            .select('full_name, phone_number')
+                            .eq('user_id', tenantCaretakerUserId)
+                            .maybeSingle();
+                        if (profileData) caretakerData = profileData;
+                    }
+                    
+                    // Use property caretaker as last resort
+                    if (!caretakerData && property?.caretaker_id) {
+                        const [{ data: caretakerProfileRaw }, { data: caretakerEmployeeRaw }] = await Promise.all([
+                            supabase.from('profiles').select('full_name, phone_number').eq('user_id', property.caretaker_id).maybeSingle(),
+                            supabase.from('employees').select('full_name, phone_number').eq('user_id', property.caretaker_id).maybeSingle(),
+                        ]);
+                        caretakerData = caretakerEmployeeRaw || caretakerProfileRaw;
+                    }
+                    
+                    if (caretakerData) {
+                        setCaretaker({
+                            name: caretakerData?.full_name || 'Not assigned yet',
+                            phone: caretakerData?.phone_number || 'Not assigned yet',
+                        });
                     }
                 }
 

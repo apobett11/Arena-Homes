@@ -2,18 +2,81 @@
 
 import { Search, MapPin, Home, DollarSign, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getSupabaseClient } from "@/lib/supabase/client";
+
+interface HeroStats {
+    propertyCount: number;
+    tenantCount: number;
+    availableRooms: number;
+    verifiedProperties: number;
+}
 
 export const Hero = () => {
     const router = useRouter();
     const [location, setLocation] = useState("");
     const [type, setType] = useState("");
     const [priceRange, setPriceRange] = useState("");
+    const [stats, setStats] = useState<HeroStats>({
+        propertyCount: 0,
+        tenantCount: 0,
+        availableRooms: 0,
+        verifiedProperties: 0,
+    });
+    const [statsLoading, setStatsLoading] = useState(true);
     const selectBaseClass =
         "border-none p-0 focus:ring-0 text-xs md:text-base font-medium w-full outline-none appearance-none cursor-pointer text-slate-900 dark:text-white truncate bg-white dark:bg-slate-800 rounded-md";
     const optionClass = "bg-white dark:bg-slate-800 text-slate-900 dark:text-white";
+
+    useEffect(() => {
+        async function loadStats() {
+            const supabase = getSupabaseClient();
+            try {
+                // Get property count
+                const { count: propertyCount } = await supabase
+                    .from('properties')
+                    .select('*', { count: 'exact', head: true });
+
+                // Get tenant count
+                const { count: tenantCount } = await supabase
+                    .from('tenants')
+                    .select('*', { count: 'exact', head: true });
+
+                // Get available rooms count
+                const { count: availableRooms } = await supabase
+                    .from('units')
+                    .select('*', { count: 'exact', head: true })
+                    .or('status.eq.VACANT,availability_status.eq.AVAILABLE');
+
+                // Get verified properties count
+                const { count: verifiedProperties } = await supabase
+                    .from('properties')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('verification_status', 'VERIFIED');
+
+                setStats({
+                    propertyCount: propertyCount || 0,
+                    tenantCount: tenantCount || 0,
+                    availableRooms: availableRooms || 0,
+                    verifiedProperties: verifiedProperties || 0,
+                });
+            } catch (e) {
+                console.error('Failed to load hero stats:', e);
+            } finally {
+                setStatsLoading(false);
+            }
+        }
+        loadStats();
+    }, []);
+
+    const formatNumber = (num: number): string => {
+        if (num >= 1000) {
+            return `${(num / 1000).toFixed(1)}k`;
+        }
+        return num.toString();
+    };
 
     const handleSearch = () => {
         const params = new URLSearchParams();
@@ -25,6 +88,20 @@ export const Hero = () => {
     };
 
     const heroImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
+
+    const displayStats = statsLoading
+        ? [
+            { value: "...", label: "Properties Listed" },
+            { value: "...", label: "Happy Students" },
+            { value: "...", label: "Available Rooms" },
+            { value: "...", label: "Verified" },
+        ]
+        : [
+            { value: formatNumber(stats.propertyCount), label: "Properties Listed" },
+            { value: formatNumber(stats.tenantCount), label: "Happy Students" },
+            { value: formatNumber(stats.availableRooms), label: "Available Rooms" },
+            { value: formatNumber(stats.verifiedProperties), label: "Verified" },
+        ];
 
     return (
         <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden">
@@ -159,12 +236,7 @@ export const Hero = () => {
                         transition={{ delay: 0.6, duration: 0.6 }}
                         className="mt-12 flex flex-wrap justify-center gap-8 md:gap-16"
                     >
-                        {[
-                            { value: "150+", label: "Properties Listed" },
-                            { value: "2,000+", label: "Happy Students" },
-                            { value: "4.8/5", label: "Student Rating" },
-                            { value: "24h", label: "Response Time" }
-                        ].map((stat, index) => (
+                        {displayStats.map((stat, index) => (
                             <div key={index} className="text-center">
                                 <span className="block text-2xl md:text-3xl font-bold text-white tracking-tight">{stat.value}</span>
                                 <span className="text-xs md:text-sm font-medium text-white/70">{stat.label}</span>
