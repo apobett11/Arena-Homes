@@ -1,5 +1,10 @@
 import { getSupabaseClient } from '@/lib/supabase/client';
 
+// ============================================================================
+// DEPRECATED: Use UniversalApi from './universal' for new code
+// This file is kept for backward compatibility
+// ============================================================================
+
 export interface PropertyFacilities {
     houseGateImageUrl?: string;
     ownerType?: string;
@@ -318,7 +323,7 @@ export const PropertyApi = {
         });
     },
 
-    // Get property with vacancy counts
+    // Get property with vacancy counts - NOW USES admin_properties_view
     getPropertiesWithVacancy: async (): Promise<(Property & { 
         totalUnits: number; 
         vacantUnits: number; 
@@ -327,50 +332,43 @@ export const PropertyApi = {
     })[]> => {
         const supabase = getSupabaseClient() as any;
         
+        // Use the admin_properties_view for cleaner, faster queries
         const { data: properties, error: propError } = await supabase
-            .from('properties')
-            .select(`
-                *,
-                caretaker:employees!properties_caretaker_employee_id_fkey (
-                    id,
-                    user_id,
-                    full_name,
-                    email,
-                    phone_number,
-                    status
-                ),
-                units (
-                    id,
-                    status,
-                    base_price,
-                    availability_status
-                )
-            `)
-            .order('name', { ascending: true });
+            .from('admin_properties_view')
+            .select('*')
+            .order('property_name', { ascending: true });
 
-        if (propError) throw propError;
+        if (propError) {
+            console.error('Error fetching properties from view:', propError);
+            throw propError;
+        }
 
-        return (properties || []).map((p: any) => {
-            const units = p.units || [];
-            const totalUnits = units.length;
-            const vacantUnits = units.filter((u: any) => 
-                u.status === 'VACANT' || u.availability_status === 'AVAILABLE'
-            ).length;
-            const occupiedUnits = totalUnits - vacantUnits;
-            
-            const prices = units.map((u: any) => parseFloat(u.base_price) || 0).filter((p: number) => p > 0);
-            const rentRange = {
-                min: prices.length > 0 ? Math.min(...prices) : 0,
-                max: prices.length > 0 ? Math.max(...prices) : 0,
-            };
-
-            return {
-                ...transformProperty(p),
-                totalUnits,
-                vacantUnits,
-                occupiedUnits,
-                rentRange,
-            };
-        });
+        return (properties || []).map((p: any) => ({
+            id: p.property_id,
+            name: p.property_name,
+            location: p.location,
+            propertyType: p.property_type,
+            caretakerId: p.caretaker_user_id,
+            caretaker_user_id: p.caretaker_user_id,
+            caretaker_employee_id: p.caretaker_employee_id,
+            caretaker: p.caretaker_full_name ? {
+                id: p.caretaker_employee_id,
+                user_id: p.caretaker_user_id,
+                full_name: p.caretaker_full_name,
+                email: p.caretaker_email,
+                phone_number: p.caretaker_phone_number,
+            } : null,
+            logoUrl: null,
+            verificationStatus: p.verification_status,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            totalUnits: p.total_rooms,
+            vacantUnits: p.vacant_rooms,
+            occupiedUnits: p.occupied_rooms,
+            rentRange: {
+                min: p.price_min || 0,
+                max: p.price_max || 0,
+            },
+        }));
     },
 };
