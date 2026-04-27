@@ -1,155 +1,504 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { IdentityCard } from "@/components/caretaker/IdentityCard";
-import { PlotMap } from "@/components/caretaker/PlotMap";
-import { ActionGrid } from "@/components/caretaker/ActionGrid";
-import { QuickStats } from "@/components/caretaker/QuickStats";
-import { RecentActivity } from "@/components/caretaker/RecentActivity";
-import { RoomsInventory } from "@/components/caretaker/RoomsInventory";
-import { IssuesTable } from "@/components/caretaker/IssuesTable";
-import { AnalyticsModule } from "@/components/caretaker/AnalyticsModule";
-import { ApplicationManager } from "@/components/caretaker/ApplicationManager";
+import { AlertCircle, RefreshCw, Home, DoorOpen, Users, Wrench, FileText, Bell, MessageSquare, ClipboardList, Settings } from "lucide-react";
 
-import { IssueApi } from "@/lib/api/domains/issues";
-import { MaintenanceApi } from "@/lib/api/domains/maintenance";
-import { PropertyApi } from "@/lib/api/domains/properties";
+// Import new data layer
+import {
+  getCaretakerDashboardData,
+  getCaretakerProperty,
+  getCaretakerUnits,
+  getCaretakerTenants,
+  getCaretakerLeases,
+  getCaretakerIssues,
+  getCaretakerRepairs,
+  getCaretakerRules,
+  getCaretakerFaqs,
+  getCaretakerFacilities,
+  getCaretakerInventory,
+  getCaretakerApplications,
+  getCaretakerAnnouncements,
+} from "@/lib/caretaker/dashboard";
+import type {
+  CaretakerDashboardData,
+  CaretakerProperty,
+  CaretakerUnit,
+  CaretakerTenant,
+  CaretakerLease,
+  CaretakerIssue,
+  CaretakerRepair,
+  CaretakerRule,
+  CaretakerFaq,
+  CaretakerFacilities,
+  CaretakerInventoryItem,
+  CaretakerApplication,
+  CaretakerAnnouncement,
+} from "@/lib/caretaker/types";
+
+// Dashboard sections
+import { IdentityCard } from "@/components/caretaker/IdentityCard";
+import { QuickStats } from "@/components/caretaker/QuickStats";
+import { IssuesPanel } from "@/components/caretaker/IssuesPanel";
+import { UnitsPanel } from "@/components/caretaker/UnitsPanel";
+import { TenantsPanel } from "@/components/caretaker/TenantsPanel";
+import { RepairsPanel } from "@/components/caretaker/RepairsPanel";
+import { AnnouncementsPanel } from "@/components/caretaker/AnnouncementsPanel";
+import { ApplicationsPanel } from "@/components/caretaker/ApplicationsPanel";
+import { RulesFaqsPanel } from "@/components/caretaker/RulesFaqsPanel";
+import { FacilitiesInventoryPanel } from "@/components/caretaker/FacilitiesInventoryPanel";
+import { LeasesPanel } from "@/components/caretaker/LeasesPanel";
+
+type TabId = "overview" | "units" | "tenants" | "issues" | "repairs" | "applications" | "rules" | "announcements" | "leases";
+
+interface DashboardState {
+  dashboard: CaretakerDashboardData | null;
+  property: CaretakerProperty | null;
+  units: CaretakerUnit[];
+  tenants: CaretakerTenant[];
+  leases: CaretakerLease[];
+  issues: CaretakerIssue[];
+  repairs: CaretakerRepair[];
+  rules: CaretakerRule[];
+  faqs: CaretakerFaq[];
+  facilities: CaretakerFacilities | null;
+  inventory: CaretakerInventoryItem[];
+  applications: CaretakerApplication[];
+  announcements: { incoming: CaretakerAnnouncement[]; outgoing: CaretakerAnnouncement[] };
+  loading: boolean;
+  error: string | null;
+}
+
+const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "overview", label: "Overview", icon: Home },
+  { id: "units", label: "Units", icon: DoorOpen },
+  { id: "tenants", label: "Tenants", icon: Users },
+  { id: "issues", label: "Issues", icon: Wrench },
+  { id: "repairs", label: "Repairs", icon: Settings },
+  { id: "applications", label: "Applications", icon: ClipboardList },
+  { id: "rules", label: "Rules & FAQs", icon: FileText },
+  { id: "announcements", label: "Announcements", icon: Bell },
+  { id: "leases", label: "Leases", icon: FileText },
+];
 
 export default function CaretakerDashboard() {
-    const [stats, setStats] = useState({
-        totalOpenIssues: 0,
-        pendingMaintenance: 0,
-        vacantUnits: 0,
-        totalUnits: 0
-    });
-    const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [state, setState] = useState<DashboardState>({
+    dashboard: null,
+    property: null,
+    units: [],
+    tenants: [],
+    leases: [],
+    issues: [],
+    repairs: [],
+    rules: [],
+    faqs: [],
+    facilities: null,
+    inventory: [],
+    applications: [],
+    announcements: { incoming: [], outgoing: [] },
+    loading: true,
+    error: null,
+  });
 
-    useEffect(() => {
-        gsap.registerPlugin(ScrollTrigger);
+  const loadData = useCallback(async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
-        async function loadData() {
-            try {
-                const [issues, maintenance, units] = await Promise.all([
-                    IssueApi.getAll(),
-                    MaintenanceApi.getAll(),
-                    PropertyApi.getUnits() // Assumption: Caretaker sees all or backend filters
-                ]);
+    try {
+      // Fetch dashboard data first (this gives us assigned_property_id)
+      const dashboard = await getCaretakerDashboardData();
 
-                const openIssues = issues.filter(i => i.status === 'OPEN').length;
-                const pendingMaint = maintenance.filter(m => m.status === 'SCHEDULED').length;
-                const vacant = units.filter(u => u.status === 'VACANT').length;
+      if (!dashboard) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: "No caretaker dashboard data found. Ensure you are logged in as a caretaker with an assigned property.",
+        }));
+        return;
+      }
 
-                setStats({
-                    totalOpenIssues: openIssues,
-                    pendingMaintenance: pendingMaint,
-                    vacantUnits: vacant,
-                    totalUnits: units.length
-                });
+      if (!dashboard.assigned_property_id) {
+        setState((prev) => ({
+          ...prev,
+          dashboard,
+          loading: false,
+          error: "No property has been assigned to your caretaker account yet. Contact admin.",
+        }));
+        return;
+      }
 
-            } catch (err) {
-                console.error("Failed to load caretaker data", err);
-            } finally {
-                setLoading(false);
-            }
-        }
-        loadData();
+      const propertyId = dashboard.assigned_property_id;
 
-        // Reveal animation (delayed slightly to wait for layout)
-        const sections = document.querySelectorAll("section, .reveal-module");
-        sections.forEach((section) => {
-            gsap.fromTo(
-                section,
-                { opacity: 0, y: 30 },
-                {
-                    opacity: 1,
-                    y: 0,
-                    duration: 1,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: section,
-                        start: "top 85%",
-                        toggleActions: "play none none none",
-                    },
-                }
-            );
-        });
-    }, []);
+      // Fetch all related data in parallel
+      const [
+        property,
+        units,
+        tenants,
+        leases,
+        issues,
+        repairs,
+        rules,
+        faqs,
+        facilities,
+        inventory,
+        applications,
+        announcements,
+      ] = await Promise.all([
+        getCaretakerProperty(propertyId),
+        getCaretakerUnits(propertyId),
+        getCaretakerTenants(propertyId),
+        getCaretakerLeases(propertyId),
+        getCaretakerIssues(propertyId),
+        getCaretakerRepairs(propertyId),
+        getCaretakerRules(propertyId),
+        getCaretakerFaqs(propertyId),
+        getCaretakerFacilities(propertyId),
+        getCaretakerInventory(propertyId),
+        getCaretakerApplications(propertyId),
+        getCaretakerAnnouncements(propertyId, dashboard.caretaker_employee_id),
+      ]);
 
+      setState({
+        dashboard,
+        property,
+        units,
+        tenants,
+        leases,
+        issues,
+        repairs,
+        rules,
+        faqs,
+        facilities,
+        inventory,
+        applications,
+        announcements,
+        loading: false,
+        error: null,
+      });
+    } catch (err) {
+      console.error("Failed to load caretaker data:", err);
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        error: err instanceof Error ? err.message : "Failed to load dashboard data",
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    loadData();
+
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, [loadData]);
+
+  // Refresh button animation
+  const handleRefresh = () => {
+    loadData();
+  };
+
+  if (state.loading) {
     return (
-        <div className="space-y-6">
-            {/* Identity & Top Stats */}
-            <IdentityCard />
-
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
-                {/* Left Column - Main Map & Actions */}
-                <div className="xl:col-span-2 space-y-8">
-                    <PlotMap />
-                    <QuickStats stats={stats} loading={loading} />
-                    <ActionGrid />
-                </div>
-
-                {/* Right Column - Secondary Info */}
-                <div className="space-y-8">
-                    <ApplicationManager />
-                    <RecentActivity />
-                    <AnalyticsModule />
-
-                    {/* Quick Plot Rules Teaser */}
-                    <div className="glass rounded-3xl p-6 border border-slate-200 dark:border-white/15 reveal-module bg-white dark:bg-slate-900/40 shadow-sm">
-                        <h3 className="text-slate-900 dark:text-white font-bold mb-4 uppercase tracking-widest text-sm">Plot Rules Overview</h3>
-                        <ul className="space-y-3">
-                            {["No loud music after 10 PM", "Ensure gate is locked at all times", "No sub-letting allowed", "Garbage collection every Tuesday"].map((rule, i) => (
-                                <li key={i} className="flex gap-3 text-sm text-slate-600 dark:text-slate-200 font-medium">
-                                    <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0 font-bold text-[10px]">{i + 1}</span>
-                                    {rule}
-                                </li>
-                            ))}
-                        </ul>
-                        <button className="w-full mt-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/40 text-slate-700 dark:text-white text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-900 transition-all border border-slate-200 dark:border-white/10 uppercase tracking-widest">
-                            Update Rules
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Full Width Modules */}
-            <div className="pt-8 border-t border-slate-200 dark:border-white/10 space-y-12">
-                <RoomsInventory vacantCount={stats.vacantUnits} totalCount={stats.totalUnits} />
-                <IssuesTable />
-            </div>
-
-            {/* Lease & Payments Registry Teaser */}
-            <section className="glass rounded-3xl p-8 border border-slate-200 dark:border-white/15 bg-white dark:bg-slate-950 shadow-sm">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Lease & Payments Registry</h2>
-                        <p className="text-slate-600 dark:text-slate-300 mt-2 max-w-xl font-medium">
-                            Access official lease documents, payment history (past 4 months), and export reports for audit.
-                        </p>
-                        <div className="flex gap-4 mt-6">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Late Payments</span>
-                                <span className="text-xl font-bold text-rose-600 dark:text-rose-400">3 Cases</span>
-                            </div>
-                            <div className="w-px h-10 bg-slate-200 dark:bg-white/10" />
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Expiring Soon</span>
-                                <span className="text-xl font-bold text-amber-600 dark:text-amber-400">5 Leases</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                        <button className="px-8 py-3 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg uppercase tracking-widest">
-                            EXPORT PDF
-                        </button>
-                        <button className="px-8 py-3 bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-white border border-slate-300 dark:border-white/10 rounded-2xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-800 transition-all uppercase tracking-widest">
-                            VIEW ALL LEASES
-                        </button>
-                    </div>
-                </div>
-            </section>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-600 dark:text-slate-300 font-medium">Loading dashboard...</p>
         </div>
+      </div>
     );
+  }
+
+  if (state.error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-white/10 shadow-lg">
+          <div className="flex items-center gap-3 text-rose-500 mb-4">
+            <AlertCircle className="w-8 h-8" />
+            <h2 className="text-xl font-bold">Dashboard Error</h2>
+          </div>
+          <p className="text-slate-600 dark:text-slate-300 mb-6">{state.error}</p>
+          <button
+            onClick={handleRefresh}
+            className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!state.dashboard) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-white/10 shadow-lg text-center">
+          <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Dashboard Data</h2>
+          <p className="text-slate-600 dark:text-slate-300 mb-6">
+            Could not load caretaker dashboard. Please ensure you have the correct permissions.
+          </p>
+          <button
+            onClick={handleRefresh}
+            className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Identity and Refresh */}
+      <div className="flex items-center justify-between">
+        <IdentityCard
+          caretaker={state.dashboard}
+          property={state.property}
+          onRefresh={handleRefresh}
+          isRefreshing={state.loading}
+        />
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-slate-200 dark:border-white/10">
+        <nav className="flex gap-1 overflow-x-auto pb-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg ${
+                  isActive
+                    ? "text-primary border-b-2 border-primary bg-primary/5"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+                {tab.id === "issues" && state.issues.filter((i) => i.status === "PENDING").length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-rose-500 text-white text-[10px] rounded-full">
+                    {state.issues.filter((i) => i.status === "PENDING").length}
+                  </span>
+                )}
+                {tab.id === "applications" && state.applications.filter((a) => a.status === "PENDING").length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] rounded-full">
+                    {state.applications.filter((a) => a.status === "PENDING").length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="pb-8">
+        {activeTab === "overview" && (
+          <div className="space-y-8">
+            {/* Stats Row */}
+            <QuickStats
+              totalRooms={state.dashboard.total_rooms}
+              occupiedRooms={state.dashboard.occupied_rooms}
+              vacantRooms={state.dashboard.vacant_rooms}
+              tenantsCount={state.dashboard.tenants_count}
+              pendingIssues={state.dashboard.pending_issues_count}
+              resolvedIssues={state.dashboard.resolved_issues_count}
+              pendingRepairs={state.dashboard.pending_repairs_count}
+              solvedRepairs={state.dashboard.solved_repairs_count}
+              pendingApplications={state.dashboard.pending_applications_count}
+            />
+
+            {/* Quick Actions Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <QuickActionCard
+                title="Pending Issues"
+                count={state.dashboard.pending_issues_count}
+                icon={Wrench}
+                color="rose"
+                onClick={() => setActiveTab("issues")}
+              />
+              <QuickActionCard
+                title="Pending Applications"
+                count={state.dashboard.pending_applications_count}
+                icon={ClipboardList}
+                color="amber"
+                onClick={() => setActiveTab("applications")}
+              />
+              <QuickActionCard
+                title="Vacant Units"
+                count={state.dashboard.vacant_rooms}
+                icon={DoorOpen}
+                color="emerald"
+                onClick={() => setActiveTab("units")}
+              />
+            </div>
+
+            {/* Recent Issues Preview */}
+            {state.issues.length > 0 && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Issues</h3>
+                  <button
+                    onClick={() => setActiveTab("issues")}
+                    className="text-sm text-primary hover:text-primary/80 font-medium"
+                  >
+                    View All
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {state.issues.slice(0, 3).map((issue) => (
+                    <div
+                      key={issue.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            issue.priority === "URGENT"
+                              ? "bg-rose-500"
+                              : issue.priority === "HIGH"
+                              ? "bg-amber-500"
+                              : "bg-blue-500"
+                          }`}
+                        />
+                        <div>
+                          <p className="font-medium text-slate-900 dark:text-white text-sm">{issue.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {issue.tenant?.room_number || "No room"} • {issue.tenant?.full_name || "Unknown"}
+                          </p>
+                        </div>
+                      </div>
+                      <StatusBadge status={issue.status} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "units" && (
+          <UnitsPanel
+            units={state.units}
+            propertyId={state.dashboard.assigned_property_id!}
+            onDataChange={loadData}
+          />
+        )}
+
+        {activeTab === "tenants" && (
+          <TenantsPanel
+            tenants={state.tenants}
+            units={state.units}
+            propertyId={state.dashboard.assigned_property_id!}
+          />
+        )}
+
+        {activeTab === "issues" && (
+          <IssuesPanel
+            issues={state.issues}
+            propertyId={state.dashboard.assigned_property_id!}
+            onDataChange={loadData}
+          />
+        )}
+
+        {activeTab === "repairs" && (
+          <RepairsPanel
+            repairs={state.repairs}
+            issues={state.issues}
+            propertyId={state.dashboard.assigned_property_id!}
+            onDataChange={loadData}
+          />
+        )}
+
+        {activeTab === "applications" && (
+          <ApplicationsPanel
+            applications={state.applications}
+            propertyId={state.dashboard.assigned_property_id!}
+            onDataChange={loadData}
+          />
+        )}
+
+        {activeTab === "rules" && (
+          <RulesFaqsPanel
+            rules={state.rules}
+            faqs={state.faqs}
+            propertyId={state.dashboard.assigned_property_id!}
+            onDataChange={loadData}
+          />
+        )}
+
+        {activeTab === "announcements" && (
+          <AnnouncementsPanel
+            incoming={state.announcements.incoming}
+            outgoing={state.announcements.outgoing}
+            propertyId={state.dashboard.assigned_property_id!}
+            caretakerEmployeeId={state.dashboard.caretaker_employee_id}
+            onDataChange={loadData}
+          />
+        )}
+
+        {activeTab === "leases" && <LeasesPanel leases={state.leases} tenants={state.tenants} />}
+      </div>
+    </div>
+  );
+}
+
+// Helper Components
+function QuickActionCard({
+  title,
+  count,
+  icon: Icon,
+  color,
+  onClick,
+}: {
+  title: string;
+  count: number;
+  icon: React.ElementType;
+  color: "rose" | "amber" | "emerald" | "blue";
+  onClick: () => void;
+}) {
+  const colors = {
+    rose: "bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400",
+    amber: "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400",
+    emerald: "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+    blue: "bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-400",
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`p-4 rounded-xl border text-left transition-all hover:scale-[1.02] ${colors[color]}`}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-2xl font-bold">{count}</p>
+          <p className="text-sm font-medium opacity-80">{title}</p>
+        </div>
+        <Icon className="w-8 h-8 opacity-50" />
+      </div>
+    </button>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    PENDING: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400",
+    IN_PROGRESS: "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400",
+    RESOLVED: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+    ESCALATED: "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400",
+    CLOSED: "bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-400",
+  };
+
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status] || styles.PENDING}`}>
+      {status.replace("_", " ")}
+    </span>
+  );
 }

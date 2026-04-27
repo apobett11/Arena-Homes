@@ -1,83 +1,119 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { gsap } from "gsap";
+import React from "react";
+import { Home, DoorOpen, Users, Wrench, ClipboardCheck, ClipboardList } from "lucide-react";
 
 interface QuickStatsProps {
-    stats?: {
-        totalOpenIssues: number;
-        pendingMaintenance: number;
-        vacantUnits: number;
-        totalUnits: number;
-    };
-    loading?: boolean;
+  totalRooms: number;
+  occupiedRooms: number;
+  vacantRooms: number;
+  tenantsCount: number;
+  pendingIssues: number;
+  resolvedIssues: number;
+  pendingRepairs: number;
+  solvedRepairs: number;
+  pendingApplications: number;
 }
 
-export const QuickStats = ({ stats, loading }: QuickStatsProps) => {
-    const containerRef = useRef<HTMLDivElement>(null);
+export const QuickStats = ({
+  totalRooms,
+  occupiedRooms,
+  vacantRooms,
+  tenantsCount,
+  pendingIssues,
+  resolvedIssues,
+  pendingRepairs,
+  solvedRepairs,
+  pendingApplications,
+}: QuickStatsProps) => {
+  const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
-    const occupancyRate = stats && stats.totalUnits > 0
-        ? Math.round(((stats.totalUnits - stats.vacantUnits) / stats.totalUnits) * 100)
-        : 0;
+  const stats = [
+    {
+      label: "Total Rooms",
+      value: totalRooms,
+      icon: Home,
+      color: "bg-blue-500",
+      lightColor: "bg-blue-50 dark:bg-blue-500/10",
+      textColor: "text-blue-700 dark:text-blue-400",
+      subtext: `${occupiedRooms} occupied`,
+    },
+    {
+      label: "Vacant Units",
+      value: vacantRooms,
+      icon: DoorOpen,
+      color: "bg-emerald-500",
+      lightColor: "bg-emerald-50 dark:bg-emerald-500/10",
+      textColor: "text-emerald-700 dark:text-emerald-400",
+      subtext: "Available for rent",
+    },
+    {
+      label: "Tenants",
+      value: tenantsCount,
+      icon: Users,
+      color: "bg-purple-500",
+      lightColor: "bg-purple-50 dark:bg-purple-500/10",
+      textColor: "text-purple-700 dark:text-purple-400",
+      subtext: "Active tenants",
+    },
+    {
+      label: "Pending Issues",
+      value: pendingIssues,
+      icon: Wrench,
+      color: "bg-rose-500",
+      lightColor: "bg-rose-50 dark:bg-rose-500/10",
+      textColor: "text-rose-700 dark:text-rose-400",
+      subtext: `${resolvedIssues} resolved`,
+      alert: pendingIssues > 0,
+    },
+    {
+      label: "Repairs",
+      value: pendingRepairs,
+      icon: ClipboardCheck,
+      color: "bg-amber-500",
+      lightColor: "bg-amber-50 dark:bg-amber-500/10",
+      textColor: "text-amber-700 dark:text-amber-400",
+      subtext: `${solvedRepairs} completed`,
+    },
+    {
+      label: "Applications",
+      value: pendingApplications,
+      icon: ClipboardList,
+      color: "bg-cyan-500",
+      lightColor: "bg-cyan-50 dark:bg-cyan-500/10",
+      textColor: "text-cyan-700 dark:text-cyan-400",
+      subtext: "Pending review",
+      alert: pendingApplications > 0,
+    },
+  ];
 
-    const data = [
-        { label: "Occupancy Rate", value: occupancyRate, suffix: "%", color: "text-blue-500", barColor: "bg-blue-500" },
-        { label: "Vacant Units", value: stats?.vacantUnits ?? 0, color: "text-amber-500", barColor: "bg-amber-500" }, // Use vacant instead of pending rent
-        { label: "Maintenance", value: stats?.pendingMaintenance ?? 0, color: "text-rose-500", barColor: "bg-rose-500" },
-    ];
-
-    useEffect(() => {
-        if (containerRef.current && !loading) {
-            const counters = containerRef.current.querySelectorAll(".stat-value");
-
-            counters.forEach((counter) => {
-                const targetValue = parseInt(counter.getAttribute("data-value") || "0");
-                const obj = { val: 0 };
-
-                gsap.to(obj, {
-                    val: targetValue,
-                    duration: 1.5,
-                    ease: "power2.out",
-                    onUpdate: () => {
-                        counter.textContent = Math.floor(obj.val).toString();
-                    }
-                });
-            });
-        }
-    }, [loading, stats]);
-
-    return (
-        <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {data.map((stat, i) => (
-                <div
-                    key={i}
-                    className="glass rounded-3xl p-8 border border-slate-100 dark:border-white/15 flex flex-col justify-between min-h-[160px] bg-white dark:bg-slate-900/40 shadow-lg"
-                >
-                    <span className="text-slate-600 dark:text-slate-300 font-bold text-[11px] uppercase tracking-widest bg-slate-50 dark:bg-white/5 py-1 px-3 rounded-full self-start border border-slate-200 dark:border-transparent">
-                        {stat.label}
-                    </span>
-                    <div className="flex items-baseline gap-2 mt-4">
-                        <span
-                            className={`text-6xl font-bold tracking-tighter ${stat.color} stat-value`}
-                            data-value={stat.value}
-                        >
-                            {loading ? "-" : 0}
-                        </span>
-                        {stat.suffix && <span className="text-3xl font-bold text-slate-900 dark:text-white">{stat.suffix}</span>}
-                    </div>
-                    <div className="mt-4 flex items-center gap-2">
-                        {!loading && (
-                            <div className="h-2 flex-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/50 dark:border-transparent">
-                                <div
-                                    className={`h-full ${stat.barColor} opacity-90 dark:opacity-50`}
-                                    style={{ width: `${stat.label === 'Occupancy Rate' ? stat.value : Math.min((stat.value / 10) * 100, 100)}%` }}
-                                />
-                            </div>
-                        )}
-                        {loading && <div className="h-2 flex-1 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-full" />}
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {stats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <div
+            key={stat.label}
+            className={`p-4 rounded-xl border ${
+              stat.alert
+                ? "border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-500/5"
+                : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className={`p-2 rounded-lg ${stat.lightColor}`}>
+                <Icon className={`w-5 h-5 ${stat.textColor}`} />
+              </div>
+              {stat.alert && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </div>
+            <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{stat.label}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{stat.subtext}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
 };
