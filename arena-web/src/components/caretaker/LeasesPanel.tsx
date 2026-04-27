@@ -6,7 +6,7 @@ import type { CaretakerLease, CaretakerTenant } from "@/lib/caretaker/types";
 
 interface LeasesPanelProps {
   leases: CaretakerLease[];
-  tenants: CaretakerTenant[];
+  propertyId: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -16,7 +16,7 @@ const statusColors: Record<string, string> = {
   TERMINATED: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
 };
 
-export const LeasesPanel = ({ leases, tenants }: LeasesPanelProps) => {
+export const LeasesPanel = ({ leases, propertyId }: LeasesPanelProps) => {
   const [filter, setFilter] = useState<string>("all");
 
   const filteredLeases = leases.filter((lease) => {

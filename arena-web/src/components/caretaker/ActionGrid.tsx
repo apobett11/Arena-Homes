@@ -1,72 +1,57 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { gsap } from "gsap";
+import React from "react";
 import {
-    PlusCircle,
-    Send,
+    DoorOpen,
     Users,
     Wrench,
-    PieChart,
+    FileText,
+    Bell,
     Settings,
-    ArrowUpRight
+    Shield,
+    HelpCircle,
 } from "lucide-react";
 
+type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announcements" | "rules";
+
+interface ActionGridProps {
+    onTabChange: (tab: TabType) => void;
+    activeTab: TabType;
+}
+
 const actions = [
-    { id: 1, title: "Add / Edit Room", icon: PlusCircle, color: "bg-blue-500", desc: "Manage inventory" },
-    { id: 2, title: "Send Notification", icon: Send, color: "bg-purple-500", desc: "Bulk or individual" },
-    { id: 3, title: "View Tenants", icon: Users, color: "bg-emerald-500", desc: "Directory & history" },
-    { id: 4, title: "Maintenance", icon: Wrench, color: "bg-rose-500", desc: "Tickets & status" },
-    { id: 5, title: "Plot Analytics", icon: PieChart, color: "bg-amber-500", desc: "Occupancy & rent" },
-    { id: 6, title: "Settings", icon: Settings, color: "bg-slate-500", desc: "App preferences" },
+    { id: "units", label: "Manage Units", icon: DoorOpen, color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-50 dark:bg-blue-500/10", desc: "Rooms & availability" },
+    { id: "tenants", label: "View Tenants", icon: Users, color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-50 dark:bg-emerald-500/10", desc: "Tenant directory" },
+    { id: "issues", label: "Handle Issues", icon: Wrench, color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-50 dark:bg-rose-500/10", desc: "Maintenance requests" },
+    { id: "leases", label: "View Leases", icon: FileText, color: "text-purple-600 dark:text-purple-400", bgColor: "bg-purple-50 dark:bg-purple-500/10", desc: "Lease agreements" },
+    { id: "announcements", label: "Announcements", icon: Bell, color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-50 dark:bg-amber-500/10", desc: "Send notices" },
+    { id: "rules", label: "Rules & FAQ", icon: Shield, color: "text-cyan-600 dark:text-cyan-400", bgColor: "bg-cyan-50 dark:bg-cyan-500/10", desc: "Property policies" },
 ];
 
-export const ActionGrid = () => {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (containerRef.current) {
-            const items = containerRef.current.querySelectorAll(".action-card");
-            gsap.fromTo(
-                items,
-                { opacity: 0, scale: 0.9, y: 20 },
-                {
-                    opacity: 1,
-                    scale: 1,
-                    y: 0,
-                    duration: 0.5,
-                    stagger: 0.1,
-                    ease: "back.out(1.7)"
-                }
-            );
-        }
-    }, []);
-
+export const ActionGrid = ({ onTabChange, activeTab }: ActionGridProps) => {
     return (
-        <div ref={containerRef} className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-            {actions.map((action) => (
-                <button
-                    key={action.id}
-                    className="action-card group relative overflow-hidden glass rounded-3xl p-6 border border-slate-200 dark:border-white/15 text-left transition-all duration-300 hover:border-electric/50 hover:bg-slate-50 dark:hover:bg-slate-900/60 active:scale-95 bg-white dark:bg-slate-900/40"
-                >
-                    <div className="absolute top-4 right-4 text-slate-400 dark:text-white/40 group-hover:text-electric transition-colors">
-                        <ArrowUpRight className="w-5 h-5" />
-                    </div>
-
-                    <div className={`w-12 h-12 rounded-2xl ${action.color}/10 dark:${action.color}/20 flex items-center justify-center mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 border border-slate-300 dark:border-white/5`}>
-                        <action.icon className={`${action.title === 'Add / Edit Room' ? 'text-blue-600 dark:text-blue-400' :
-                            action.title === 'Send Notification' ? 'text-purple-600 dark:text-purple-400' :
-                                action.title === 'View Tenants' ? 'text-emerald-600 dark:text-emerald-400' :
-                                    action.title === 'Maintenance' ? 'text-rose-600 dark:text-rose-400' :
-                                        action.title === 'Plot Analytics' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-400'} w-6 h-6`} />
-                    </div>
-
-                    <h3 className="text-slate-900 dark:text-white font-bold text-lg">{action.title}</h3>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">{action.desc}</p>
-
-                    <div className="absolute bottom-0 left-0 h-1 w-0 bg-electric group-hover:w-full transition-all duration-500" />
-                </button>
-            ))}
+        <div className="flex flex-wrap gap-2">
+            {actions.map((action) => {
+                const Icon = action.icon;
+                const isActive = activeTab === action.id;
+                
+                return (
+                    <button
+                        key={action.id}
+                        onClick={() => onTabChange(action.id as TabType)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            isActive
+                                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <div className={`p-1 rounded ${isActive ? "bg-white/20" : action.bgColor}`}>
+                            <Icon className={`w-3.5 h-3.5 ${isActive ? "text-white dark:text-slate-900" : action.color}`} />
+                        </div>
+                        <span>{action.label}</span>
+                    </button>
+                );
+            })}
         </div>
     );
 };

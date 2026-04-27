@@ -2,19 +2,17 @@
 
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
     Home,
     DoorOpen,
     Users,
     MessageSquare,
     Settings,
-    LogOut,
     ChevronRight,
     ShieldCheck
 } from "lucide-react";
 import { gsap } from "gsap";
-import { AuthApi } from "@/lib/api/auth";
 
 const navItems = [
     { name: "Home", icon: Home, href: "/caretaker/dashboard" },
@@ -25,7 +23,6 @@ const navItems = [
 
 export const Sidebar = () => {
     const sidebarRef = useRef<HTMLDivElement>(null);
-    const router = useRouter();
 
     useEffect(() => {
         if (sidebarRef.current) {
@@ -68,7 +65,7 @@ export const Sidebar = () => {
                 ))}
             </nav>
 
-            <div className="mt-auto pt-6 border-t border-slate-200 dark:border-white/10 space-y-2">
+            <div className="mt-auto pt-6 border-t border-slate-200 dark:border-white/10">
                 <Link
                     href="#settings"
                     className="flex items-center gap-3 p-3 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 transition-all"
@@ -76,18 +73,6 @@ export const Sidebar = () => {
                     <Settings className="w-5 h-5" />
                     <span className="font-bold">Settings</span>
                 </Link>
-                <button
-                    onClick={async () => {
-                        await AuthApi.logout();
-                        localStorage.removeItem('user_role');
-                        sessionStorage.removeItem('user_role');
-                        router.replace('/auth/login');
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
-                >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Logout</span>
-                </button>
             </div>
         </aside>
     );

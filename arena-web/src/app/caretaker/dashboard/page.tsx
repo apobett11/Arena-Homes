@@ -426,7 +426,7 @@ export default function CaretakerDashboard() {
           />
         )}
 
-        {activeTab === "leases" && <LeasesPanel leases={state.leases} tenants={state.tenants} />}
+        {activeTab === "leases" && <LeasesPanel leases={state.leases} propertyId={state.dashboard.assigned_property_id!} />}
       </div>
     </div>
   );

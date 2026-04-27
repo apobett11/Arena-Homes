@@ -54,7 +54,7 @@ async function getCurrentUserId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-async function getCurrentCaretakerEmployee(): Promise<{ id: string; assigned_property_id: string | null } | null> {
+export async function getCurrentCaretakerEmployee(): Promise<{ id: string; assigned_property_id: string | null } | null> {
   const userId = await getCurrentUserId();
   if (!userId) return null;
 

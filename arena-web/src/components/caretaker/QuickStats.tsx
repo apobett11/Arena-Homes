@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { Home, DoorOpen, Users, Wrench, ClipboardCheck, ClipboardList } from "lucide-react";
+import { Home, DoorOpen, Users, Wrench, ClipboardCheck, Bell } from "lucide-react";
 
 interface QuickStatsProps {
-  // New interface props
   totalRooms?: number;
   occupiedRooms?: number;
   vacantRooms?: number;
@@ -14,14 +13,7 @@ interface QuickStatsProps {
   pendingRepairs?: number;
   solvedRepairs?: number;
   pendingApplications?: number;
-  // Legacy interface props for backward compatibility
-  stats?: {
-    totalOpenIssues: number;
-    pendingMaintenance: number;
-    vacantUnits: number;
-    totalUnits: number;
-  };
-  loading?: boolean;
+  incomingAnnouncements?: number;
 }
 
 export const QuickStats = ({
@@ -34,104 +26,104 @@ export const QuickStats = ({
   pendingRepairs = 0,
   solvedRepairs = 0,
   pendingApplications = 0,
-  stats,
-  loading,
+  incomingAnnouncements = 0,
 }: QuickStatsProps) => {
-  // Handle legacy props if provided
-  const displayTotalRooms = stats?.totalUnits ?? totalRooms;
-  const displayVacantRooms = stats?.vacantUnits ?? vacantRooms;
-  const displayOccupiedRooms = displayTotalRooms - displayVacantRooms;
-  const displayPendingIssues = stats?.totalOpenIssues ?? pendingIssues;
-  const displayPendingRepairs = stats?.pendingMaintenance ?? pendingRepairs;
-  const displayResolvedIssues = resolvedIssues;
-  const displaySolvedRepairs = solvedRepairs;
-  const displayTenants = tenantsCount;
-  const displayApplications = pendingApplications;
-  const occupancyRate = displayTotalRooms > 0 ? Math.round((displayOccupiedRooms / displayTotalRooms) * 100) : 0;
+  const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
   const statItems = [
     {
-      label: "Total Rooms",
-      value: displayTotalRooms,
+      label: "Total Units",
+      value: totalRooms,
+      subtext: `${occupancyRate}% occupied`,
       icon: Home,
-      color: "bg-blue-500",
-      lightColor: "bg-blue-50 dark:bg-blue-500/10",
-      textColor: "text-blue-700 dark:text-blue-400",
-      subtext: `${displayOccupiedRooms} occupied`,
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-500/10",
     },
     {
-      label: "Vacant Units",
-      value: displayVacantRooms,
+      label: "Occupied",
+      value: occupiedRooms,
+      subtext: `${vacantRooms} vacant`,
+      icon: Users,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-50 dark:bg-emerald-500/10",
+    },
+    {
+      label: "Vacant",
+      value: vacantRooms,
+      subtext: "Available",
       icon: DoorOpen,
-      color: "bg-emerald-500",
-      lightColor: "bg-emerald-50 dark:bg-emerald-500/10",
-      textColor: "text-emerald-700 dark:text-emerald-400",
-      subtext: "Available for rent",
+      color: "text-amber-600 dark:text-amber-400",
+      bgColor: "bg-amber-50 dark:bg-amber-500/10",
     },
     {
       label: "Tenants",
-      value: displayTenants,
+      value: tenantsCount,
+      subtext: "Active",
       icon: Users,
-      color: "bg-purple-500",
-      lightColor: "bg-purple-50 dark:bg-purple-500/10",
-      textColor: "text-purple-700 dark:text-purple-400",
-      subtext: "Active tenants",
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-500/10",
     },
     {
       label: "Pending Issues",
-      value: displayPendingIssues,
+      value: pendingIssues,
+      subtext: `${resolvedIssues} resolved`,
       icon: Wrench,
-      color: "bg-rose-500",
-      lightColor: "bg-rose-50 dark:bg-rose-500/10",
-      textColor: "text-rose-700 dark:text-rose-400",
-      subtext: `${displayResolvedIssues} resolved`,
-      alert: displayPendingIssues > 0,
+      color: pendingIssues > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-400",
+      bgColor: pendingIssues > 0 ? "bg-rose-50 dark:bg-rose-500/10" : "bg-slate-50 dark:bg-slate-500/10",
+      alert: pendingIssues > 0,
     },
     {
       label: "Repairs",
-      value: displayPendingRepairs,
+      value: pendingRepairs,
+      subtext: `${solvedRepairs} done`,
       icon: ClipboardCheck,
-      color: "bg-amber-500",
-      lightColor: "bg-amber-50 dark:bg-amber-500/10",
-      textColor: "text-amber-700 dark:text-amber-400",
-      subtext: `${displaySolvedRepairs} completed`,
+      color: "text-cyan-600 dark:text-cyan-400",
+      bgColor: "bg-cyan-50 dark:bg-cyan-500/10",
     },
     {
       label: "Applications",
-      value: displayApplications,
-      icon: ClipboardList,
-      color: "bg-cyan-500",
-      lightColor: "bg-cyan-50 dark:bg-cyan-500/10",
-      textColor: "text-cyan-700 dark:text-cyan-400",
-      subtext: "Pending review",
-      alert: displayApplications > 0,
+      value: pendingApplications,
+      subtext: "Pending",
+      icon: DoorOpen,
+      color: pendingApplications > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-400",
+      bgColor: "bg-amber-50 dark:bg-amber-500/10",
+      alert: pendingApplications > 0,
+    },
+    {
+      label: "Announcements",
+      value: incomingAnnouncements,
+      subtext: "Unread",
+      icon: Bell,
+      color: incomingAnnouncements > 0 ? "text-indigo-600 dark:text-indigo-400" : "text-slate-600 dark:text-slate-400",
+      bgColor: "bg-indigo-50 dark:bg-indigo-500/10",
+      alert: incomingAnnouncements > 0,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
       {statItems.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.label}
-            className={`p-4 rounded-xl border ${
+            className={`p-3 rounded-lg border ${
               stat.alert
                 ? "border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-500/5"
                 : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className={`p-2 rounded-lg ${stat.lightColor}`}>
-                <Icon className={`w-5 h-5 ${stat.textColor}`} />
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`p-1.5 rounded-md ${stat.bgColor}`}>
+                <Icon className={`w-3.5 h-3.5 ${stat.color}`} />
               </div>
               {stat.alert && (
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               )}
             </div>
-            <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{stat.label}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{stat.subtext}</p>
+            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">{stat.label}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-500">{stat.subtext}</p>
           </div>
         );
       })}

@@ -6,7 +6,7 @@ import { User, MapPin, Home, BarChart3, RefreshCw, ShieldCheck } from "lucide-re
 import type { CaretakerDashboardData, CaretakerProperty } from "@/lib/caretaker/types";
 
 interface IdentityCardProps {
-  caretaker?: CaretakerDashboardData;
+  caretaker?: CaretakerDashboardData | null;
   property?: CaretakerProperty | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
