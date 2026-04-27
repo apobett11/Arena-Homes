@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AlertCircle, RefreshCw, Home, DoorOpen, Users, Wrench, FileText, Bell, MessageSquare, ClipboardList, Settings } from "lucide-react";
 
-// Import new data layer
 import {
   getCaretakerDashboardData,
   getCaretakerProperty,
@@ -37,7 +34,6 @@ import type {
   CaretakerAnnouncement,
 } from "@/lib/caretaker/types";
 
-// Dashboard sections
 import { IdentityCard } from "@/components/caretaker/IdentityCard";
 import { QuickStats } from "@/components/caretaker/QuickStats";
 import { IssuesPanel } from "@/components/caretaker/IssuesPanel";
@@ -106,7 +102,6 @@ export default function CaretakerDashboard() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Fetch dashboard data first (this gives us assigned_property_id)
       const dashboard = await getCaretakerDashboardData();
 
       if (!dashboard) {
@@ -130,7 +125,6 @@ export default function CaretakerDashboard() {
 
       const propertyId = dashboard.assigned_property_id;
 
-      // Fetch all related data in parallel
       const [
         property,
         units,
@@ -187,15 +181,9 @@ export default function CaretakerDashboard() {
   }, []);
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
     loadData();
-
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    };
   }, [loadData]);
 
-  // Refresh button animation
   const handleRefresh = () => {
     loadData();
   };
@@ -254,7 +242,6 @@ export default function CaretakerDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Identity and Refresh */}
       <div className="flex items-center justify-between">
         <IdentityCard
           caretaker={state.dashboard}
@@ -264,7 +251,6 @@ export default function CaretakerDashboard() {
         />
       </div>
 
-      {/* Tab Navigation */}
       <div className="border-b border-slate-200 dark:border-white/10">
         <nav className="flex gap-1 overflow-x-auto pb-1">
           {tabs.map((tab) => {
@@ -298,11 +284,9 @@ export default function CaretakerDashboard() {
         </nav>
       </div>
 
-      {/* Tab Content */}
       <div className="pb-8">
         {activeTab === "overview" && (
           <div className="space-y-8">
-            {/* Stats Row */}
             <QuickStats
               totalRooms={state.dashboard.total_rooms}
               occupiedRooms={state.dashboard.occupied_rooms}
@@ -315,7 +299,6 @@ export default function CaretakerDashboard() {
               pendingApplications={state.dashboard.pending_applications_count}
             />
 
-            {/* Quick Actions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <QuickActionCard
                 title="Pending Issues"
@@ -340,7 +323,6 @@ export default function CaretakerDashboard() {
               />
             </div>
 
-            {/* Recent Issues Preview */}
             {state.issues.length > 0 && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -450,7 +432,6 @@ export default function CaretakerDashboard() {
   );
 }
 
-// Helper Components
 function QuickActionCard({
   title,
   count,

@@ -6,13 +6,26 @@ import { User, MapPin, Home, BarChart3, RefreshCw, ShieldCheck } from "lucide-re
 import type { CaretakerDashboardData, CaretakerProperty } from "@/lib/caretaker/types";
 
 interface IdentityCardProps {
-  caretaker: CaretakerDashboardData;
-  property: CaretakerProperty | null;
+  caretaker?: CaretakerDashboardData;
+  property?: CaretakerProperty | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
 
-export const IdentityCard = ({ caretaker, property, onRefresh, isRefreshing }: IdentityCardProps) => {
+export const IdentityCard = ({ 
+  caretaker, 
+  property, 
+  onRefresh, 
+  isRefreshing 
+}: IdentityCardProps) => {
+  // Handle missing props gracefully during build
+  if (!caretaker) {
+    return (
+      <div className="w-full rounded-2xl p-6 border border-slate-200 dark:border-white/10 shadow-lg bg-white dark:bg-slate-900">
+        <p className="text-slate-600 dark:text-slate-400">Loading caretaker data...</p>
+      </div>
+    );
+  }
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

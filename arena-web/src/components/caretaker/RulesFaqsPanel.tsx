@@ -124,7 +124,7 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
               isEditing={editingItem?.id === rule.id}
               onEdit={() => setEditingItem(rule)}
               onCancel={() => setEditingItem(null)}
-              onUpdate={(data) => handleUpdateRule(rule.id, data)}
+              onUpdate={(data: { title: string; description: string }) => handleUpdateRule(rule.id, data)}
               onDelete={() => handleDeleteRule(rule.id)}
             />
           ))}
@@ -139,7 +139,7 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
               isEditing={editingItem?.id === faq.id}
               onEdit={() => setEditingItem(faq)}
               onCancel={() => setEditingItem(null)}
-              onUpdate={(data) => handleUpdateFaq(faq.id, data)}
+              onUpdate={(data: { question: string; answer: string }) => handleUpdateFaq(faq.id, data)}
               onDelete={() => handleDeleteFaq(faq.id)}
             />
           ))}

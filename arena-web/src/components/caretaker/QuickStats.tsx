@@ -4,43 +4,64 @@ import React from "react";
 import { Home, DoorOpen, Users, Wrench, ClipboardCheck, ClipboardList } from "lucide-react";
 
 interface QuickStatsProps {
-  totalRooms: number;
-  occupiedRooms: number;
-  vacantRooms: number;
-  tenantsCount: number;
-  pendingIssues: number;
-  resolvedIssues: number;
-  pendingRepairs: number;
-  solvedRepairs: number;
-  pendingApplications: number;
+  // New interface props
+  totalRooms?: number;
+  occupiedRooms?: number;
+  vacantRooms?: number;
+  tenantsCount?: number;
+  pendingIssues?: number;
+  resolvedIssues?: number;
+  pendingRepairs?: number;
+  solvedRepairs?: number;
+  pendingApplications?: number;
+  // Legacy interface props for backward compatibility
+  stats?: {
+    totalOpenIssues: number;
+    pendingMaintenance: number;
+    vacantUnits: number;
+    totalUnits: number;
+  };
+  loading?: boolean;
 }
 
 export const QuickStats = ({
-  totalRooms,
-  occupiedRooms,
-  vacantRooms,
-  tenantsCount,
-  pendingIssues,
-  resolvedIssues,
-  pendingRepairs,
-  solvedRepairs,
-  pendingApplications,
+  totalRooms = 0,
+  occupiedRooms = 0,
+  vacantRooms = 0,
+  tenantsCount = 0,
+  pendingIssues = 0,
+  resolvedIssues = 0,
+  pendingRepairs = 0,
+  solvedRepairs = 0,
+  pendingApplications = 0,
+  stats,
+  loading,
 }: QuickStatsProps) => {
-  const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+  // Handle legacy props if provided
+  const displayTotalRooms = stats?.totalUnits ?? totalRooms;
+  const displayVacantRooms = stats?.vacantUnits ?? vacantRooms;
+  const displayOccupiedRooms = displayTotalRooms - displayVacantRooms;
+  const displayPendingIssues = stats?.totalOpenIssues ?? pendingIssues;
+  const displayPendingRepairs = stats?.pendingMaintenance ?? pendingRepairs;
+  const displayResolvedIssues = resolvedIssues;
+  const displaySolvedRepairs = solvedRepairs;
+  const displayTenants = tenantsCount;
+  const displayApplications = pendingApplications;
+  const occupancyRate = displayTotalRooms > 0 ? Math.round((displayOccupiedRooms / displayTotalRooms) * 100) : 0;
 
-  const stats = [
+  const statItems = [
     {
       label: "Total Rooms",
-      value: totalRooms,
+      value: displayTotalRooms,
       icon: Home,
       color: "bg-blue-500",
       lightColor: "bg-blue-50 dark:bg-blue-500/10",
       textColor: "text-blue-700 dark:text-blue-400",
-      subtext: `${occupiedRooms} occupied`,
+      subtext: `${displayOccupiedRooms} occupied`,
     },
     {
       label: "Vacant Units",
-      value: vacantRooms,
+      value: displayVacantRooms,
       icon: DoorOpen,
       color: "bg-emerald-500",
       lightColor: "bg-emerald-50 dark:bg-emerald-500/10",
@@ -49,7 +70,7 @@ export const QuickStats = ({
     },
     {
       label: "Tenants",
-      value: tenantsCount,
+      value: displayTenants,
       icon: Users,
       color: "bg-purple-500",
       lightColor: "bg-purple-50 dark:bg-purple-500/10",
@@ -58,38 +79,38 @@ export const QuickStats = ({
     },
     {
       label: "Pending Issues",
-      value: pendingIssues,
+      value: displayPendingIssues,
       icon: Wrench,
       color: "bg-rose-500",
       lightColor: "bg-rose-50 dark:bg-rose-500/10",
       textColor: "text-rose-700 dark:text-rose-400",
-      subtext: `${resolvedIssues} resolved`,
-      alert: pendingIssues > 0,
+      subtext: `${displayResolvedIssues} resolved`,
+      alert: displayPendingIssues > 0,
     },
     {
       label: "Repairs",
-      value: pendingRepairs,
+      value: displayPendingRepairs,
       icon: ClipboardCheck,
       color: "bg-amber-500",
       lightColor: "bg-amber-50 dark:bg-amber-500/10",
       textColor: "text-amber-700 dark:text-amber-400",
-      subtext: `${solvedRepairs} completed`,
+      subtext: `${displaySolvedRepairs} completed`,
     },
     {
       label: "Applications",
-      value: pendingApplications,
+      value: displayApplications,
       icon: ClipboardList,
       color: "bg-cyan-500",
       lightColor: "bg-cyan-50 dark:bg-cyan-500/10",
       textColor: "text-cyan-700 dark:text-cyan-400",
       subtext: "Pending review",
-      alert: pendingApplications > 0,
+      alert: displayApplications > 0,
     },
   ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {stats.map((stat) => {
+      {statItems.map((stat) => {
         const Icon = stat.icon;
         return (
           <div

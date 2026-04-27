@@ -6,7 +6,7 @@
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 // Cast to any to bypass strict typing until Supabase types are fully generated
-const getClient = () => getSupabaseClient() as any;
+const getClient = (): any => getSupabaseClient() as any;
 import type {
   CaretakerDashboardData,
   CaretakerProperty,
@@ -217,7 +217,7 @@ export async function setUnitStatus(
 // ============================================================================
 
 export async function getCaretakerTenants(propertyId: string): Promise<CaretakerTenant[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('tenants')
@@ -253,7 +253,7 @@ export async function getCaretakerTenants(propertyId: string): Promise<Caretaker
 }
 
 export async function getTenantById(tenantId: string): Promise<CaretakerTenant | null> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('tenants')
@@ -280,7 +280,7 @@ export async function getTenantById(tenantId: string): Promise<CaretakerTenant |
 // ============================================================================
 
 export async function getCaretakerLeases(propertyId: string): Promise<CaretakerLease[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('leases')
@@ -311,7 +311,7 @@ export async function getCaretakerLeases(propertyId: string): Promise<CaretakerL
 // ============================================================================
 
 export async function getCaretakerIssues(propertyId: string): Promise<CaretakerIssue[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('issues')
@@ -340,7 +340,7 @@ export async function updateCaretakerIssue(
   issueId: string,
   payload: UpdateIssuePayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const updates: Record<string, any> = {
     updated_at: new Date().toISOString(),
@@ -352,7 +352,7 @@ export async function updateCaretakerIssue(
 
   const { error } = await supabase
     .from('issues')
-    .update(updates)
+    .update(updates as any)
     .eq('id', issueId);
 
   if (error) {
@@ -376,7 +376,7 @@ export async function markIssueAsInProgress(issueId: string): Promise<{ success:
 // ============================================================================
 
 export async function getCaretakerRepairs(propertyId: string): Promise<CaretakerRepair[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('repairs')
@@ -408,7 +408,7 @@ export async function getCaretakerRepairs(propertyId: string): Promise<Caretaker
 export async function createCaretakerRepair(
   payload: CreateRepairPayload
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   // Get caretaker employee id
   const employee = await getCurrentCaretakerEmployee();
@@ -437,7 +437,7 @@ export async function updateCaretakerRepair(
   repairId: string,
   payload: UpdateRepairPayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const updates: Record<string, any> = {
     updated_at: new Date().toISOString(),
@@ -475,7 +475,7 @@ export async function markRepairAsSolved(
 // ============================================================================
 
 export async function getCaretakerRules(propertyId: string): Promise<CaretakerRule[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('property_rules')
@@ -494,7 +494,7 @@ export async function getCaretakerRules(propertyId: string): Promise<CaretakerRu
 export async function createCaretakerRule(
   payload: CreateRulePayload
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('property_rules')
@@ -519,7 +519,7 @@ export async function updateCaretakerRule(
   ruleId: string,
   payload: UpdateRulePayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const updates: Record<string, any> = {
     updated_at: new Date().toISOString(),
@@ -552,7 +552,7 @@ export async function deleteCaretakerRule(ruleId: string): Promise<{ success: bo
 // ============================================================================
 
 export async function getCaretakerFaqs(propertyId: string): Promise<CaretakerFaq[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('property_faqs')
@@ -571,7 +571,7 @@ export async function getCaretakerFaqs(propertyId: string): Promise<CaretakerFaq
 export async function createCaretakerFaq(
   payload: CreateFaqPayload
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('property_faqs')
@@ -596,7 +596,7 @@ export async function updateCaretakerFaq(
   faqId: string,
   payload: UpdateFaqPayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const updates: Record<string, any> = {
     updated_at: new Date().toISOString(),
@@ -628,7 +628,7 @@ export async function deleteCaretakerFaq(faqId: string): Promise<{ success: bool
 // ============================================================================
 
 export async function getCaretakerFacilities(propertyId: string): Promise<CaretakerFacilities | null> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('property_facilities')
@@ -647,7 +647,7 @@ export async function getCaretakerFacilities(propertyId: string): Promise<Careta
 export async function upsertCaretakerFacilities(
   payload: UpsertFacilitiesPayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
   const userId = await getCurrentUserId();
 
   const { data: existing } = await supabase
@@ -696,7 +696,7 @@ export async function upsertCaretakerFacilities(
 // ============================================================================
 
 export async function getCaretakerInventory(propertyId: string): Promise<CaretakerInventoryItem[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('property_inventory')
@@ -715,7 +715,7 @@ export async function getCaretakerInventory(propertyId: string): Promise<Caretak
 export async function createInventoryItem(
   payload: CreateInventoryPayload
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
   const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
@@ -741,7 +741,7 @@ export async function updateInventoryItem(
   itemId: string,
   payload: UpdateInventoryPayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
   const userId = await getCurrentUserId();
 
   const updates: Record<string, any> = {
@@ -772,7 +772,7 @@ export async function updateInventoryItem(
 // ============================================================================
 
 export async function getCaretakerApplications(propertyId: string): Promise<CaretakerApplication[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { data, error } = await supabase
     .from('tenant_applications')
@@ -798,7 +798,7 @@ export async function updateCaretakerApplication(
   applicationId: string,
   payload: UpdateApplicationPayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const updates: Record<string, any> = {
     updated_at: new Date().toISOString(),
@@ -858,7 +858,7 @@ export async function getCaretakerAnnouncements(propertyId: string, caretakerEmp
   incoming: CaretakerAnnouncement[];
   outgoing: CaretakerAnnouncement[];
 }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   // Incoming: targeted to caretaker or their property or global
   const { data: incoming, error: incomingError } = await supabase
@@ -892,7 +892,7 @@ export async function getCaretakerAnnouncements(propertyId: string, caretakerEmp
 export async function createCaretakerAnnouncement(
   payload: CreateAnnouncementPayload
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
   const { data: { user } } = await supabase.auth.getUser();
   const employee = await getCurrentCaretakerEmployee();
 
@@ -926,7 +926,7 @@ export async function createCaretakerAnnouncement(
 // ============================================================================
 
 export async function getCaretakerMessages(): Promise<CaretakerMessage[]> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
   const userId = await getCurrentUserId();
 
   if (!userId) return [];
@@ -962,7 +962,7 @@ export async function getCaretakerMessages(): Promise<CaretakerMessage[]> {
 export async function sendCaretakerMessage(
   payload: SendMessagePayload
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
   const userId = await getCurrentUserId();
 
   if (!userId) {
@@ -988,7 +988,7 @@ export async function sendCaretakerMessage(
 }
 
 export async function markMessageAsRead(messageId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   const { error } = await supabase
     .from('messages')
@@ -1008,7 +1008,7 @@ export async function markMessageAsRead(messageId: string): Promise<{ success: b
 // ============================================================================
 
 export async function getCaretakerDashboardDataFallback(): Promise<CaretakerDashboardData | null> {
-  const supabase = getSupabaseClient();
+  const supabase = getClient();
 
   // 1. Get current auth user
   const { data: { user } } = await supabase.auth.getUser();

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Bell, Moon, Sun, Search, User, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { gsap } from "gsap";
 
 export const TopBar = () => {
     const { theme, setTheme } = useTheme();
@@ -12,11 +11,6 @@ export const TopBar = () => {
 
     useEffect(() => {
         setMounted(true);
-        gsap.fromTo(
-            ".top-bar-item",
-            { opacity: 0, y: -10 },
-            { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" }
-        );
     }, []);
 
     if (!mounted) return null;
