@@ -12,9 +12,11 @@ export default function CaretakerLayout({
         <RoleGate allowedRoles={["CARETAKER", "ADMIN"]}>
             <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-primary/30 transition-colors duration-300">
                 {/* Sidebar - Desktop Only */}
-                <Sidebar />
+                <div className="hidden lg:block flex-shrink-0">
+                    <Sidebar />
+                </div>
 
-                <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
+                <div className="flex-1 flex flex-col min-w-0">
                     {/* Top Header */}
                     <TopBar />
 

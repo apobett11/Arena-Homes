@@ -37,7 +37,7 @@ export const Sidebar = () => {
     return (
         <aside
             ref={sidebarRef}
-            className="hidden lg:flex flex-col w-64 h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-white/10 sticky top-0 p-6 z-40"
+            className="hidden lg:flex flex-col w-64 min-h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-white/10 p-6 z-40"
         >
             <div className="flex items-center gap-3 mb-10 px-2">
                 <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
