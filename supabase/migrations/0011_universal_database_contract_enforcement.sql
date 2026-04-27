@@ -963,7 +963,6 @@ AS $$
 $$;
 
 -- Function: Check if user can manage a property
-DROP FUNCTION IF EXISTS public.can_manage_property(uuid);
 CREATE OR REPLACE FUNCTION public.can_manage_property(p_property_id uuid)
 RETURNS boolean
 LANGUAGE sql
