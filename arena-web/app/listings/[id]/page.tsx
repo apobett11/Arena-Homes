@@ -47,6 +47,22 @@ interface SiteSettings {
     business_hours?: string;
 }
 
+interface PropertyReview {
+    id: string;
+    tenant_id: string;
+    property_id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+}
+
+interface CaretakerInfo {
+    id: string;
+    full_name: string;
+    email?: string;
+    phone_number?: string;
+}
+
 // --- Dummy Data ---
 const defaultHouseData = {
     id: "1",
@@ -109,6 +125,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
     const [faqs, setFaqs] = useState<PropertyFAQ[]>([]);
     const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
     const [propertyId, setPropertyId] = useState<string | null>(null);
+    const [reviews, setReviews] = useState<PropertyReview[]>([]);
+    const [caretaker, setCaretaker] = useState<CaretakerInfo | null>(null);
     const [showShareModal, setShowShareModal] = useState(false);
     const [copied, setCopied] = useState(false);
     const [showApplyModal, setShowApplyModal] = useState(false);
@@ -196,6 +214,25 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     .select('*')
                     .maybeSingle();
                 if (settingsData) setSiteSettings(settingsData);
+
+                // Load property reviews
+                const { data: reviewsData } = await supabase
+                    .from('property_reviews')
+                    .select('*')
+                    .eq('property_id', property.id)
+                    .order('created_at', { ascending: false })
+                    .limit(4);
+                if (reviewsData) setReviews(reviewsData);
+
+                // Set caretaker info from property
+                if (property.caretaker) {
+                    setCaretaker({
+                        id: property.caretaker.id,
+                        full_name: property.caretaker.full_name,
+                        email: property.caretaker.email,
+                        phone_number: property.caretaker.phone_number
+                    });
+                }
 
             } catch (error) {
                 console.error("Failed to load listing details", error);
@@ -293,6 +330,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             const applicationData = {
                 unit_id: params.id,
                 property_id: propertyId,
+                caretaker_id: caretaker?.id || null,
                 full_name: applicationForm.fullName,
                 email: applicationForm.email,
                 phone_number: applicationForm.phone,
@@ -303,7 +341,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             
             if (error) throw error;
             
-            setSubmitMessage("Application submitted successfully! We'll contact you soon.");
+            setSubmitMessage("Application submitted successfully! The caretaker will contact you soon.");
             setApplicationForm({ fullName: "", email: "", phone: "", message: "" });
             setTimeout(() => setShowApplyModal(false), 2000);
         } catch (error) {
@@ -480,7 +518,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
 
                     <div className="mt-4 flex items-center justify-center gap-2 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold uppercase tracking-widest border border-blue-100 dark:border-blue-800/30">
                         <ShieldCheck size={14} />
-                        Fulfilled by Arena Homes
+                        Fulfilled by {caretaker?.full_name || "Arena Homes"}
                     </div>
                 </div>
 
@@ -519,23 +557,33 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold">What people say</h3>
-                        <Link href={`/listings/${houseData.id}/reviews`} className="text-primary text-sm font-bold hover:underline">View all</Link>
+                        {reviews.length > 0 && (
+                            <Link href={`/listings/${houseData.id}/reviews`} className="text-primary text-sm font-bold hover:underline">View all</Link>
+                        )}
                     </div>
                     <div className="space-y-3">
-                        {houseData.reviews.map((review) => (
-                            <div key={review.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-bold text-sm">{review.user}</h4>
-                                    <span className="text-[10px] text-slate-400 font-medium bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{review.date}</span>
-                                </div>
-                                <div className="flex text-amber-500 mb-2">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} size={10} fill={i < review.rating ? "currentColor" : "none"} className={i >= review.rating ? "text-slate-200 dark:text-zinc-700" : ""} />
-                                    ))}
-                                </div>
-                                <p className="text-xs text-slate-600 dark:text-slate-400 italic">&quot;{review.comment}&quot;</p>
+                        {reviews.length === 0 ? (
+                            <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 text-center">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet. Be the first to review!</p>
                             </div>
-                        ))}
+                        ) : (
+                            reviews.slice(0, 4).map((review) => (
+                                <div key={review.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-sm">Tenant</h4>
+                                        <span className="text-[10px] text-slate-400 font-medium bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
+                                            {new Date(review.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex text-amber-500 mb-2">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} size={10} fill={i < review.rating ? "currentColor" : "none"} className={i >= review.rating ? "text-slate-200 dark:text-zinc-700" : ""} />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 italic">&quot;{review.comment}&quot;</p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -751,7 +799,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                             Apply Now
                         </button>
                         <button 
-                            onClick={() => alert("Only tenants can chat with tenants. Please sign in as a tenant to access the chat feature.")}
+                            onClick={() => alert("We are working on the chat feature. Coming soon!")}
                             className="flex-1 sm:flex-none px-6 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap text-center"
                         >
                             Chat

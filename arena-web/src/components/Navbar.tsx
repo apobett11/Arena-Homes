@@ -66,7 +66,7 @@ export const Navbar = () => {
         sessionStorage.removeItem('refresh_token');
         setRole(null);
         setDashboardRoute('/auth/login');
-        router.replace('/auth/login');
+        router.replace('/');
     };
 
     if (!mounted) return null;

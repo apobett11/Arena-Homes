@@ -100,13 +100,6 @@ export const Footer = () => {
                             <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
                             <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
                             <Link href="#" className="hover:text-primary transition-colors">Cookies</Link>
-                            <button 
-                                onClick={handleLogout}
-                                className="flex items-center gap-1.5 text-rose-400 hover:text-rose-300 transition-colors"
-                            >
-                                <LogOut size={12} />
-                                <span>Logout</span>
-                            </button>
                         </div>
                     </div>
                 </div>

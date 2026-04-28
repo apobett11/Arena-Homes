@@ -98,9 +98,9 @@ function ListingsContent() {
                 const propertiesWithVacancy = await PropertyApi.getPropertiesWithVacancy();
                 
                 // Filter to only show properties with at least one vacant unit
-                // or properties with total units (to show availability)
+                // Fully occupied properties will not be shown
                 const mappedListings: HouseProps[] = propertiesWithVacancy
-                    .filter((p: any) => p.totalUnits > 0) // Only show properties with units
+                    .filter((p: any) => p.vacantUnits > 0) // Only show properties with vacant units
                     .map((p: any) => mapPropertyToHouseProps({
                         id: p.id,
                         name: p.name,

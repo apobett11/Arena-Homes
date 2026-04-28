@@ -1,39 +1,61 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Star, Filter, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
-const allReviews = [
-    { id: 1, user: "Sarah Jenkins", rating: 5, date: "2023-10-15", comment: "Absolutely loved staying here! The garden is magical, and the host was incredibly responsive." },
-    { id: 2, user: "Mike Rossi", rating: 4, date: "2023-10-10", comment: "Great location, very clean. A bit pricey but worth it for the amenities provided." },
-    { id: 3, user: "Jessica Lee", rating: 5, date: "2023-09-28", comment: "The security is top notch, felt very safe coming home late at night." },
-    { id: 4, user: "David Chen", rating: 4, date: "2023-09-20", comment: "Modern and stylish. The water pressure is amazing, unlike my last apartment." },
-    { id: 5, user: "Amanda White", rating: 3, date: "2023-09-15", comment: "Good place but the street noise can be a bit much on weekends." },
-    { id: 6, user: "Robert Black", rating: 5, date: "2023-09-02", comment: "Perfect for remote work. Fast internet and quiet neighbors." },
-    { id: 7, user: "Emily Davis", rating: 2, date: "2023-08-30", comment: "Had some issues with the AC, took a while to fix." },
-    { id: 8, user: "Chris Martin", rating: 5, date: "2023-08-25", comment: "Simply the best rental experience I've had in this city." },
-];
+interface PropertyReview {
+    id: string;
+    tenant_id: string;
+    property_id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+}
 
 type SortOption = "All" | "Latest" | "With Comments" | "Highest Rated" | "Lowest Rated";
 
 export default function ReviewsPage({ params }: { params: { id: string } }) {
     const [activeSort, setActiveSort] = useState<SortOption>("All");
+    const [reviews, setReviews] = useState<PropertyReview[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadReviews() {
+            try {
+                const supabase = getSupabaseClient();
+                const { data: reviewsData, error } = await supabase
+                    .from('property_reviews')
+                    .select('*')
+                    .eq('property_id', params.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                if (reviewsData) setReviews(reviewsData);
+            } catch (error) {
+                console.error("Failed to load reviews", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadReviews();
+    }, [params.id]);
 
     const getSortedReviews = () => {
-        let reviews = [...allReviews];
+        let sorted = [...reviews];
         switch (activeSort) {
             case "Latest":
-                return reviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
             case "Highest Rated":
-                return reviews.sort((a, b) => b.rating - a.rating);
+                return sorted.sort((a, b) => b.rating - a.rating);
             case "Lowest Rated":
-                return reviews.sort((a, b) => a.rating - b.rating);
+                return sorted.sort((a, b) => a.rating - b.rating);
             case "With Comments":
-                return reviews.filter(r => r.comment && r.comment.length > 0);
+                return sorted.filter(r => r.comment && r.comment.length > 0);
             default:
-                return reviews;
+                return sorted;
         }
     };
 
@@ -74,7 +96,11 @@ export default function ReviewsPage({ params }: { params: { id: string } }) {
 
                 {/* Reviews List */}
                 <div className="grid gap-4">
-                    {sortedReviews.length === 0 ? (
+                    {loading ? (
+                        <div className="text-center py-20 text-slate-500">
+                            <div className="animate-pulse">Loading reviews...</div>
+                        </div>
+                    ) : sortedReviews.length === 0 ? (
                         <div className="text-center py-20 text-slate-500">
                             <MessageCircle size={48} className="mx-auto mb-4 opacity-20" />
                             <p>No reviews found matching your filter.</p>
@@ -85,11 +111,11 @@ export default function ReviewsPage({ params }: { params: { id: string } }) {
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center font-bold text-sm">
-                                            {review.user.charAt(0)}
+                                            T
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-sm sm:text-base">{review.user}</h3>
-                                            <p className="text-xs text-slate-400">{review.date}</p>
+                                            <h3 className="font-bold text-sm sm:text-base">Tenant</h3>
+                                            <p className="text-xs text-slate-400">{new Date(review.created_at).toLocaleDateString()}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-0.5 text-amber-500 bg-amber-500/10 px-2 py-1 rounded-lg">
