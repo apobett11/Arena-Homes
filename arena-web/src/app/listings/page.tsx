@@ -10,25 +10,48 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PropertyApi, Property, Unit } from "@/lib/api/domains/properties";
 
-const unitTypeToLabel: Record<string, string> = {
-    SINGLE: "Single Room",
-    BEDSITTER: "Bedsitter",
-    ONE_BEDROOM: "One Bedroom",
-    TWO_BEDROOM: "Two Bedroom",
-    APARTMENT: "Apartment",
-};
+// Property with vacancy data
+interface PropertyWithVacancy {
+    id: string;
+    name: string;
+    location: string;
+    logoUrl?: string;
+    verificationStatus?: 'UNVERIFIED' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'SUSPENDED' | 'FLAGGED';
+    schoolGateDistanceMeters?: number;
+    landmark?: string;
+    totalUnits: number;
+    vacantUnits: number;
+    occupiedUnits: number;
+    rentRange: { min: number; max: number };
+    likes_count?: number;
+}
 
-// Helper to map API data to UI props
-const mapToHouseProps = (property: Property, unit: Unit): HouseProps => ({
-    id: unit.id,
-    title: `${property.name} - ${unitTypeToLabel[unit.type] || unit.type}`,
+// Helper to map property with vacancy to HouseProps
+// Uses PROPERTY ID (not unit ID) for navigation to detail page
+const mapPropertyToHouseProps = (property: PropertyWithVacancy): HouseProps => ({
+    id: property.id, // CRITICAL: Use PROPERTY ID for navigation to detail page
+    title: property.name,
     location: property.location,
-    price: parseFloat(unit.basePrice),
-    type: unitTypeToLabel[unit.type] || unit.type,
-    image: property.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`, // Fallback
-    distance: "0.5km", // Placeholder, backend API needs geo logic
-    vacancy: unit.status === 'VACANT' ? 'Available' : 'Limited',
-    water: true // Placeholder
+    price: property.rentRange.min > 0 ? property.rentRange.min : 2500,
+    type: property.vacantUnits > 0 ? `${property.vacantUnits} rooms available` : 'Fully Occupied',
+    image: property.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
+    distance: property.schoolGateDistanceMeters
+        ? `${(property.schoolGateDistanceMeters / 1000).toFixed(1)}km`
+        : "Near Campus",
+    vacancy: property.vacantUnits > 0 ? 'Available' : 'Occupied',
+    water: true,
+    // Trust signals
+    isVerified: property.verificationStatus === 'VERIFIED',
+    verificationStatus: property.verificationStatus,
+    availabilityStatus: property.vacantUnits > 0 ? 'AVAILABLE' : 'OCCUPIED',
+    depositAmount: undefined,
+    walkingTimeMinutes: property.schoolGateDistanceMeters ? Math.round(property.schoolGateDistanceMeters / 80) : undefined,
+    lastUpdated: undefined,
+    amenities: { water: true, electricity: true, security: true },
+    // Vacancy display
+    availableRooms: property.vacantUnits,
+    totalRooms: property.totalUnits,
+    likesCount: property.likes_count || 0,
 });
 
 function ListingsContent() {
@@ -65,35 +88,32 @@ function ListingsContent() {
         }
     }, [searchParams]);
 
-    // Data Fetching
+    // Data Fetching - Use properties with vacancy counts
     useEffect(() => {
         async function fetchListings() {
             try {
-                // Fetch properties (with units implied or separate?)
-                // Assuming properties endpoint returns basic info. We might need units.
-                // Let's try fetching properties, and if they have units, good.
-                // If not, we might need a specific '/listings' endpoint in real world.
-                // Phase 4 Backend `PropertyRepository.get` returns units, `list` might not.
-                // I'll fetch units directly via `getUnits` and properties via `getAll`.
-                const [properties, units] = await Promise.all([
-                    PropertyApi.getAll(),
-                    PropertyApi.getUnits()
-                ]);
+                // Use the PropertyApi to get properties with vacancy info
+                const propertiesWithVacancy = await PropertyApi.getPropertiesWithVacancy();
 
-                // Map units to houses
-                const mapped: HouseProps[] = [];
+                // Filter to only show properties with at least one vacant unit
+                // Fully occupied properties will not be shown
+                const mappedListings: HouseProps[] = propertiesWithVacancy
+                    .filter((p: any) => p.vacantUnits > 0) // Only show properties with vacant units
+                    .map((p: any) => mapPropertyToHouseProps({
+                        id: p.id,
+                        name: p.name,
+                        location: p.location,
+                        logoUrl: p.logoUrl,
+                        verificationStatus: p.verificationStatus,
+                        schoolGateDistanceMeters: p.schoolGateDistanceMeters,
+                        totalUnits: p.totalUnits,
+                        vacantUnits: p.vacantUnits,
+                        occupiedUnits: p.occupiedUnits,
+                        rentRange: p.rentRange,
+                        likes_count: p.likes_count,
+                    }));
 
-                // Index properties for faster lookup
-                const propMap = new Map(properties.map(p => [p.id, p]));
-
-                units.forEach(u => {
-                    const p = propMap.get(u.propertyId);
-                    if (p) {
-                        mapped.push(mapToHouseProps(p, u));
-                    }
-                });
-
-                setListings(mapped);
+                setListings(mappedListings);
             } catch (err) {
                 console.error("Failed to fetch listings", err);
             } finally {
@@ -108,12 +128,8 @@ function ListingsContent() {
         setPinSearchError("");
         try {
             const property = await PropertyApi.getByPinCode(pinCode.trim().toUpperCase());
-            const firstUnit = property.units?.[0];
-            if (!firstUnit) {
-                setPinSearchError("No unit is currently attached to this house.");
-                return;
-            }
-            router.push(`/listings/${firstUnit.id}?pin=${encodeURIComponent(pinCode.trim().toUpperCase())}`);
+            // Navigate using PROPERTY ID (not unit ID)
+            router.push(`/listings/${property.id}?pin=${encodeURIComponent(pinCode.trim().toUpperCase())}`);
         } catch (error: unknown) {
             setPinSearchError(error instanceof Error ? error.message : "PIN search failed");
         }
