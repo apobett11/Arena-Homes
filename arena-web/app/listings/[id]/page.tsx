@@ -149,6 +149,13 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
 
     useEffect(() => {
         async function loadListing() {
+            // Guard against invalid IDs
+            if (!params.id || params.id === "undefined" || params.id === "null") {
+                console.error("Invalid property ID:", params.id);
+                setLoading(false);
+                return;
+            }
+            
             try {
                 const supabase = getSupabaseClient();
                 
