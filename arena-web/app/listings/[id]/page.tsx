@@ -186,6 +186,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     price,
                     description: unit.description || `A ${typeLabel} unit at ${property.name} located in ${property.location}.`,
                     longDescription: unit.description || `This is a ${typeLabel} unit located at ${property.name} in ${property.location}. Contact the caretaker for more details and to schedule a viewing.`,
+                    rating: 0,
+                    reviewCount: 0,
                     images: [image, property.logoUrl || image, image, image],
                     amenities: [
                         { icon: Banknote, label: "Deposit Policy", value: policies.find((p) => p.toLowerCase().includes("deposit")) || "Set by admin" },
@@ -195,6 +197,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                         { icon: User, label: "Caretaker", value: caretakerInfo?.full_name || "Assigned" },
                         { icon: Droplets, label: "House Card", value: property.facilities?.houseCardDetails || "Available" },
                     ],
+                    reviews: [],
                 });
 
                 // Load property rules
@@ -496,6 +499,53 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" />
                 </Link>
 
+                {/* About this home - First */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
+                    <h3 className="text-lg font-bold mb-3">About this home</h3>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm text-justify">
+                        {houseData.longDescription}
+                    </p>
+                </div>
+
+                {/* House Rules - Below About */}
+                {rules.length > 0 && (
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <FileText size={20} className="text-primary" />
+                            House Rules
+                        </h3>
+                        <div className="space-y-3">
+                            {rules.map((rule) => (
+                                <div key={rule.id} className="flex gap-3">
+                                    <div className="mt-1 w-2 h-2 rounded-full bg-primary shrink-0" />
+                                    <div>
+                                        <p className="font-semibold text-sm">{rule.title}</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">{rule.details}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* FAQ Section - Below Rules */}
+                {faqs.length > 0 && (
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <HelpCircle size={20} className="text-primary" />
+                            Frequently Asked Questions
+                        </h3>
+                        <div className="space-y-4">
+                            {faqs.map((faq) => (
+                                <div key={faq.id} className="border-b border-slate-100 dark:border-zinc-800 last:border-0 pb-3 last:pb-0">
+                                    <p className="font-semibold text-sm text-slate-900 dark:text-white">{faq.question}</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{faq.answer}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Amenities & Policies */}
                 <div>
                     <h3 className="text-lg font-bold mb-4">Amenities & Policies</h3>
@@ -584,7 +634,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     </div>
                 </div>
 
-                {/* Similar Houses Carousel */}
+                {/* Similar Houses Carousel - Last before footer */}
                 <div>
                     <h3 className="text-lg font-bold mb-4">Similar Homes</h3>
                     <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 scrollbar-hide">
@@ -596,55 +646,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     </div>
                 </div>
 
-                {/* --- Rules, FAQ, About & Contact Section --- */}
+                {/* --- Contact Section --- */}
                 <div id="rules-faq-section" className="space-y-8 pt-4">
-                    
-                    {/* House Rules */}
-                    {rules.length > 0 && (
-                        <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <FileText size={20} className="text-primary" />
-                                House Rules
-                            </h3>
-                            <div className="space-y-3">
-                                {rules.map((rule) => (
-                                    <div key={rule.id} className="flex gap-3">
-                                        <div className="mt-1 w-2 h-2 rounded-full bg-primary shrink-0" />
-                                        <div>
-                                            <p className="font-semibold text-sm">{rule.title}</p>
-                                            <p className="text-xs text-slate-600 dark:text-slate-400">{rule.details}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* FAQ Section */}
-                    {faqs.length > 0 && (
-                        <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <HelpCircle size={20} className="text-primary" />
-                                Frequently Asked Questions
-                            </h3>
-                            <div className="space-y-4">
-                                {faqs.map((faq) => (
-                                    <div key={faq.id} className="border-b border-slate-100 dark:border-zinc-800 last:border-0 pb-3 last:pb-0">
-                                        <p className="font-semibold text-sm text-slate-900 dark:text-white">{faq.question}</p>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{faq.answer}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* About this home - Moved to bottom */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
-                        <h3 className="text-lg font-bold mb-3">About this home</h3>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm text-justify">
-                            {houseData.longDescription}
-                        </p>
-                    </div>
 
                     {/* Contact Section */}
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">

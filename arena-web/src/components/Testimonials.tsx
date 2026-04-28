@@ -2,8 +2,31 @@
 
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export const Testimonials = () => {
+    const [tenantCount, setTenantCount] = useState<number>(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchTenantCount() {
+            try {
+                const supabase = getSupabaseClient();
+                const { count, error } = await supabase
+                    .from('tenants')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (error) throw error;
+                setTenantCount(count || 0);
+            } catch (error) {
+                console.error("Failed to fetch tenant count", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchTenantCount();
+    }, []);
     const reviews = [
         {
             name: "James Mwangi",
@@ -93,7 +116,7 @@ export const Testimonials = () => {
                 >
                     {[
                         { value: "4.9/5", label: "Rating" },
-                        { value: "2,000+", label: "Students" },
+                        { value: loading ? "..." : `${tenantCount.toLocaleString()}+`, label: "Happy Students" },
                         { value: "98%", label: "Recommend" }
                     ].map((stat, index) => (
                         <div key={index} className="text-center">

@@ -329,6 +329,11 @@ export const PropertyApi = {
         vacantUnits: number; 
         occupiedUnits: number;
         rentRange: { min: number; max: number };
+        overall_rating?: number;
+        review_count?: number;
+        likes_count?: number;
+        tenant_count?: number;
+        created_at?: string;
     })[]> => {
         const supabase = getSupabaseClient() as any;
         
@@ -358,7 +363,7 @@ export const PropertyApi = {
                 email: p.caretaker_email,
                 phone_number: p.caretaker_phone_number,
             } : null,
-            logoUrl: null,
+            logoUrl: p.logo_url,
             verificationStatus: p.verification_status,
             latitude: p.latitude,
             longitude: p.longitude,
@@ -369,6 +374,11 @@ export const PropertyApi = {
                 min: p.price_min || 0,
                 max: p.price_max || 0,
             },
+            overall_rating: p.overall_rating,
+            review_count: p.review_count,
+            likes_count: p.likes_count,
+            tenant_count: p.tenant_count,
+            created_at: p.created_at,
         }));
     },
 };

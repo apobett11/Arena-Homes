@@ -26,7 +26,11 @@ export default function AdminSidebar() {
         await AuthApi.logout();
         localStorage.removeItem('user_role');
         sessionStorage.removeItem('user_role');
-        router.replace('/auth/login');
+        localStorage.removeItem('access_token');
+        sessionStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('refresh_token');
+        router.replace('/');
     };
 
     useEffect(() => {
