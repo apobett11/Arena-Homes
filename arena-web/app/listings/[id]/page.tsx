@@ -96,7 +96,8 @@ const similarHouses = [
     { id: 4, title: "Sunset Ridge Estate", type: "Two Bedroom", image: "https://images.unsplash.com/photo-1600585154526-990dcea4db0d?auto=format&fit=crop&w=800&q=80", location: "Malibu, CA", description: "Sunset Ridge Estate", price: 3200, distance: "3km", vacancy: "Limited" as const, water: true },
 ];
 
-export default function ListingDetailPage({ params }: { params: { id: string } }) {
+export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const searchParams = useSearchParams();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -152,8 +153,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
     useEffect(() => {
         async function loadListing() {
             // Guard against invalid IDs
-            if (!params.id || params.id === "undefined" || params.id === "null") {
-                console.error("Invalid property ID:", params.id);
+            if (!id || id === "undefined" || id === "null") {
+                console.error("Invalid property ID:", id);
                 setError("Invalid property ID. Please check the URL and try again.");
                 setLoading(false);
                 return;
@@ -163,11 +164,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 const supabase = getSupabaseClient();
                 
                 // Load property by PROPERTY ID (from URL param)
-                const property = await PropertyApi.getOne(params.id);
+                const property = await PropertyApi.getOne(id);
                 setPropertyId(property.id);
                 
                 // Load units for this property to get vacancy info and pricing
-                const units = await PropertyApi.getUnits(params.id);
+                const units = await PropertyApi.getUnits(id);
                 const vacantUnit = units.find(u => u.status === 'VACANT');
                 const firstUnit = units[0];
                 const representativeUnit = vacantUnit || firstUnit;
@@ -259,7 +260,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
         }
 
         loadListing();
-    }, [params.id]);
+    }, [id]);
 
     async function startRealtimeMap() {
         if (!pinCode || !visitorId) {
@@ -302,7 +303,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
     // Share functions
     const getShareUrl = () => {
         if (typeof window === 'undefined') return '';
-        return `${window.location.origin}/listings/${params.id}`;
+        return `${window.location.origin}/listings/${id}`;
     };
 
     const handleShare = (platform: string) => {
@@ -345,7 +346,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
         try {
             const supabase = getSupabaseClient();
             const applicationData = {
-                unit_id: params.id,
+                unit_id: id,
                 property_id: propertyId,
                 caretaker_id: caretaker?.id || null,
                 full_name: applicationForm.fullName,
