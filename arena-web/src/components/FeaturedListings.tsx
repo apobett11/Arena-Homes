@@ -79,7 +79,7 @@ export const FeaturedListings = () => {
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
                 
                 const latestProperties = propertiesWithVacancy
-                    .filter(p => new Date(p.created_at) >= oneWeekAgo || p.vacantUnits > 0)
+                    .filter(p => (p.created_at && new Date(p.created_at) >= oneWeekAgo) || p.vacantUnits > 0)
                     .slice(0, 6)
                     .map((p, idx) => ({
                         id: p.id,
