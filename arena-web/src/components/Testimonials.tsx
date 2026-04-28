@@ -15,7 +15,8 @@ export const Testimonials = () => {
                 const supabase = getSupabaseClient();
                 const { count, error } = await supabase
                     .from('tenants')
-                    .select('*', { count: 'exact', head: true });
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'active');
                 
                 if (error) throw error;
                 setTenantCount(count || 0);
