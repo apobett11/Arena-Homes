@@ -323,10 +323,10 @@ export const PropertyApi = {
         });
     },
 
-    // Get property with vacancy counts - NOW USES admin_properties_view
-    getPropertiesWithVacancy: async (): Promise<(Property & { 
-        totalUnits: number; 
-        vacantUnits: number; 
+    // Get property with vacancy counts - USES public_properties_view for anonymous access
+    getPropertiesWithVacancy: async (): Promise<(Property & {
+        totalUnits: number;
+        vacantUnits: number;
         occupiedUnits: number;
         rentRange: { min: number; max: number };
         overall_rating?: number;
@@ -336,10 +336,11 @@ export const PropertyApi = {
         created_at?: string;
     })[]> => {
         const supabase = getSupabaseClient() as any;
-        
-        // Use the admin_properties_view for cleaner, faster queries
+
+        // Use public_properties_view - it has GRANT SELECT TO anon
+        // This allows public listings to work without authentication
         const { data: properties, error: propError } = await supabase
-            .from('admin_properties_view')
+            .from('public_properties_view')
             .select('*')
             .order('property_name', { ascending: true });
 
@@ -353,17 +354,8 @@ export const PropertyApi = {
             name: p.property_name,
             location: p.location,
             propertyType: p.property_type,
-            caretakerId: p.caretaker_user_id,
-            caretaker_user_id: p.caretaker_user_id,
-            caretaker_employee_id: p.caretaker_employee_id,
-            caretaker: p.caretaker_full_name ? {
-                id: p.caretaker_employee_id,
-                user_id: p.caretaker_user_id,
-                full_name: p.caretaker_full_name,
-                email: p.caretaker_email,
-                phone_number: p.caretaker_phone_number,
-            } : null,
-            logoUrl: p.logo_url,
+            caretakerId: p.caretaker_assigned ? p.caretaker_name : null,
+            logoUrl: p.logo_url || p.cover_photo_url,
             verificationStatus: p.verification_status,
             latitude: p.latitude,
             longitude: p.longitude,
@@ -377,7 +369,6 @@ export const PropertyApi = {
             overall_rating: p.overall_rating,
             review_count: p.review_count,
             likes_count: p.likes_count,
-            tenant_count: p.tenant_count,
             created_at: p.created_at,
         }));
     },
