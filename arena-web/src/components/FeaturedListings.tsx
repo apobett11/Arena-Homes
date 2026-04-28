@@ -172,22 +172,22 @@ export const FeaturedListings = () => {
                         </Link>
                     </div>
 
-                    <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide -mx-4 px-4">
+                    <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide -mx-4 px-4">
                         {loading ? (
-                            <div className="min-w-[200px] sm:min-w-[240px] p-4 text-center text-slate-400">Loading...</div>
+                            <div className="min-w-[160px] sm:min-w-[200px] p-4 text-center text-slate-400">Loading...</div>
                         ) : newThisWeek.length === 0 ? (
-                            <div className="min-w-[200px] sm:min-w-[240px] p-4 text-center text-slate-400">No new listings this week</div>
+                            <div className="min-w-[160px] sm:min-w-[200px] p-4 text-center text-slate-400">No new listings this week</div>
                         ) : (
                             newThisWeek.map((item) => (
-                                <Link key={item.id} href="/listings" className="min-w-[200px] sm:min-w-[240px] group cursor-pointer">
-                                    <div className="relative aspect-[4/5] rounded-2xl overflow-hidden mb-3 shadow-lg">
+                                <Link key={item.id} href="/listings" className="min-w-[160px] sm:min-w-[200px] group cursor-pointer">
+                                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden mb-2 shadow-lg">
                                         <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                                        <div className="absolute bottom-4 left-4 right-4">
-                                            <p className="text-white font-semibold text-lg leading-tight">{item.title}</p>
-                                            <p className="text-white/80 text-sm font-medium">{item.price}/mo</p>
-                                            <p className="text-white/60 text-xs mt-1 flex items-center gap-1">
-                                                <MapPin size={12} /> {item.location}
+                                        <div className="absolute bottom-3 left-3 right-3">
+                                            <p className="text-white font-semibold text-sm leading-tight">{item.title}</p>
+                                            <p className="text-white/80 text-xs font-medium">{item.price}/mo</p>
+                                            <p className="text-white/60 text-[10px] mt-0.5 flex items-center gap-1">
+                                                <MapPin size={10} /> {item.location}
                                             </p>
                                         </div>
                                     </div>
@@ -220,8 +220,8 @@ export const FeaturedListings = () => {
                     </Link>
                 </div>
 
-                {/* Property Grid - Using HouseCard from listings page */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Property Grid - Using HouseCard from listings page - 2 cols on mobile */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                     {visibleListings.map((item, index) => (
                         <motion.div
                             key={item.id}
@@ -229,6 +229,7 @@ export const FeaturedListings = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1, duration: 0.5 }}
                             viewport={{ once: true }}
+                            className="min-w-0"
                         >
                             <HouseCard {...item} />
                         </motion.div>
