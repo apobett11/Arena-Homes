@@ -27,11 +27,13 @@ interface PropertyWithVacancy {
     vacantUnits: number;
     occupiedUnits: number;
     rentRange: { min: number; max: number };
+    likes_count?: number;
 }
 
 // Helper to map property with vacancy to HouseProps
+// Uses PROPERTY ID (not unit ID) for navigation to detail page
 const mapPropertyToHouseProps = (property: PropertyWithVacancy): HouseProps => ({
-    id: property.id,
+    id: property.id, // CRITICAL: Use PROPERTY ID for navigation to detail page
     title: property.name,
     location: property.location,
     price: property.rentRange.min > 0 ? property.rentRange.min : 2500,
@@ -53,7 +55,7 @@ const mapPropertyToHouseProps = (property: PropertyWithVacancy): HouseProps => (
     // Vacancy display
     availableRooms: property.vacantUnits,
     totalRooms: property.totalUnits,
-    likesCount: 0,
+    likesCount: property.likes_count || 0,
 });
 
 function ListingsContent() {
@@ -94,7 +96,7 @@ function ListingsContent() {
     useEffect(() => {
         async function fetchListings() {
             try {
-                // Use the new PropertyApi to get properties with vacancy info
+                // Use the PropertyApi to get properties with vacancy info
                 const propertiesWithVacancy = await PropertyApi.getPropertiesWithVacancy();
                 
                 // Filter to only show properties with at least one vacant unit
@@ -113,6 +115,7 @@ function ListingsContent() {
                         vacantUnits: p.vacantUnits,
                         occupiedUnits: p.occupiedUnits,
                         rentRange: p.rentRange,
+                        likes_count: p.likes_count,
                     }));
                 
                 setListings(mappedListings);

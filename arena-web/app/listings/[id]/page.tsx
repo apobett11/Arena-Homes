@@ -147,11 +147,14 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
         }
     }, [searchParams]);
 
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
         async function loadListing() {
             // Guard against invalid IDs
             if (!params.id || params.id === "undefined" || params.id === "null") {
                 console.error("Invalid property ID:", params.id);
+                setError("Invalid property ID. Please check the URL and try again.");
                 setLoading(false);
                 return;
             }
@@ -159,14 +162,20 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             try {
                 const supabase = getSupabaseClient();
                 
-                // Load unit and property data
-                const unit = await PropertyApi.getUnit(params.id);
-                const property = await PropertyApi.getOne(unit.propertyId);
+                // Load property by PROPERTY ID (from URL param)
+                const property = await PropertyApi.getOne(params.id);
                 setPropertyId(property.id);
                 
-                const price = Number(unit.basePrice) || 0;
+                // Load units for this property to get vacancy info and pricing
+                const units = await PropertyApi.getUnits(params.id);
+                const vacantUnit = units.find(u => u.status === 'VACANT');
+                const firstUnit = units[0];
+                const representativeUnit = vacantUnit || firstUnit;
+                
+                // Get price from first available unit, or default
+                const price = representativeUnit ? Number(representativeUnit.basePrice) : 0;
                 const image = property.logoUrl || defaultHouseData.images[0];
-                const typeLabel = unit.type.replaceAll("_", " ");
+                const typeLabel = representativeUnit ? representativeUnit.type.replaceAll("_", " ") : 'Unit';
                 const policies = property.facilities?.policies || [];
                 const map = property.facilities?.map;
                 
@@ -187,12 +196,12 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 }
 
                 setHouseData({
-                    id: unit.id,
+                    id: property.id, // Use PROPERTY ID
                     title: `${property.name} - ${typeLabel}`,
                     location: property.location,
                     price,
-                    description: unit.description || `A ${typeLabel} unit at ${property.name} located in ${property.location}.`,
-                    longDescription: unit.description || `This is a ${typeLabel} unit located at ${property.name} in ${property.location}. Contact the caretaker for more details and to schedule a viewing.`,
+                    description: representativeUnit?.description || `A ${typeLabel} unit at ${property.name} located in ${property.location}.`,
+                    longDescription: representativeUnit?.description || `This is a ${typeLabel} unit located at ${property.name} in ${property.location}. Contact the caretaker for more details and to schedule a viewing.`,
                     rating: 0,
                     reviewCount: 0,
                     images: [image, property.logoUrl || image, image, image],
@@ -241,8 +250,9 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     .limit(4);
                 if (reviewsData) setReviews(reviewsData);
 
-            } catch (error) {
-                console.error("Failed to load listing details", error);
+            } catch (err) {
+                console.error("Failed to load listing details", err);
+                setError(err instanceof Error ? err.message : "Failed to load property details. Please try again later.");
             } finally {
                 setLoading(false);
             }
@@ -364,6 +374,33 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             {loading && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm text-white font-semibold">
                     Loading listing...
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-black p-4">
+                    <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-zinc-800 text-center">
+                        <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <XCircle size={32} className="text-rose-600 dark:text-rose-400" />
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Unable to Load Property</h2>
+                        <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
+                        <div className="flex gap-3 justify-center">
+                            <Link 
+                                href="/listings" 
+                                className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:brightness-110 transition-all"
+                            >
+                                Browse Listings
+                            </Link>
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="px-6 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

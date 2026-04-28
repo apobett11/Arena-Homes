@@ -39,38 +39,29 @@ export const FeaturedListings = () => {
                 // Get properties with vacancy info - this already filters for vacant units > 0
                 const propertiesWithVacancy = await PropertyApi.getPropertiesWithVacancy();
                 
-                // Get units to create detailed listings
-                const units = await PropertyApi.getUnits();
-                
-                const propertyById = new Map(propertiesWithVacancy.map((p) => [p.id, p]));
-                
-                // Map units to HouseProps - only show VACANT units from properties with vacancy
-                const mapped: HouseProps[] = units
-                    .filter((u) => u.status === "VACANT" && propertyById.has(u.propertyId))
+                // Map PROPERTIES to HouseProps - using PROPERTY ID for navigation
+                // This matches the detail page which expects property ID
+                const mapped: HousePropsWithCaretaker[] = propertiesWithVacancy
+                    .filter((p) => p.vacantUnits > 0) // Only show properties with vacant units
                     .slice(0, 6)
-                    .map((u, idx) => {
-                        const property = propertyById.get(u.propertyId);
-                        if (!property) return null;
-                        return {
-                            id: u.id,
-                            title: `${property.name} - ${u.type.replaceAll("_", " ")}`,
-                            location: property.location,
-                            price: Number(u.basePrice) || 0,
-                            type: `${property.vacantUnits} rooms available`,
-                            image: property.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80`,
-                            vacancy: "Available",
-                            water: true,
-                            isVerified: property.verificationStatus === 'VERIFIED',
-                            verificationStatus: property.verificationStatus,
-                            availabilityStatus: 'AVAILABLE',
-                            availableRooms: property.vacantUnits,
-                            totalRooms: property.totalUnits,
-                            likesCount: property.likes_count || 0,
-                            propertyId: property.id,
-                            caretakerId: property.caretakerId,
-                        } as HousePropsWithCaretaker;
-                    })
-                    .filter(Boolean) as HousePropsWithCaretaker[];
+                    .map((p) => ({
+                        id: p.id, // CRITICAL: Use PROPERTY ID for navigation
+                        title: p.name,
+                        location: p.location,
+                        price: p.rentRange.min || 0,
+                        type: `${p.vacantUnits} rooms available`,
+                        image: p.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80`,
+                        vacancy: "Available",
+                        water: true,
+                        isVerified: p.verificationStatus === 'VERIFIED',
+                        verificationStatus: p.verificationStatus,
+                        availabilityStatus: 'AVAILABLE',
+                        availableRooms: p.vacantUnits,
+                        totalRooms: p.totalUnits,
+                        likesCount: p.likes_count || 0,
+                        propertyId: p.id,
+                        caretakerId: p.caretakerId,
+                    }));
 
                 setDynamicListings(mapped);
                 
@@ -78,31 +69,15 @@ export const FeaturedListings = () => {
                 const oneWeekAgo = new Date();
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
                 
-                // Create a map of property ID to first vacant unit for linking
-                const unitsByPropertyId = new Map<string, typeof units[0]>();
-                units.filter(u => u.status === "VACANT").forEach(u => {
-                    if (!unitsByPropertyId.has(u.propertyId)) {
-                        unitsByPropertyId.set(u.propertyId, u);
-                    }
-                });
-                
                 const latestProperties = propertiesWithVacancy
                     .filter(p => (p.created_at && new Date(p.created_at) >= oneWeekAgo) || p.vacantUnits > 0)
-                    .map((p, idx) => {
-                        // Get a vacant unit for this property to use as the link ID
-                        const unitForLink = unitsByPropertyId.get(p.id);
-                        return {
-                            id: unitForLink?.id || p.id, // Use unit ID if available, fallback to property ID
-                            title: p.name,
-                            location: p.location,
-                            price: unitForLink ? `KSh ${Number(unitForLink.basePrice).toLocaleString()}` : `KSh ${p.rentRange.min.toLocaleString()}`,
-                            image: p.logoUrl || `https://images.unsplash.com/photo-${[
-                                '1522708323590-d24dbb6b0267',
-                                '1502672260266-1c1ef2d93688',
-                                '1493809842364-78817add7ffb'
-                            ][idx % 3]}?w=400&q=80`,
-                        };
-                    })
+                    .map((p) => ({
+                        id: p.id, // Use PROPERTY ID
+                        title: p.name,
+                        location: p.location,
+                        price: `KSh ${p.rentRange.min.toLocaleString()}`,
+                        image: p.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80`,
+                    }))
                     .filter(p => p.id) // Only include items with valid IDs
                     .slice(0, 6);
                 
@@ -192,7 +167,7 @@ export const FeaturedListings = () => {
                             <div className="min-w-[160px] sm:min-w-[200px] p-4 text-center text-slate-400">No new listings this week</div>
                         ) : (
                             newThisWeek.map((item) => (
-                                <Link key={item.id} href="/listings" className="min-w-[160px] sm:min-w-[200px] group cursor-pointer">
+                                <Link key={item.id} href={`/listings/${item.id}`} className="min-w-[160px] sm:min-w-[200px] group cursor-pointer">
                                     <div className="relative aspect-[4/5] rounded-xl overflow-hidden mb-2 shadow-lg">
                                         <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
