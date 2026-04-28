@@ -63,36 +63,31 @@ interface CaretakerInfo {
     phone_number?: string;
 }
 
-// --- Dummy Data ---
+// --- Default/Fallback Data (used while loading) ---
 const defaultHouseData = {
-    id: "1",
-    title: "Modern Minimalist Villa with Garden",
-    location: "Beverly Hills, CA",
-    price: 2400,
-    description: "Experience luxury living in this stunning 2-bedroom villa located just minutes from the city center. Featuring a spacious open-plan layout, private garden, and top-tier security.",
-    longDescription: "Nestled in the heart of Beverly Hills, this modern minimalist villa offers a perfect blend of style and comfort. The property features floor-to-ceiling windows that flood the living space with natural light. The kitchen is equipped with state-of-the-art appliances, and the bedrooms offer ample storage and en-suite bathrooms. The private garden is perfect for evening relaxation. \n\nIdeal for professionals or small families looking for a premium lifestyle with easy access to urban amenities while enjoying a quiet retreat.",
-    rating: 4.8,
-    reviewCount: 124,
+    id: "",
+    title: "Loading...",
+    location: "",
+    price: 0,
+    description: "Loading property details...",
+    longDescription: "Please wait while we load the property information.",
+    rating: 0,
+    reviewCount: 0,
     amenities: [
-        { icon: Banknote, label: "Deposit", value: "$1,200" },
-        { icon: Droplets, label: "Water", value: "24/7 Supply" },
-        { icon: Calendar, label: "Holiday Policy", value: "Flexible" },
-        { icon: ShieldCheck, label: "Security", value: "CCTV & Guards" },
-        { icon: Lock, label: "Gate Hours", value: "Close at 11 PM" },
-        { icon: CheckCircle2, label: "Deposit Return", value: "Guaranteed" },
+        { icon: Banknote, label: "Deposit", value: "Loading..." },
+        { icon: Droplets, label: "Water", value: "Loading..." },
+        { icon: Calendar, label: "Holiday Policy", value: "Loading..." },
+        { icon: ShieldCheck, label: "Security", value: "Loading..." },
+        { icon: Lock, label: "Gate Hours", value: "Loading..." },
+        { icon: CheckCircle2, label: "Deposit Return", value: "Loading..." },
     ],
     images: [
-        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
     ],
-    reviews: [
-        { id: 1, user: "Sarah Jenkins", rating: 5, date: "2 days ago", comment: "Absolutely loved staying here! The garden is magical." },
-        { id: 2, user: "Mike Rossi", rating: 4, date: "1 week ago", comment: "Great location, very clean. A bit pricey but worth it." },
-        { id: 3, user: "Jessica Lee", rating: 5, date: "2 weeks ago", comment: "The security is top notch, felt very safe." },
-        { id: 4, user: "David Chen", rating: 4, date: "3 weeks ago", comment: "Modern and stylish. The water pressure is amazing." },
-    ]
+    reviews: []
 };
 
 const similarHouses = [
@@ -167,28 +162,40 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 const typeLabel = unit.type.replaceAll("_", " ");
                 const policies = property.facilities?.policies || [];
                 const map = property.facilities?.map;
+                
+                // Extract caretaker info first
+                const caretakerInfo = property.caretaker ? {
+                    id: property.caretaker.id,
+                    full_name: property.caretaker.full_name,
+                    email: property.caretaker.email,
+                    phone_number: property.caretaker.phone_number
+                } : null;
+                
+                if (caretakerInfo) {
+                    setCaretaker(caretakerInfo);
+                }
+                
                 if (map) {
                     setMapData(map);
                 }
 
-                setHouseData((prev) => ({
-                    ...prev,
+                setHouseData({
                     id: unit.id,
                     title: `${property.name} - ${typeLabel}`,
                     location: property.location,
                     price,
-                    description: unit.description || prev.description,
-                    longDescription: unit.description || prev.longDescription,
-                    images: [image, ...prev.images.slice(1)],
+                    description: unit.description || `A ${typeLabel} unit at ${property.name} located in ${property.location}.`,
+                    longDescription: unit.description || `This is a ${typeLabel} unit located at ${property.name} in ${property.location}. Contact the caretaker for more details and to schedule a viewing.`,
+                    images: [image, property.logoUrl || image, image, image],
                     amenities: [
                         { icon: Banknote, label: "Deposit Policy", value: policies.find((p) => p.toLowerCase().includes("deposit")) || "Set by admin" },
                         { icon: Calendar, label: "Holiday Rent Policy", value: policies.find((p) => p.toLowerCase().includes("holiday")) || "Set by admin" },
                         { icon: Lock, label: "Gate", value: property.facilities?.map?.gateLabel || "Main gate" },
                         { icon: Home, label: "Owner", value: property.facilities?.ownerType || "Arena Homes" },
-                        { icon: User, label: "Caretaker", value: property.facilities?.caretakerName || "Assigned" },
+                        { icon: User, label: "Caretaker", value: caretakerInfo?.full_name || "Assigned" },
                         { icon: Droplets, label: "House Card", value: property.facilities?.houseCardDetails || "Available" },
                     ],
-                }));
+                });
 
                 // Load property rules
                 const { data: rulesData } = await supabase
@@ -223,16 +230,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     .order('created_at', { ascending: false })
                     .limit(4);
                 if (reviewsData) setReviews(reviewsData);
-
-                // Set caretaker info from property
-                if (property.caretaker) {
-                    setCaretaker({
-                        id: property.caretaker.id,
-                        full_name: property.caretaker.full_name,
-                        email: property.caretaker.email,
-                        phone_number: property.caretaker.phone_number
-                    });
-                }
 
             } catch (error) {
                 console.error("Failed to load listing details", error);
