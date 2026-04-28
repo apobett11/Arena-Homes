@@ -78,20 +78,33 @@ export const FeaturedListings = () => {
                 const oneWeekAgo = new Date();
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
                 
+                // Create a map of property ID to first vacant unit for linking
+                const unitsByPropertyId = new Map<string, typeof units[0]>();
+                units.filter(u => u.status === "VACANT").forEach(u => {
+                    if (!unitsByPropertyId.has(u.propertyId)) {
+                        unitsByPropertyId.set(u.propertyId, u);
+                    }
+                });
+                
                 const latestProperties = propertiesWithVacancy
                     .filter(p => (p.created_at && new Date(p.created_at) >= oneWeekAgo) || p.vacantUnits > 0)
-                    .slice(0, 6)
-                    .map((p, idx) => ({
-                        id: p.id,
-                        title: p.name,
-                        location: p.location,
-                        price: `KSh ${p.rentRange.min.toLocaleString()}`,
-                        image: p.logoUrl || `https://images.unsplash.com/photo-${[
-                            '1522708323590-d24dbb6b0267',
-                            '1502672260266-1c1ef2d93688',
-                            '1493809842364-78817add7ffb'
-                        ][idx % 3]}?w=400&q=80`,
-                    }));
+                    .map((p, idx) => {
+                        // Get a vacant unit for this property to use as the link ID
+                        const unitForLink = unitsByPropertyId.get(p.id);
+                        return {
+                            id: unitForLink?.id || p.id, // Use unit ID if available, fallback to property ID
+                            title: p.name,
+                            location: p.location,
+                            price: unitForLink ? `KSh ${Number(unitForLink.basePrice).toLocaleString()}` : `KSh ${p.rentRange.min.toLocaleString()}`,
+                            image: p.logoUrl || `https://images.unsplash.com/photo-${[
+                                '1522708323590-d24dbb6b0267',
+                                '1502672260266-1c1ef2d93688',
+                                '1493809842364-78817add7ffb'
+                            ][idx % 3]}?w=400&q=80`,
+                        };
+                    })
+                    .filter(p => p.id) // Only include items with valid IDs
+                    .slice(0, 6);
                 
                 setNewThisWeek(latestProperties);
             } catch (error) {
