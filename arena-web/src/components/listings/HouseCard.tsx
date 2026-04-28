@@ -94,8 +94,27 @@ export const HouseCard = ({
         return `Updated ${date.toLocaleDateString()}`;
     };
 
+    // Guard against invalid IDs
+    const validId = id && id !== "undefined" && id !== "null" ? String(id) : null;
+    
+    if (!validId) {
+        return (
+            <div className="block group h-full cursor-not-allowed opacity-60">
+                <div className="card-premium h-full flex flex-col overflow-hidden">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                        <span className="text-slate-500 text-sm">Property not available</span>
+                    </div>
+                    <div className="p-3 flex-1 flex flex-col">
+                        <h3 className="text-sm font-bold text-slate-400 mb-1">{title || "Unknown"}</h3>
+                        <p className="text-xs text-slate-400">Please try again later</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <Link href={`/listings/${id}`} className="block group h-full">
+        <Link href={`/listings/${validId}`} className="block group h-full">
             <div className="card-premium h-full flex flex-col overflow-hidden">
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">

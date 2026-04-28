@@ -13,15 +13,16 @@ export const Testimonials = () => {
         async function fetchTenantCount() {
             try {
                 const supabase = getSupabaseClient();
-                const { count, error } = await supabase
-                    .from('tenants')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'active');
+                // Use RPC function that bypasses RLS for public stats
+                const { data, error } = await supabase
+                    .rpc('get_active_tenant_count');
                 
                 if (error) throw error;
-                setTenantCount(count || 0);
+                setTenantCount(data || 0);
             } catch (error) {
                 console.error("Failed to fetch tenant count", error);
+                // Fallback to 0 on error
+                setTenantCount(0);
             } finally {
                 setLoading(false);
             }
