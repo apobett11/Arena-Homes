@@ -35,54 +35,50 @@ export const FAQSection = () => {
     const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
     return (
-        <section className="py-20 md:py-28 bg-gradient-to-b from-[#F8FAFC] to-white dark:from-slate-950 dark:to-slate-900 overflow-hidden">
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-16 md:py-24 bg-white dark:bg-slate-950">
+            <div className="container mx-auto px-4 md:px-6 max-w-3xl">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-center mb-16"
+                    className="text-center mb-12"
                 >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-                        <HelpCircle size={14} />
-                        Got Questions?
-                    </span>
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">
-                        Frequently Asked <span className="text-gradient">Questions</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 block">Got Questions?</span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
+                        Frequently Asked Questions
                     </h2>
-                    <p className="mt-4 text-slate-600 dark:text-slate-400 text-base md:text-lg">
-                        Everything you need to know about finding student housing near Egerton University
+                    <p className="mt-3 text-slate-600 dark:text-slate-400">
+                        Everything you need to know about finding student housing
                     </p>
                 </motion.div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {faqs.map((faq, index) => (
                         <motion.div
                             key={index}
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: index * 0.08 }}
-                            className={`card-premium overflow-hidden transition-all ${
+                            transition={{ delay: index * 0.05 }}
+                            className={`border rounded-2xl overflow-hidden transition-all ${
                                 activeIndex === index 
-                                    ? "border-primary/30 shadow-glow" 
-                                    : "hover:border-slate-300 dark:hover:border-slate-600"
+                                    ? "border-primary/30 bg-primary/5" 
+                                    : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-600"
                             }`}
                         >
                             <button
                                 onClick={() => setActiveIndex(activeIndex === index ? null : index)}
-                                className="w-full flex items-center justify-between p-6 text-left gap-4"
-                                aria-expanded={activeIndex === index}
+                                className="w-full flex items-center justify-between p-5 text-left gap-4"
                             >
                                 <span className={`font-semibold text-base ${activeIndex === index ? "text-primary" : "text-slate-900 dark:text-white"}`}>
                                     {faq.question}
                                 </span>
-                                <div className={`h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-xl transition-all ${
+                                <div className={`h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full transition-all ${
                                     activeIndex === index 
-                                        ? "bg-primary text-white" 
-                                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                        ? "bg-primary text-white rotate-0" 
+                                        : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                                 }`}>
-                                    {activeIndex === index ? <Minus size={18} /> : <Plus size={18} />}
+                                    {activeIndex === index ? <Minus size={16} /> : <Plus size={16} />}
                                 </div>
                             </button>
 
@@ -92,10 +88,10 @@ export const FAQSection = () => {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.25 }}
+                                        transition={{ duration: 0.2 }}
                                         className="overflow-hidden"
                                     >
-                                        <div className="px-6 pb-6 pt-0 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800">
+                                        <div className="px-5 pb-5 pt-0 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-200 dark:border-slate-700">
                                             <p className="pt-4 text-sm md:text-base">
                                                 {faq.answer}
                                             </p>
@@ -112,17 +108,14 @@ export const FAQSection = () => {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    className="mt-12 text-center"
+                    className="mt-10 text-center"
                 >
-                    <div className="inline-flex flex-col sm:flex-row items-center gap-3 px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                        <HelpCircle size={20} className="text-primary" />
-                        <p className="text-slate-700 dark:text-slate-300 text-sm">
-                            Still have questions?{" "}
-                            <a href="/contact" className="text-primary font-semibold hover:underline">
-                                Contact our support team
-                            </a>
-                        </p>
-                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">
+                        Still have questions?{" "}
+                        <a href="/contact" className="text-primary font-semibold hover:underline">
+                            Contact our support team
+                        </a>
+                    </p>
                 </motion.div>
             </div>
         </section>

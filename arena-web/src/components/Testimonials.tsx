@@ -54,61 +54,55 @@ export const Testimonials = () => {
     ];
 
     return (
-        <section className="py-20 md:py-28 bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-8 md:py-12 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+            <div className="container mx-auto px-4 md:px-6">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-center mb-16"
+                    className="text-center mb-6 md:mb-8"
                 >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-                        <span className="w-2 h-2 rounded-full bg-primary" />
-                        Student Stories
-                    </span>
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-1 block">Student Stories</span>
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
                         Loved by <span className="text-gradient">Students</span>
                     </h2>
-                    <p className="mt-4 text-slate-600 dark:text-slate-400 text-base md:text-lg max-w-2xl mx-auto">
-                        Hear from students who found their perfect home through Arena Homes
-                    </p>
                 </motion.div>
 
-                {/* Testimonials Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+                {/* Mobile: Horizontal scroll; Desktop: Grid */}
+                <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-5 max-w-6xl mx-auto overflow-x-auto md:overflow-visible pb-2 md:pb-0 -mx-4 px-4 md:mx-auto md:px-0">
                     {reviews.map((review, index) => (
                         <motion.div
                             key={index}
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.15, duration: 0.5 }}
+                            transition={{ delay: index * 0.1, duration: 0.5 }}
                             viewport={{ once: true }}
-                            className="card-luxury p-6 md:p-8 group"
+                            className="card-premium p-4 md:p-5 min-w-[280px] md:min-w-0"
                         >
                             {/* Stars */}
-                            <div className="flex gap-1 mb-4">
+                            <div className="flex gap-0.5 mb-2">
                                 {[...Array(5)].map((_, i) => (
                                     <Star 
                                         key={i} 
-                                        size={16} 
+                                        size={12} 
                                         className={i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200 dark:text-slate-700"} 
                                     />
                                 ))}
                             </div>
 
                             {/* Quote */}
-                            <p className="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed mb-6">
+                            <p className="text-slate-700 dark:text-slate-300 text-xs md:text-sm leading-relaxed mb-3 line-clamp-3">
                                 "{review.text}"
                             </p>
 
                             {/* Author */}
-                            <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                                <div className="h-12 w-12 rounded-full bg-gradient-premium flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary/20">
+                            <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+                                <div className="h-8 w-8 rounded-full bg-gradient-premium flex items-center justify-center text-white font-bold text-xs">
                                     {review.avatar}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white">{review.name}</h4>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">{review.role}</p>
+                                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{review.name}</h4>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{review.role}</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -120,16 +114,16 @@ export const Testimonials = () => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mt-12 md:mt-16 flex flex-wrap justify-center gap-8 md:gap-16 px-8 py-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft max-w-2xl mx-auto"
+                    className="mt-6 md:mt-8 flex flex-wrap justify-center gap-6 md:gap-12"
                 >
                     {[
-                        { value: "4.9/5", label: "Average Rating" },
+                        { value: "4.9/5", label: "Rating" },
                         { value: loading ? "..." : `${tenantCount.toLocaleString()}+`, label: "Happy Students" },
-                        { value: "98%", label: "Would Recommend" }
+                        { value: "98%", label: "Recommend" }
                     ].map((stat, index) => (
                         <div key={index} className="text-center">
-                            <span className="block text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{stat.value}</span>
-                            <span className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</span>
+                            <span className="block text-lg md:text-xl font-bold text-slate-900 dark:text-white">{stat.value}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</span>
                         </div>
                     ))}
                 </motion.div>

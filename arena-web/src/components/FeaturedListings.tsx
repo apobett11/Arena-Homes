@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, X, Send, CheckCircle, MapPin, Home } from "lucide-react";
+import { ArrowRight, X, Send, CheckCircle, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { PropertyApi } from "@/lib/api/domains/properties";
@@ -140,8 +140,8 @@ export const FeaturedListings = () => {
     const visibleListings = dynamicListings;
 
     return (
-        <section className="py-20 md:py-28 bg-gradient-to-b from-[#F8FAFC] to-white dark:from-slate-950 dark:to-slate-900 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+            <div className="container mx-auto px-4 md:px-6">
                 {/* New Listings Carousel */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -150,44 +150,31 @@ export const FeaturedListings = () => {
                     transition={{ duration: 0.6 }}
                     className="mb-16 md:mb-20"
                 >
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center justify-between mb-6">
                         <div>
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                Just Listed
-                            </span>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 block">Just Listed</span>
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">New This Week</h2>
                         </div>
-                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-hover transition-colors group">
-                            View All 
-                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                        <Link href="/listings" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors">
+                            View All <ArrowRight size={16} />
                         </Link>
                     </div>
 
-                    <div className="flex overflow-x-auto gap-4 pb-6 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                    <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide -mx-4 px-4">
                         {loading ? (
-                            <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center">
-                                <div className="animate-pulse bg-slate-200 dark:bg-slate-800 rounded-2xl h-64" />
-                            </div>
+                            <div className="min-w-[160px] sm:min-w-[200px] p-4 text-center text-slate-400">Loading...</div>
                         ) : newThisWeek.length === 0 ? (
-                            <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-2xl">
-                                No new listings this week
-                            </div>
+                            <div className="min-w-[160px] sm:min-w-[200px] p-4 text-center text-slate-400">No new listings this week</div>
                         ) : (
                             newThisWeek.map((item) => (
-                                <Link key={item.id} href={`/listings/${item.id}`} className="min-w-[180px] sm:min-w-[220px] group cursor-pointer">
-                                    <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-soft border border-slate-200/50 dark:border-slate-700/50">
-                                        <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                        <div className="absolute top-3 left-3">
-                                            <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-semibold uppercase tracking-wide">
-                                                New
-                                            </span>
-                                        </div>
-                                        <div className="absolute bottom-4 left-4 right-4">
-                                            <p className="text-white font-bold text-sm leading-tight mb-1">{item.title}</p>
-                                            <p className="text-amber-300 text-xs font-semibold">{item.price}/mo</p>
-                                            <p className="text-white/70 text-[10px] mt-1 flex items-center gap-1">
+                                <Link key={item.id} href={`/listings/${item.id}`} className="min-w-[160px] sm:min-w-[200px] group cursor-pointer">
+                                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden mb-2 shadow-lg">
+                                        <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                                        <div className="absolute bottom-3 left-3 right-3">
+                                            <p className="text-white font-semibold text-sm leading-tight">{item.title}</p>
+                                            <p className="text-white/80 text-xs font-medium">{item.price}/mo</p>
+                                            <p className="text-white/60 text-[10px] mt-0.5 flex items-center gap-1">
                                                 <MapPin size={10} /> {item.location}
                                             </p>
                                         </div>
@@ -199,74 +186,52 @@ export const FeaturedListings = () => {
                 </motion.div>
 
                 {/* Featured Properties Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-12 gap-4">
                     <motion.div 
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         className="max-w-xl"
                     >
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-                            <span className="w-2 h-2 rounded-full bg-primary" />
-                            Featured Properties
-                        </span>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 block">Featured Properties</span>
                         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-tight">
                             Find Your Perfect <br className="hidden sm:block" />
                             <span className="text-gradient">Student Home</span>
                         </h2>
-                        <p className="mt-4 text-slate-600 dark:text-slate-400 text-base md:text-lg leading-relaxed">
-                            Verified listings near Egerton University with transparent pricing and direct caretaker contact
+                        <p className="mt-3 text-slate-600 dark:text-slate-400 text-base md:text-lg">
+                            Verified listings near Egerton University at affordable prices
                         </p>
                     </motion.div>
-                    <Link href="/listings" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95 sm:w-auto w-full shrink-0">
+                    <Link href="/listings" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95 sm:w-auto w-full">
                         Browse All Properties
                         <ArrowRight size={18} />
                     </Link>
                 </div>
 
-                {/* Property Grid - Premium Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                    {loading ? (
-                        // Loading skeleton
-                        [...Array(6)].map((_, index) => (
-                            <div key={index} className="animate-pulse">
-                                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-800 rounded-2xl mb-4" />
-                                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4 mb-2" />
-                                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
-                            </div>
-                        ))
-                    ) : visibleListings.length === 0 ? (
-                        <div className="col-span-full text-center py-16">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <Home size={24} className="text-slate-400" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">No properties available</h3>
-                            <p className="text-slate-500 dark:text-slate-400">Check back soon for new listings</p>
-                        </div>
-                    ) : (
-                        visibleListings.map((item, index) => (
-                            <motion.div
-                                key={item.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1, duration: 0.5 }}
-                                viewport={{ once: true }}
-                                className="min-w-0"
-                            >
-                                <HouseCard {...item} />
-                            </motion.div>
-                        ))
-                    )}
+                {/* Property Grid - Using HouseCard from listings page - 2 cols on mobile */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                    {visibleListings.map((item, index) => (
+                        <motion.div
+                            key={item.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1, duration: 0.5 }}
+                            viewport={{ once: true }}
+                            className="min-w-0"
+                        >
+                            <HouseCard {...item} />
+                        </motion.div>
+                    ))}
                 </div>
 
-                {/* Premium CTA */}
+                {/* CTA */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mt-16 md:mt-20 text-center"
+                    className="mt-12 md:mt-16 text-center"
                 >
-                    <Link href="/listings" className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-base hover:scale-105 transition-all shadow-luxury">
+                    <Link href="/listings" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-base hover:scale-105 transition-all shadow-xl shadow-slate-900/20 dark:shadow-white/20">
                         View All Properties
                         <ArrowRight size={18} />
                     </Link>
