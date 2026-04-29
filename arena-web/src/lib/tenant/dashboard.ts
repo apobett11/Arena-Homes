@@ -95,6 +95,7 @@ export async function getTenantDashboardData(): Promise<{
       caretakerPhoneNumber: viewData.caretaker_phone_number,
       caretakerWhatsappNumber: viewData.caretaker_whatsapp_number,
       caretakerEmail: viewData.caretaker_email,
+      caretakerStatus: viewData.caretaker_status || null,
       
       leaseId: viewData.lease_id,
       leaseNumber: viewData.lease_number,
@@ -194,7 +195,7 @@ async function getTenantDashboardFallback(userId: string): Promise<{
     if (tenant.caretaker_employee_id) {
       const { data: ct } = await supabase
         .from('employees')
-        .select('id, user_id, full_name, phone_number, whatsapp_number, email')
+        .select('id, user_id, full_name, phone_number, whatsapp_number, email, status')
         .eq('id', tenant.caretaker_employee_id)
         .maybeSingle();
       caretaker = ct;
@@ -255,6 +256,7 @@ async function getTenantDashboardFallback(userId: string): Promise<{
       caretakerPhoneNumber: caretaker?.phone_number || null,
       caretakerWhatsappNumber: caretaker?.whatsapp_number || null,
       caretakerEmail: caretaker?.email || null,
+      caretakerStatus: caretaker?.status || null,
       
       leaseId: activeLease?.id || null,
       leaseNumber: activeLease?.lease_number || null,

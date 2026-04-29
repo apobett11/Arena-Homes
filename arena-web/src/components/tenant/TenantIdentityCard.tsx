@@ -14,6 +14,7 @@ interface TenantIdentityCardProps {
   daysRemaining: number | null;
   caretakerName: string;
   caretakerPhone: string;
+  caretakerStatus?: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | null;
   avatarUrl?: string | null;
   onPayRent: () => void;
   onReportIssue: () => void;
@@ -30,6 +31,7 @@ const TenantIdentityCard: React.FC<TenantIdentityCardProps> = ({
   daysRemaining,
   caretakerName,
   caretakerPhone,
+  caretakerStatus,
   avatarUrl,
   onPayRent,
   onReportIssue,
@@ -124,12 +126,28 @@ const TenantIdentityCard: React.FC<TenantIdentityCardProps> = ({
           {daysRemaining === null && (
             <p className="mt-2 text-slate-400">Days remaining: Not available yet</p>
           )}
-          <p className="mt-3 text-slate-600 dark:text-slate-300">
-            Caretaker: <span className="font-semibold text-slate-800 dark:text-slate-200">{caretakerName}</span>
+          <div className="mt-3">
+            <p className="text-slate-600 dark:text-slate-300">
+              Caretaker: <span className="font-semibold text-slate-800 dark:text-slate-200">{caretakerName}</span>
+              {caretakerStatus && caretakerStatus !== 'ACTIVE' && (
+                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                  caretakerStatus === 'SUSPENDED'
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                }`}>
+                  {caretakerStatus}
+                </span>
+              )}
+            </p>
             {caretakerPhone && caretakerPhone !== 'Not assigned yet' && (
-              <span className="text-slate-500 dark:text-slate-400"> ({caretakerPhone})</span>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{caretakerPhone}</p>
             )}
-          </p>
+            {caretakerStatus === 'SUSPENDED' && (
+              <p className="mt-2 text-sm text-rose-400 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+                ⚠ This caretaker is currently suspended. Contact admin support for assistance.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Quick Actions */}

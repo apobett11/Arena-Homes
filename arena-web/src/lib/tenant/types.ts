@@ -33,6 +33,7 @@ export interface TenantDashboardData {
   caretakerPhoneNumber: string | null;
   caretakerWhatsappNumber: string | null;
   caretakerEmail: string | null;
+  caretakerStatus: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | null;
   
   // Lease info
   leaseId: string | null;

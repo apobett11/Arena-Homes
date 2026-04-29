@@ -324,6 +324,7 @@ export default function TenantDashboard() {
                                 daysRemaining={daysRemaining}
                                 caretakerName={dashboardData.caretakerFullName || 'Not assigned yet'}
                                 caretakerPhone={dashboardData.caretakerPhoneNumber || 'Not assigned yet'}
+                                caretakerStatus={dashboardData.caretakerStatus}
                                 avatarUrl={dashboardData.tenantLogoUrl}
                                 onPayRent={() => handleAction("pay")}
                                 onReportIssue={() => handleAction("report")}
