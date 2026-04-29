@@ -54,7 +54,7 @@ export const FAQRulesSection = () => {
     const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
     return (
-        <section className="py-8 md:py-10 bg-gradient-to-b from-white to-[#FAF9F6]">
+        <section className="py-8 md:py-10 bg-gradient-to-b from-[#F0EDE6] to-[#F8F5F0]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* FAQ Column */}
@@ -64,8 +64,8 @@ export const FAQRulesSection = () => {
                         viewport={{ once: true }}
                     >
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center">
-                                <ScrollText size={18} className="text-[#1E3A8A]" />
+                            <div className="h-8 w-8 rounded-lg bg-[#0F172A]/10 flex items-center justify-center">
+                                <ScrollText size={18} className="text-[#0F172A]" />
                             </div>
                             <h2 className="text-lg font-bold text-[#1F2937]">Frequently Asked Questions</h2>
                         </div>
@@ -76,8 +76,8 @@ export const FAQRulesSection = () => {
                                     key={index}
                                     className={`card-premium overflow-hidden transition-all ${
                                         activeFaq === index 
-                                            ? "border-[#D4AF88]/50 shadow-sm" 
-                                            : "hover:border-[#E5E7EB]"
+                                            ? "border-[#C9B37F]/50 shadow-sm" 
+                                            : "hover:border-[#EDE9E0]"
                                     }`}
                                 >
                                     <button
@@ -85,13 +85,13 @@ export const FAQRulesSection = () => {
                                         className="w-full flex items-center justify-between p-3 text-left gap-3"
                                         aria-expanded={activeFaq === index}
                                     >
-                                        <span className={`font-medium text-sm ${activeFaq === index ? "text-[#1E3A8A]" : "text-[#1F2937]"}`}>
+                                        <span className={`font-medium text-sm ${activeFaq === index ? "text-[#0F172A]" : "text-[#1F2937]"}`}>
                                             {faq.question}
                                         </span>
                                         <div className={`h-7 w-7 flex-shrink-0 flex items-center justify-center rounded-lg transition-all ${
                                             activeFaq === index 
-                                                ? "bg-[#1E3A8A] text-white" 
-                                                : "bg-[#F4F4F5] text-[#6B7280]"
+                                                ? "bg-[#0F172A] text-white" 
+                                                : "bg-[#EDE9E0] text-[#4B5563]"
                                         }`}>
                                             {activeFaq === index ? <Minus size={14} /> : <Plus size={14} />}
                                         </div>
@@ -106,7 +106,7 @@ export const FAQRulesSection = () => {
                                                 transition={{ duration: 0.2 }}
                                                 className="overflow-hidden"
                                             >
-                                                <div className="px-3 pb-3 pt-0 text-[#6B7280] leading-relaxed border-t border-[#F4F4F5]">
+                                                <div className="px-3 pb-3 pt-0 text-[#4B5563] leading-relaxed border-t border-[#EDE9E0]">
                                                     <p className="pt-2 text-xs">
                                                         {faq.answer}
                                                     </p>
@@ -126,8 +126,8 @@ export const FAQRulesSection = () => {
                         viewport={{ once: true }}
                     >
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center">
-                                <CheckCircle2 size={18} className="text-[#1E3A8A]" />
+                            <div className="h-8 w-8 rounded-lg bg-[#0F172A]/10 flex items-center justify-center">
+                                <CheckCircle2 size={18} className="text-[#0F172A]" />
                             </div>
                             <h2 className="text-lg font-bold text-[#1F2937]">Rules & Guidelines</h2>
                         </div>
@@ -140,7 +140,7 @@ export const FAQRulesSection = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05, duration: 0.3 }}
                                     viewport={{ once: true }}
-                                    className="card-premium p-3 group hover:border-[#D4AF88]/40"
+                                    className="card-premium p-3 group hover:border-[#C9B37F]/40"
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
@@ -152,15 +152,15 @@ export const FAQRulesSection = () => {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-sm text-[#1F2937] mb-0.5">{rule.title}</h4>
-                                            <p className="text-[#6B7280] text-xs leading-relaxed">{rule.desc}</p>
+                                            <p className="text-[#4B5563] text-xs leading-relaxed">{rule.desc}</p>
                                         </div>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
 
-                        <p className="mt-3 text-xs text-[#6B7280] text-center">
-                            View full rules and FAQ on our <a href="/rules" className="text-[#1E3A8A] hover:underline">rules page</a>
+                        <p className="mt-3 text-xs text-[#4B5563] text-center">
+                            View full rules and FAQ on our <a href="/rules" className="text-[#0F172A] hover:underline">rules page</a>
                         </p>
                     </motion.div>
                 </div>

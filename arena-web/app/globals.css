@@ -3,69 +3,79 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Luxury Light Brand Palette */
-  --color-primary: #1E3A8A;
-  --color-primary-hover: #172A5E;
-  --color-secondary: #3B5998;
-  --color-accent: #D4AF88;
-  --color-accent-hover: #C9B89F;
+  /* Futuristic Luxury Brand Palette - Elon Musk Inspired */
+  --color-primary: #0F172A;
+  --color-primary-hover: #1E293B;
+  --color-secondary: #1E3A5F;
+  --color-accent: #C9B37F;
+  --color-accent-hover: #D4AF88;
   --color-electric: #3B82F6;
   --color-coral: #F87171;
-  /* Luxury Extended Palette - Light & Airy */
-  --color-navy: #1E3A8A;
-  --color-navy-light: #2D4A7C;
-  --color-gold: #D4AF88;
-  --color-gold-soft: #E8D5B7;
-  --color-cream: #FAF9F6;
-  --color-cream-warm: #F8F5F0;
-  --color-beige: #EDE4D9;
+  /* Luxury Extended Palette - Quiet Elegance */
+  --color-navy: #0F172A;
+  --color-navy-light: #1E293B;
+  --color-navy-soft: #334155;
+  --color-gold: #C9B37F;
+  --color-gold-soft: #D4AF88;
+  --color-gold-subtle: #E8D5B7;
+  --color-cream: #F8F5F0;
+  --color-cream-warm: #F5F1EB;
+  --color-beige: #F0EDE6;
+  --color-beige-soft: #EDE9E0;
   --color-ivory: #FAF9F6;
   --color-slate-text: #1F2937;
+  --color-slate-body: #4B5563;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  --background: #FAF9F6;
+  --background: #F8F5F0;
   --foreground: #1F2937;
-  --card: #FFFFFF;
+  --card: #F0EDE6;
   --card-foreground: #1F2937;
   --popover: #FFFFFF;
   --popover-foreground: #1F2937;
-  --primary: #1E3A8A;
+  --primary: #0F172A;
   --primary-foreground: #FFFFFF;
-  --secondary: #F4F4F5;
-  --secondary-foreground: #374151;
-  --muted: #F8F5F0;
-  --muted-foreground: #6B7280;
-  --accent: #D4AF88;
-  --accent-foreground: #1F2937;
+  --secondary: #F0EDE6;
+  --secondary-foreground: #1F2937;
+  --muted: #EDE9E0;
+  --muted-foreground: #4B5563;
+  --accent: #C9B37F;
+  --accent-foreground: #0F172A;
   --radius: 1rem;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
-  --gold: #D4AF88;
-  --cream: #FAF9F6;
-  --beige: #EDE4D9;
-  --navy: #1E3A8A;
+  --gold: #C9B37F;
+  --gold-soft: #D4AF88;
+  --cream: #F8F5F0;
+  --cream-warm: #F5F1EB;
+  --beige: #F0EDE6;
+  --beige-soft: #EDE9E0;
+  --navy: #0F172A;
+  --navy-light: #1E293B;
+  --navy-soft: #334155;
   --charcoal: #1F2937;
+  --slate: #4B5563;
 }
 
 .dark {
   --background: #0F172A;
-  --foreground: #FAF9F6;
+  --foreground: #F8F5F0;
   --card: #1E293B;
-  --card-foreground: #FAF9F6;
+  --card-foreground: #F8F5F0;
   --popover: #1E293B;
-  --popover-foreground: #FAF9F6;
-  --primary: #3B82F6;
-  --primary-foreground: #FFFFFF;
+  --popover-foreground: #F8F5F0;
+  --primary: #C9B37F;
+  --primary-foreground: #0F172A;
   --secondary: #334155;
-  --secondary-foreground: #FAF9F6;
+  --secondary-foreground: #F8F5F0;
   --muted: #1E293B;
-  --muted-foreground: #9CA3AF;
-  --accent: #D4AF88;
-  --accent-foreground: #1F2937;
+  --muted-foreground: #94A3B8;
+  --accent: #C9B37F;
+  --accent-foreground: #0F172A;
 }
 
 @layer base {
@@ -82,16 +92,16 @@
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 24px -4px rgba(30, 58, 138, 0.08), 0 8px 32px -8px rgba(30, 58, 138, 0.04);
+  background: rgba(240, 237, 230, 0.85);
+  border: 1px solid rgba(201, 179, 127, 0.25);
+  box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.06), 0 8px 32px -8px rgba(15, 23, 42, 0.03);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
 .dark .glass {
   background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(201, 179, 127, 0.15);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -99,40 +109,49 @@
 
 /* Premium Glass Variants */
 .glass-elevated {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 8px 40px -8px rgba(30, 58, 138, 0.12), 0 16px 48px -16px rgba(30, 58, 138, 0.06);
+  background: rgba(248, 245, 240, 0.95);
+  border: 1px solid rgba(201, 179, 127, 0.3);
+  box-shadow: 0 8px 40px -8px rgba(15, 23, 42, 0.1), 0 16px 48px -16px rgba(15, 23, 42, 0.05);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
 
 .glass-subtle {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(248, 245, 240, 0.6);
+  border: 1px solid rgba(201, 179, 127, 0.2);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 /* Premium Shadows */
 .shadow-soft {
-  box-shadow: 0 4px 24px -4px rgba(30, 58, 138, 0.06), 0 8px 32px -8px rgba(30, 58, 138, 0.03);
+  box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.06), 0 8px 32px -8px rgba(15, 23, 42, 0.03);
 }
 
 .shadow-luxury {
-  box-shadow: 0 8px 32px -8px rgba(30, 58, 138, 0.1), 0 16px 48px -16px rgba(30, 58, 138, 0.05);
+  box-shadow: 0 8px 32px -8px rgba(15, 23, 42, 0.1), 0 16px 48px -16px rgba(15, 23, 42, 0.05);
+}
+
+.shadow-futuristic {
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 20px 40px -15px rgba(15, 23, 42, 0.04);
 }
 
 .shadow-glow {
-  box-shadow: 0 0 40px -8px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 40px -8px rgba(15, 23, 42, 0.15);
 }
 
 .shadow-gold {
-  box-shadow: 0 0 40px -8px rgba(214, 168, 79, 0.25);
+  box-shadow: 0 0 40px -8px rgba(201, 179, 127, 0.3);
+}
+
+.shadow-gold-subtle {
+  box-shadow: 0 4px 20px -4px rgba(201, 179, 127, 0.2);
 }
 
 .hero-gradient {
-  background: radial-gradient(circle at top right, rgba(212, 175, 136, 0.15), transparent),
-    radial-gradient(circle at bottom left, rgba(30, 58, 138, 0.08), transparent);
+  background: radial-gradient(circle at top right, rgba(201, 179, 127, 0.12), transparent 60%),
+    radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.06), transparent 50%),
+    radial-gradient(circle at center, rgba(248, 245, 240, 0.8), transparent 70%);
 }
 
 @keyframes float {
@@ -156,6 +175,46 @@
   50% { opacity: 0.7; }
 }
 
+/* Futuristic Gradient Shift Animation - Subtle, elegant, 40s loop */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+    opacity: 0.6;
+  }
+  25% {
+    background-position: 50% 100%;
+    opacity: 0.8;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.7;
+  }
+  75% {
+    background-position: 50% 0%;
+    opacity: 0.9;
+  }
+}
+
+@keyframes mesh-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  33% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+  66% {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes subtle-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -172,95 +231,162 @@
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
+/* Futuristic ambient animations */
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 40s ease infinite;
+}
+
+.animate-mesh-glow {
+  animation: mesh-glow 20s ease-in-out infinite;
+}
+
+.animate-subtle-rotate {
+  animation: subtle-rotate 60s linear infinite;
+}
+
 /* Premium Card Styles */
 .card-premium {
-  background: var(--card);
+  background: linear-gradient(135deg, #F0EDE6 0%, #EDE9E0 100%);
   border-radius: 1.5rem;
-  box-shadow: 0 4px 24px -4px rgba(30, 58, 138, 0.05), 0 8px 32px -8px rgba(30, 58, 138, 0.02);
-  border: 1px solid rgba(212, 175, 136, 0.2);
+  box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.05), 0 8px 32px -8px rgba(15, 23, 42, 0.02);
+  border: 1px solid rgba(201, 179, 127, 0.15);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-premium:hover {
-  box-shadow: 0 20px 40px -8px rgba(30, 58, 138, 0.1), 0 12px 24px -12px rgba(30, 58, 138, 0.04);
-  transform: translateY(-6px);
-  border-color: rgba(212, 175, 136, 0.4);
+  box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.08), 0 12px 24px -12px rgba(15, 23, 42, 0.04);
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(201, 179, 127, 0.35);
+  background: linear-gradient(135deg, #F5F1EB 0%, #F0EDE6 100%);
 }
 
 .card-luxury {
-  background: var(--card);
+  background: linear-gradient(135deg, #F0EDE6 0%, #EDE9E0 100%);
   border-radius: 2rem;
-  box-shadow: 0 8px 32px -8px rgba(30, 58, 138, 0.08), 0 16px 48px -16px rgba(30, 58, 138, 0.04);
-  border: 1px solid rgba(212, 175, 136, 0.25);
+  box-shadow: 0 8px 32px -8px rgba(15, 23, 42, 0.06), 0 16px 48px -16px rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(201, 179, 127, 0.2);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-luxury:hover {
-  box-shadow: 0 24px 48px -12px rgba(30, 58, 138, 0.12), 0 16px 32px -16px rgba(30, 58, 138, 0.06);
-  transform: translateY(-8px);
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.1), 0 16px 32px -16px rgba(15, 23, 42, 0.05);
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(201, 179, 127, 0.4);
 }
 
 /* Button Styles */
 .btn-primary {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  color: #FFFFFF;
   padding: 12px 24px;
   border-radius: 12px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
 }
 
 .btn-primary:hover {
-  background: #1D4ED8;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.3);
+  border-color: rgba(201, 179, 127, 0.5);
 }
 
-/* Premium Gradient Backgrounds */
+/* Premium Gradient Backgrounds - Futuristic Luxury */
 .bg-gradient-premium {
-  background: linear-gradient(135deg, #1E3A8A 0%, #3B5998 100%);
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
 }
 
 .bg-gradient-subtle {
-  background: linear-gradient(180deg, #FAF9F6 0%, #F4F4F5 100%);
+  background: linear-gradient(180deg, #F8F5F0 0%, #F0EDE6 50%, #EDE9E0 100%);
 }
 
 .bg-gradient-navy {
-  background: linear-gradient(180deg, #1E3A8A 0%, #172A5E 100%);
+  background: linear-gradient(180deg, #0F172A 0%, #1E293B 50%, #334155 100%);
 }
 
 .bg-gradient-navy-radial {
-  background: radial-gradient(ellipse at top, #2D4A7C 0%, #1E3A8A 70%);
+  background: radial-gradient(ellipse at top, #1E293B 0%, #0F172A 70%);
 }
 
 .bg-gradient-hero {
-  background: linear-gradient(135deg, rgba(212, 175, 136, 0.12) 0%, rgba(30, 58, 138, 0.04) 50%, transparent 100%);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.03) 0%, rgba(248, 245, 240, 0.8) 30%, rgba(201, 179, 127, 0.05) 60%, transparent 100%);
 }
 
 .bg-gradient-ivory {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FAF9F6 50%, #F8F5F0 100%);
+  background: linear-gradient(180deg, #FAF9F6 0%, #F8F5F0 50%, #F5F1EB 100%);
 }
 
-/* Premium Text Gradients */
+/* Futuristic Hero Gradient - Deep navy (low opacity) → warm cream → faint gold */
+.bg-gradient-futuristic-hero {
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(15, 23, 42, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(201, 179, 127, 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(248, 245, 240, 0.9) 0%, #F8F5F0 70%);
+}
+
+/* Section gradients for smooth transitions */
+.bg-gradient-section-1 {
+  background: linear-gradient(180deg, #F8F5F0 0%, #F5F1EB 100%);
+}
+
+.bg-gradient-section-2 {
+  background: linear-gradient(180deg, #F5F1EB 0%, #F0EDE6 100%);
+}
+
+.bg-gradient-section-3 {
+  background: linear-gradient(180deg, #F0EDE6 0%, #EDE9E0 100%);
+}
+
+/* Futuristic ambient background */
+.bg-futuristic-ambient {
+  background: 
+    linear-gradient(135deg, #F8F5F0 0%, #F0EDE6 50%, #EDE9E0 100%);
+  position: relative;
+}
+
+.bg-futuristic-ambient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(201, 179, 127, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(15, 23, 42, 0.03) 0%, transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(248, 245, 240, 0.5) 0%, transparent 60%);
+  pointer-events: none;
+  animation: mesh-glow 30s ease-in-out infinite;
+}
+
+/* Premium Text Gradients - Futuristic Luxury */
 .text-gradient {
-  background: linear-gradient(135deg, #1E3A8A 0%, #D4AF88 100%);
+  background: linear-gradient(135deg, #0F172A 0%, #C9B37F 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-gold {
-  background: linear-gradient(135deg, #D4AF88 0%, #E8D5B7 100%);
+  background: linear-gradient(135deg, #C9B37F 0%, #D4AF88 50%, #E8D5B7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-navy {
-  background: linear-gradient(135deg, #1E3A8A 0%, #2D4A7C 100%);
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.text-gradient-futuristic {
+  background: linear-gradient(90deg, #0F172A 0%, #334155 25%, #C9B37F 50%, #334155 75%, #0F172A 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 8s ease infinite;
 }
 
 /* Smooth Scrolling */
@@ -270,8 +396,8 @@ html {
 
 /* Selection Color */
 ::selection {
-  background: rgba(212, 175, 136, 0.3);
-  color: #1E3A8A;
+  background: rgba(201, 179, 127, 0.35);
+  color: #0F172A;
 }
 
 /* Focus Styles */

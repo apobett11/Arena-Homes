@@ -54,7 +54,7 @@ export const Testimonials = () => {
     ];
 
     return (
-        <section className="py-8 md:py-10 bg-gradient-to-b from-[#FAF9F6] to-white">
+        <section className="py-8 md:py-10 bg-gradient-to-b from-[#EDE9E0] to-[#F0EDE6]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -62,8 +62,8 @@ export const Testimonials = () => {
                     viewport={{ once: true }}
                     className="text-center mb-6"
                 >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#1E3A8A]">
-                        <span className="w-2 h-2 rounded-full bg-[#1E3A8A]" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                        <span className="w-2 h-2 rounded-full bg-[#0F172A]" />
                         Student Stories
                     </span>
                     <h2 className="text-xl md:text-2xl font-bold text-[#1F2937] mt-1">
@@ -88,7 +88,7 @@ export const Testimonials = () => {
                                     <Star 
                                         key={i} 
                                         size={12} 
-                                        className={i < review.rating ? "text-[#D4AF88] fill-[#D4AF88]" : "text-[#E5E7EB]"} 
+                                        className={i < review.rating ? "text-[#C9B37F] fill-[#C9B37F]" : "text-[#EDE9E0]"} 
                                     />
                                 ))}
                             </div>
@@ -99,13 +99,13 @@ export const Testimonials = () => {
                             </p>
 
                             {/* Author */}
-                            <div className="flex items-center gap-2 pt-3 border-t border-[#F4F4F5]">
-                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B5998] flex items-center justify-center text-white font-bold text-xs">
+                            <div className="flex items-center gap-2 pt-3 border-t border-[#EDE9E0]">
+                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#0F172A] to-[#334155] flex items-center justify-center text-white font-bold text-xs">
                                     {review.avatar}
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-sm text-[#1F2937]">{review.name}</h4>
-                                    <p className="text-xs text-[#6B7280]">{review.role}</p>
+                                    <p className="text-xs text-[#4B5563]">{review.role}</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -117,7 +117,7 @@ export const Testimonials = () => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mt-6 md:mt-8 flex flex-wrap justify-center gap-6 md:gap-10 px-6 py-3 rounded-xl bg-white border border-[#D4AF88]/20 shadow-sm max-w-xl mx-auto"
+                    className="mt-6 md:mt-8 flex flex-wrap justify-center gap-6 md:gap-10 px-6 py-3 rounded-xl bg-[#F8F5F0] border border-[#C9B37F]/20 shadow-sm max-w-xl mx-auto"
                 >
                     {[
                         { value: "4.9/5", label: "Rating" },
@@ -125,8 +125,8 @@ export const Testimonials = () => {
                         { value: "98%", label: "Recommend" }
                     ].map((stat, index) => (
                         <div key={index} className="text-center">
-                            <span className="block text-lg md:text-xl font-bold text-[#1E3A8A]">{stat.value}</span>
-                            <span className="text-xs text-[#6B7280]">{stat.label}</span>
+                            <span className="block text-lg md:text-xl font-bold text-[#0F172A]">{stat.value}</span>
+                            <span className="text-xs text-[#4B5563]">{stat.label}</span>
                         </div>
                     ))}
                 </motion.div>
