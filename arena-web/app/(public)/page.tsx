@@ -14,32 +14,37 @@ import { FAQRulesSection } from "@/components/FAQRulesSection";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getCurrentUserRoleProfile, redirectToRoleHome } from "@/lib/auth/role-routing";
 
-// Final CTA Section Component - Compact
+// Final CTA Section Component - Light Theme
 const FinalCTA = () => (
-    <section className="py-10 md:py-12 bg-gradient-navy relative overflow-hidden">
+    <section className="py-10 md:py-12 bg-gradient-to-b from-[#FAF9F6] to-white relative overflow-hidden border-t border-[#D4AF88]/20">
+        {/* Decorative gradient orbs */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-gradient-radial from-[#D4AF88]/15 via-transparent to-transparent rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-gradient-radial from-[#1E3A8A]/8 via-transparent to-transparent rounded-full blur-3xl" />
+        </div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
             >
-                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">
+                <h2 className="text-xl md:text-2xl font-bold text-[#1F2937] mb-3">
                     Ready to find your student home?
                 </h2>
-                <p className="text-sm text-white/70 mb-5 max-w-lg mx-auto">
+                <p className="text-sm text-[#6B7280] mb-5 max-w-lg mx-auto">
                     Join thousands of Egerton University students who found their perfect housing through Arena Homes.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <Link 
                         href="/listings" 
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-white text-slate-900 font-semibold hover:bg-white/90 transition-all text-sm"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#1E3A8A] text-white font-semibold hover:bg-[#172A5E] transition-all text-sm shadow-lg shadow-[#1E3A8A]/20 border-2 border-transparent hover:border-[#D4AF88]"
                     >
                         Browse Houses
                         <ArrowRight size={16} />
                     </Link>
                     <Link 
                         href="/auth/login" 
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all border border-white/20 text-sm"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-white text-[#1F2937] font-medium hover:bg-[#F8F5F0] transition-all border-2 border-[#D4AF88]/30 hover:border-[#D4AF88] text-sm"
                     >
                         Create Account
                     </Link>
@@ -89,11 +94,11 @@ export default function Home() {
   }, [router]);
 
   if (checkingSession) {
-    return <main className="min-h-screen p-6 text-sm text-slate-400">Checking your session...</main>;
+    return <main className="min-h-screen p-6 text-sm text-[#6B7280] bg-[#FAF9F6]">Checking your session...</main>;
   }
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950">
+    <main className="min-h-screen bg-[#FAF9F6]">
       {/* Hero Section */}
       <Hero />
 

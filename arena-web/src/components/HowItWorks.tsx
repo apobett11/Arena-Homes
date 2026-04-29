@@ -28,7 +28,7 @@ export const HowItWorks = () => {
     ];
 
     return (
-        <section className="py-8 md:py-10 bg-white dark:bg-slate-950">
+        <section className="py-8 md:py-10 bg-[#FAF9F6]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -36,11 +36,11 @@ export const HowItWorks = () => {
                     viewport={{ once: true }}
                     className="text-center mb-6"
                 >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
-                        <span className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#1E3A8A]">
+                        <span className="w-2 h-2 rounded-full bg-[#1E3A8A]" />
                         Simple Process
                     </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                    <h2 className="text-xl md:text-2xl font-bold text-[#1F2937] mt-1">
                         How It <span className="text-gradient">Works</span>
                     </h2>
                 </motion.div>
@@ -54,18 +54,18 @@ export const HowItWorks = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1, duration: 0.4 }}
-                            className="card-premium p-4 text-center group hover:border-primary/20 transition-all"
+                            className="card-premium p-4 text-center group hover:border-[#D4AF88]/40 transition-all"
                         >
                             {/* Icon */}
-                            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 mb-2 group-hover:scale-105 transition-transform">
-                                <step.icon size={20} className="text-primary" />
+                            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#F8F5F0] to-white border border-[#E5E7EB] mb-2 group-hover:scale-105 transition-transform group-hover:border-[#D4AF88]/30">
+                                <step.icon size={20} className="text-[#1E3A8A]" />
                             </div>
                             
                             {/* Content */}
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+                            <h3 className="text-sm font-bold text-[#1F2937] mb-1">
                                 {index + 1}. {step.title}
                             </h3>
-                            <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">
+                            <p className="text-[#6B7280] text-xs leading-relaxed line-clamp-2">
                                 {step.desc}
                             </p>
                         </motion.div>

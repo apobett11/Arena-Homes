@@ -54,7 +54,7 @@ export const FAQRulesSection = () => {
     const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
     return (
-        <section className="py-8 md:py-10 bg-gradient-to-b from-[#F8FAFC] to-white dark:from-slate-950 dark:to-slate-900">
+        <section className="py-8 md:py-10 bg-gradient-to-b from-white to-[#FAF9F6]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* FAQ Column */}
@@ -64,10 +64,10 @@ export const FAQRulesSection = () => {
                         viewport={{ once: true }}
                     >
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <ScrollText size={18} className="text-primary" />
+                            <div className="h-8 w-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center">
+                                <ScrollText size={18} className="text-[#1E3A8A]" />
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+                            <h2 className="text-lg font-bold text-[#1F2937]">Frequently Asked Questions</h2>
                         </div>
                         
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
@@ -76,8 +76,8 @@ export const FAQRulesSection = () => {
                                     key={index}
                                     className={`card-premium overflow-hidden transition-all ${
                                         activeFaq === index 
-                                            ? "border-primary/30 shadow-sm" 
-                                            : "hover:border-slate-300 dark:hover:border-slate-600"
+                                            ? "border-[#D4AF88]/50 shadow-sm" 
+                                            : "hover:border-[#E5E7EB]"
                                     }`}
                                 >
                                     <button
@@ -85,13 +85,13 @@ export const FAQRulesSection = () => {
                                         className="w-full flex items-center justify-between p-3 text-left gap-3"
                                         aria-expanded={activeFaq === index}
                                     >
-                                        <span className={`font-medium text-sm ${activeFaq === index ? "text-primary" : "text-slate-900 dark:text-white"}`}>
+                                        <span className={`font-medium text-sm ${activeFaq === index ? "text-[#1E3A8A]" : "text-[#1F2937]"}`}>
                                             {faq.question}
                                         </span>
                                         <div className={`h-7 w-7 flex-shrink-0 flex items-center justify-center rounded-lg transition-all ${
                                             activeFaq === index 
-                                                ? "bg-primary text-white" 
-                                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                                ? "bg-[#1E3A8A] text-white" 
+                                                : "bg-[#F4F4F5] text-[#6B7280]"
                                         }`}>
                                             {activeFaq === index ? <Minus size={14} /> : <Plus size={14} />}
                                         </div>
@@ -106,7 +106,7 @@ export const FAQRulesSection = () => {
                                                 transition={{ duration: 0.2 }}
                                                 className="overflow-hidden"
                                             >
-                                                <div className="px-3 pb-3 pt-0 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800">
+                                                <div className="px-3 pb-3 pt-0 text-[#6B7280] leading-relaxed border-t border-[#F4F4F5]">
                                                     <p className="pt-2 text-xs">
                                                         {faq.answer}
                                                     </p>
@@ -126,10 +126,10 @@ export const FAQRulesSection = () => {
                         viewport={{ once: true }}
                     >
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <CheckCircle2 size={18} className="text-primary" />
+                            <div className="h-8 w-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center">
+                                <CheckCircle2 size={18} className="text-[#1E3A8A]" />
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Rules & Guidelines</h2>
+                            <h2 className="text-lg font-bold text-[#1F2937]">Rules & Guidelines</h2>
                         </div>
 
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
@@ -140,27 +140,27 @@ export const FAQRulesSection = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05, duration: 0.3 }}
                                     viewport={{ once: true }}
-                                    className="card-premium p-3 group hover:border-primary/20"
+                                    className="card-premium p-3 group hover:border-[#D4AF88]/40"
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
                                             rule.type === 'alert' 
-                                                ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' 
-                                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                                                ? 'bg-rose-100 text-rose-600' 
+                                                : 'bg-emerald-100 text-emerald-600'
                                         }`}>
                                             {rule.type === 'alert' ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-sm text-slate-900 dark:text-white mb-0.5">{rule.title}</h4>
-                                            <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">{rule.desc}</p>
+                                            <h4 className="font-semibold text-sm text-[#1F2937] mb-0.5">{rule.title}</h4>
+                                            <p className="text-[#6B7280] text-xs leading-relaxed">{rule.desc}</p>
                                         </div>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
 
-                        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 text-center">
-                            View full rules and FAQ on our <a href="/rules" className="text-primary hover:underline">rules page</a>
+                        <p className="mt-3 text-xs text-[#6B7280] text-center">
+                            View full rules and FAQ on our <a href="/rules" className="text-[#1E3A8A] hover:underline">rules page</a>
                         </p>
                     </motion.div>
                 </div>

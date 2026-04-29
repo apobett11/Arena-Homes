@@ -3,61 +3,69 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Premium Brand Palette */
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-secondary: #0EA5E9;
-  --color-accent: #D6A84F;
-  --color-accent-hover: #B8923E;
-  --color-electric: #0EA5E9;
-  --color-coral: #FF6B6B;
-  /* Luxury Extended Palette */
-  --color-navy: #08111F;
-  --color-navy-light: #0F1D2E;
-  --color-gold: #D6A84F;
-  --color-gold-soft: #E8C87A;
-  --color-ivory: #F8FAFC;
-  --color-slate-text: #0F172A;
+  /* Luxury Light Brand Palette */
+  --color-primary: #1E3A8A;
+  --color-primary-hover: #172A5E;
+  --color-secondary: #3B5998;
+  --color-accent: #D4AF88;
+  --color-accent-hover: #C9B89F;
+  --color-electric: #3B82F6;
+  --color-coral: #F87171;
+  /* Luxury Extended Palette - Light & Airy */
+  --color-navy: #1E3A8A;
+  --color-navy-light: #2D4A7C;
+  --color-gold: #D4AF88;
+  --color-gold-soft: #E8D5B7;
+  --color-cream: #FAF9F6;
+  --color-cream-warm: #F8F5F0;
+  --color-beige: #EDE4D9;
+  --color-ivory: #FAF9F6;
+  --color-slate-text: #1F2937;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  --background: #FAFBFC;
-  --foreground: #0F172A;
+  --background: #FAF9F6;
+  --foreground: #1F2937;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #1F2937;
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #2563EB;
+  --popover-foreground: #1F2937;
+  --primary: #1E3A8A;
   --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #1E293B;
-  --muted: #F8FAFC;
-  --muted-foreground: #64748B;
-  --accent: #FF6B6B;
-  --accent-foreground: #FFFFFF;
+  --secondary: #F4F4F5;
+  --secondary-foreground: #374151;
+  --muted: #F8F5F0;
+  --muted-foreground: #6B7280;
+  --accent: #D4AF88;
+  --accent-foreground: #1F2937;
   --radius: 1rem;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
+  --gold: #D4AF88;
+  --cream: #FAF9F6;
+  --beige: #EDE4D9;
+  --navy: #1E3A8A;
+  --charcoal: #1F2937;
 }
 
 .dark {
   --background: #0F172A;
-  --foreground: #F8FAFC;
+  --foreground: #FAF9F6;
   --card: #1E293B;
-  --card-foreground: #F8FAFC;
+  --card-foreground: #FAF9F6;
   --popover: #1E293B;
-  --popover-foreground: #F8FAFC;
+  --popover-foreground: #FAF9F6;
   --primary: #3B82F6;
   --primary-foreground: #FFFFFF;
   --secondary: #334155;
-  --secondary-foreground: #F8FAFC;
+  --secondary-foreground: #FAF9F6;
   --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #FF6B6B;
-  --accent-foreground: #FFFFFF;
+  --muted-foreground: #9CA3AF;
+  --accent: #D4AF88;
+  --accent-foreground: #1F2937;
 }
 
 @layer base {
@@ -74,9 +82,9 @@
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08), 0 8px 32px -8px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 24px -4px rgba(30, 58, 138, 0.08), 0 8px 32px -8px rgba(30, 58, 138, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -91,9 +99,9 @@
 
 /* Premium Glass Variants */
 .glass-elevated {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 40px -8px rgba(0, 0, 0, 0.12), 0 16px 48px -16px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 40px -8px rgba(30, 58, 138, 0.12), 0 16px 48px -16px rgba(30, 58, 138, 0.06);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -107,11 +115,11 @@
 
 /* Premium Shadows */
 .shadow-soft {
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.06), 0 8px 32px -8px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 24px -4px rgba(30, 58, 138, 0.06), 0 8px 32px -8px rgba(30, 58, 138, 0.03);
 }
 
 .shadow-luxury {
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.1), 0 16px 48px -16px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px -8px rgba(30, 58, 138, 0.1), 0 16px 48px -16px rgba(30, 58, 138, 0.05);
 }
 
 .shadow-glow {
@@ -123,8 +131,8 @@
 }
 
 .hero-gradient {
-  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent),
-    radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.15), transparent);
+  background: radial-gradient(circle at top right, rgba(212, 175, 136, 0.15), transparent),
+    radial-gradient(circle at bottom left, rgba(30, 58, 138, 0.08), transparent);
 }
 
 @keyframes float {
@@ -168,27 +176,27 @@
 .card-premium {
   background: var(--card);
   border-radius: 1.5rem;
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.05), 0 8px 32px -8px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 0 4px 24px -4px rgba(30, 58, 138, 0.05), 0 8px 32px -8px rgba(30, 58, 138, 0.02);
+  border: 1px solid rgba(212, 175, 136, 0.2);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-premium:hover {
-  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.1), 0 12px 24px -12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 40px -8px rgba(30, 58, 138, 0.1), 0 12px 24px -12px rgba(30, 58, 138, 0.04);
   transform: translateY(-6px);
-  border-color: rgba(37, 99, 235, 0.15);
+  border-color: rgba(212, 175, 136, 0.4);
 }
 
 .card-luxury {
   background: var(--card);
   border-radius: 2rem;
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.08), 0 16px 48px -16px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 8px 32px -8px rgba(30, 58, 138, 0.08), 0 16px 48px -16px rgba(30, 58, 138, 0.04);
+  border: 1px solid rgba(212, 175, 136, 0.25);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-luxury:hover {
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.12), 0 16px 32px -16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 24px 48px -12px rgba(30, 58, 138, 0.12), 0 16px 32px -16px rgba(30, 58, 138, 0.06);
   transform: translateY(-8px);
 }
 
@@ -210,46 +218,46 @@
 
 /* Premium Gradient Backgrounds */
 .bg-gradient-premium {
-  background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+  background: linear-gradient(135deg, #1E3A8A 0%, #3B5998 100%);
 }
 
 .bg-gradient-subtle {
-  background: linear-gradient(180deg, #FAFBFC 0%, #F1F5F9 100%);
+  background: linear-gradient(180deg, #FAF9F6 0%, #F4F4F5 100%);
 }
 
 .bg-gradient-navy {
-  background: linear-gradient(180deg, #0F1D2E 0%, #08111F 100%);
+  background: linear-gradient(180deg, #1E3A8A 0%, #172A5E 100%);
 }
 
 .bg-gradient-navy-radial {
-  background: radial-gradient(ellipse at top, #0F1D2E 0%, #08111F 70%);
+  background: radial-gradient(ellipse at top, #2D4A7C 0%, #1E3A8A 70%);
 }
 
 .bg-gradient-hero {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(14, 165, 233, 0.04) 50%, transparent 100%);
+  background: linear-gradient(135deg, rgba(212, 175, 136, 0.12) 0%, rgba(30, 58, 138, 0.04) 50%, transparent 100%);
 }
 
 .bg-gradient-ivory {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAF9F6 50%, #F8F5F0 100%);
 }
 
 /* Premium Text Gradients */
 .text-gradient {
-  background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+  background: linear-gradient(135deg, #1E3A8A 0%, #D4AF88 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-gold {
-  background: linear-gradient(135deg, #D6A84F 0%, #E8C87A 100%);
+  background: linear-gradient(135deg, #D4AF88 0%, #E8D5B7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-navy {
-  background: linear-gradient(135deg, #08111F 0%, #1E3A5F 100%);
+  background: linear-gradient(135deg, #1E3A8A 0%, #2D4A7C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -262,8 +270,8 @@ html {
 
 /* Selection Color */
 ::selection {
-  background: rgba(37, 99, 235, 0.2);
-  color: #0F172A;
+  background: rgba(212, 175, 136, 0.3);
+  color: #1E3A8A;
 }
 
 /* Focus Styles */

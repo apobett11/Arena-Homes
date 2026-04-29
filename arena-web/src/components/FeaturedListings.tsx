@@ -140,7 +140,7 @@ export const FeaturedListings = () => {
     const visibleListings = dynamicListings;
 
     return (
-        <section className="py-10 md:py-14 bg-gradient-to-b from-[#F8FAFC] to-white dark:from-slate-950 dark:to-slate-900">
+        <section className="py-10 md:py-14 bg-gradient-to-b from-[#FAF9F6] to-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* New Listings Carousel */}
                 <motion.div 
@@ -152,13 +152,13 @@ export const FeaturedListings = () => {
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#1E3A8A]">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                 Just Listed
                             </span>
-                            <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">New This Week</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-[#1F2937]">New This Week</h2>
                         </div>
-                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-hover transition-colors group">
+                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#1E3A8A] hover:text-[#172A5E] transition-colors group">
                             View All 
                             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -167,27 +167,27 @@ export const FeaturedListings = () => {
                     <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                         {loading ? (
                             <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center">
-                                <div className="animate-pulse bg-slate-200 dark:bg-slate-800 rounded-2xl h-64" />
+                                <div className="animate-pulse bg-[#F4F4F5] rounded-2xl h-64" />
                             </div>
                         ) : newThisWeek.length === 0 ? (
-                            <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-2xl">
+                            <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center text-[#6B7280] bg-[#F8F5F0] rounded-2xl">
                                 No new listings this week
                             </div>
                         ) : (
                             newThisWeek.map((item) => (
                                 <Link key={item.id} href={`/listings/${item.id}`} className="min-w-[160px] sm:min-w-[200px] group cursor-pointer">
-                                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden shadow-sm border border-[#E5E7EB] hover:border-[#D4AF88]/50 transition-all">
                                         <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#1F2937]/90 via-[#1F2937]/20 to-transparent" />
                                         <div className="absolute top-2 left-2">
-                                            <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-semibold uppercase tracking-wide">
+                                            <span className="px-2 py-0.5 rounded-full bg-[#1E3A8A] text-white text-[10px] font-semibold uppercase tracking-wide">
                                                 New
                                             </span>
                                         </div>
                                         <div className="absolute bottom-3 left-3 right-3">
                                             <p className="text-white font-semibold text-sm leading-tight">{item.title}</p>
-                                            <p className="text-amber-300 text-xs font-medium">{item.price}/mo</p>
-                                            <p className="text-white/70 text-[10px] mt-0.5 flex items-center gap-1">
+                                            <p className="text-[#D4AF88] text-xs font-medium">{item.price}/mo</p>
+                                            <p className="text-white/80 text-[10px] mt-0.5 flex items-center gap-1">
                                                 <MapPin size={10} /> {item.location}
                                             </p>
                                         </div>
@@ -206,18 +206,18 @@ export const FeaturedListings = () => {
                         viewport={{ once: true }}
                         className="max-w-xl"
                     >
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
-                            <span className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#1E3A8A]">
+                            <span className="w-2 h-2 rounded-full bg-[#1E3A8A]" />
                             Featured Properties
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+                        <h2 className="text-2xl md:text-3xl font-bold text-[#1F2937] leading-tight">
                             Find Your Perfect <span className="text-gradient">Student Home</span>
                         </h2>
-                        <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm md:text-base">
+                        <p className="mt-2 text-[#4B5563] text-sm md:text-base">
                             Verified listings near Egerton University with transparent pricing
                         </p>
                     </motion.div>
-                    <Link href="/listings" className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95 sm:w-auto w-full shrink-0 text-sm">
+                    <Link href="/listings" className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold hover:bg-[#172A5E] hover:shadow-lg hover:shadow-[#1E3A8A]/25 transition-all active:scale-95 sm:w-auto w-full shrink-0 text-sm border-2 border-transparent hover:border-[#D4AF88]">
                         Browse All
                         <ArrowRight size={16} />
                     </Link>
@@ -229,18 +229,18 @@ export const FeaturedListings = () => {
                         // Loading skeleton
                         [...Array(6)].map((_, index) => (
                             <div key={index} className="animate-pulse">
-                                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-800 rounded-2xl mb-4" />
-                                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4 mb-2" />
-                                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+                                <div className="aspect-[4/3] bg-[#F4F4F5] rounded-2xl mb-4" />
+                                <div className="h-4 bg-[#F4F4F5] rounded w-3/4 mb-2" />
+                                <div className="h-3 bg-[#F4F4F5] rounded w-1/2" />
                             </div>
                         ))
                     ) : visibleListings.length === 0 ? (
                         <div className="col-span-full text-center py-16">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <Home size={24} className="text-slate-400" />
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#F8F5F0] flex items-center justify-center">
+                                <Home size={24} className="text-[#9CA3AF]" />
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">No properties available</h3>
-                            <p className="text-slate-500 dark:text-slate-400">Check back soon for new listings</p>
+                            <h3 className="text-lg font-semibold text-[#1F2937] mb-2">No properties available</h3>
+                            <p className="text-[#6B7280]">Check back soon for new listings</p>
                         </div>
                     ) : (
                         visibleListings.map((item, index) => (
@@ -265,7 +265,7 @@ export const FeaturedListings = () => {
                     viewport={{ once: true }}
                     className="mt-8 md:mt-10 text-center"
                 >
-                    <Link href="/listings" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-sm hover:scale-105 transition-all shadow-lg">
+                    <Link href="/listings" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:scale-105 transition-all shadow-lg shadow-[#1E3A8A]/20 border-2 border-transparent hover:border-[#D4AF88]">
                         View All Properties
                         <ArrowRight size={16} />
                     </Link>
@@ -287,7 +287,7 @@ export const FeaturedListings = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                            className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-[#1E3A8A]/10 border border-[#D4AF88]/20"
                         >
                             {showSuccess ? (
                                 <div className="p-8 text-center">
