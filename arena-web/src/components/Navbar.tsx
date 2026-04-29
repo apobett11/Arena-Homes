@@ -72,25 +72,25 @@ export const Navbar = () => {
     if (!mounted) return null;
 
     const navLinks = [
-        { name: "Home", href: "/" },
-        { name: "Listings", href: "/listings" },
-        { name: "About", href: "/about" },
-        { name: "Contact", href: "/contact" },
+        { name: "Browse Houses", href: "/listings" },
+        { name: "How It Works", href: "#how-it-works" },
+        { name: "Rules", href: "#rules" },
+        { name: "FAQs", href: "#faqs" },
     ];
 
     return (
         <nav
-            className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled
-                ? "bg-white/95 dark:bg-slate-950/95 py-3 shadow-lg border-b border-slate-200/50 dark:border-slate-800/50 backdrop-blur-xl"
+            className={`fixed top-0 z-50 w-full transition-all duration-500 ${isScrolled
+                ? "bg-white/90 dark:bg-slate-950/90 py-3 shadow-soft border-b border-slate-200/50 dark:border-slate-800/50 backdrop-blur-xl"
                 : "bg-transparent py-5"
                 }`}
         >
-            <div className="container mx-auto flex items-center justify-between px-4 md:px-6">
+            <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link href="/" className="flex items-center gap-2.5 group">
                     {brandLogo ? (
                         <img src={brandLogo} alt="Brand logo" className="h-10 w-10 rounded-xl object-cover shadow-lg" />
                     ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-premium text-white shadow-lg group-hover:scale-105 transition-transform">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-premium text-white shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
                             <Home size={22} />
                         </div>
                     )}
@@ -100,21 +100,22 @@ export const Navbar = () => {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <div className="hidden items-center gap-6 lg:gap-8 md:flex">
+                <div className="hidden items-center gap-1 lg:gap-2 md:flex">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             href={link.href}
-                            className={`text-sm font-medium transition-all hover:text-primary px-3 py-2 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50 ${isScrolled ? "text-slate-600 dark:text-slate-300" : "text-white/90 hover:text-white"}
+                            className={`text-sm font-medium transition-all hover:text-primary px-4 py-2 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50 ${isScrolled ? "text-slate-600 dark:text-slate-300" : "text-white/90 hover:text-white"}
                             `}>
                             {link.name}
                         </Link>
                     ))}
                     
-                    <div className="flex items-center gap-3 pl-4 border-l border-slate-200/50 dark:border-slate-700/50">
+                    <div className="flex items-center gap-2 pl-4 ml-2 border-l border-slate-200/50 dark:border-slate-700/50">
                         <button
                             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                             className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all ${isScrolled ? "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700" : "border-white/20 bg-white/10 text-white hover:bg-white/20"}`}
+                            aria-label="Toggle theme"
                         >
                             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
@@ -124,15 +125,20 @@ export const Navbar = () => {
                                 <Link href={dashboardRoute} className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
                                     <User size={16} /> Dashboard
                                 </Link>
-                                <button onClick={handleLogout} className="flex items-center justify-center rounded-xl bg-red-50 px-3 py-2.5 text-red-600 transition-all hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400">
+                                <button onClick={handleLogout} className="flex items-center justify-center rounded-xl bg-red-50 px-3 py-2.5 text-red-600 transition-all hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400" aria-label="Sign out">
                                     <LogOut size={16} />
                                 </button>
                             </div>
                         ) : (
-                            <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-95">
-                                <User size={16} />
-                                Sign In
-                            </Link>
+                            <>
+                                <Link href="/listings" className={`hidden lg:flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${isScrolled ? "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" : "text-white hover:bg-white/10"}`}>
+                                    Browse Houses
+                                </Link>
+                                <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-95">
+                                    <User size={16} />
+                                    Login
+                                </Link>
+                            </>
                         )}
                     </div>
                 </div>
