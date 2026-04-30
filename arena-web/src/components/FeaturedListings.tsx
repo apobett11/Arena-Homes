@@ -140,7 +140,7 @@ export const FeaturedListings = () => {
     const visibleListings = dynamicListings;
 
     return (
-        <section className="py-10 md:py-14 bg-white/85 backdrop-blur-sm">
+        <section className="py-10 md:py-14 bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* New Listings Carousel */}
                 <motion.div 

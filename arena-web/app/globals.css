@@ -140,27 +140,23 @@
   position: relative;
   z-index: 1;
   height: 100vh;
-  padding: 2rem;
-  color: #f8fafc;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  text-align: center;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* Enhanced glassmorphism - scrollable card */
 .vibrant-glass-card {
-  max-width: 1200px;
+  max-width: calc(100vw - 20px);
   width: 100%;
-  max-height: calc(100vh - 4rem);
-  overflow-y: auto;
-  margin: 0 auto;
-  padding: 2rem;
-  background: rgba(15, 15, 35, 0.4);
+  min-height: calc(100vh - 20px);
+  overflow-y: visible;
+  background: rgba(15, 15, 35, 0.25);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 24px;
+  border-radius: 16px;
   border: 1px solid rgba(59, 130, 246, 0.3);
   box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
 }
@@ -220,11 +216,13 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .vibrant-content-wrapper { padding: 1rem; }
   .vibrant-particle:nth-child(1), .vibrant-particle:nth-child(3) { 
       width: 70px; height: 70px; 
   }
   .vibrant-background { background-size: 500% 500%; }
+  .vibrant-glass-card {
+      border-radius: 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -236,8 +234,7 @@
       opacity: 0.8 !important;
   }
   .vibrant-glass-card {
-      padding: 1rem;
-      max-height: calc(100vh - 2rem);
+      border-radius: 8px;
   }
 }
 

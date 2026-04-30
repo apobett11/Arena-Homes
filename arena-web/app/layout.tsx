@@ -61,16 +61,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {/* Glassmorphic Scrollable Card Container */}
-          <div className="vibrant-content-wrapper">
-            <div className="vibrant-glass-card">
-              <h1 className="vibrant-heading">vibrant blue paradise</h1>
-              <p className="text-blue-200 mb-2">🌊 Multiple blue hues • Rich gradients • Smooth animations</p>
-              <p className="text-blue-300/80 text-sm mb-6">This background features 10+ shades of blue from deep navy (#0a0a1f) to bright sky (#e0f2fe) with 7 animated particles and multi-layered gradients.</p>
-              
-              {/* Main Content */}
-              <div className="text-left">
-                {children}
-              </div>
+          <div className="vibrant-content-wrapper p-[10px]">
+            <div className="vibrant-glass-card p-0">
+              {children}
             </div>
           </div>
         </ThemeProvider>

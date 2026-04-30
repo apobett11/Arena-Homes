@@ -114,24 +114,7 @@ export const Hero = () => {
         ];
 
     return (
-        <section className="relative min-h-[90vh] md:min-h-screen flex items-center overflow-hidden bg-[#F8F5F0]">
-            {/* Hero Background - 100% Opacity Visual Photo */}
-            <div className="absolute inset-0 z-0">
-                {/* Full Opacity Background Image */}
-                <Image
-                    src={heroImage}
-                    alt="Modern student housing near Egerton University"
-                    fill
-                    className="object-cover"
-                    priority
-                    quality={100}
-                />
-                
-                {/* Subtle Dark Overlay for Text Readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/40" />
-                <div className="absolute inset-0 bg-blue-900/20" />
-            </div>
-
+        <section className="relative min-h-[90vh] md:min-h-screen flex items-center overflow-hidden bg-transparent">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 md:pt-32">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -139,12 +122,12 @@ export const Hero = () => {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="mx-auto max-w-5xl"
                 >
-                    {/* Premium Trust Badge - White on Dark */}
+                    {/* Premium Trust Badge - Dark on Light */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2, duration: 0.5 }}
-                        className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-medium text-white shadow-lg"
+                        className="mb-8 inline-flex items-center gap-2 rounded-full bg-slate-900/80 backdrop-blur-md border border-blue-400/30 px-4 py-2 text-sm font-medium text-white shadow-lg"
                     >
                         <span className="relative flex h-2 w-2">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
@@ -154,17 +137,17 @@ export const Hero = () => {
                         <Sparkles size={14} className="text-blue-300" />
                     </motion.div>
 
-                    {/* Main Heading - White Text for Dark Background */}
-                    <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-white leading-[1.1] drop-shadow-lg">
+                    {/* Main Heading - Dark Text for Light Background */}
+                    <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1]">
                         Find a verified{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-blue-200 to-white">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800">
                             student home
                         </span>
                         <br className="hidden sm:block" />
-                        near <span className="text-blue-300">Egerton University</span>
+                        near <span className="text-blue-700">Egerton University</span>
                     </h1>
 
-                    <p className="mb-10 text-lg md:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+                    <p className="mb-10 text-lg md:text-xl text-slate-700 font-normal max-w-2xl mx-auto leading-relaxed">
                         Browse trusted rooms, bedsitters, and apartments built around student budgets,
                         safety, and campus convenience.
                     </p>
@@ -249,7 +232,7 @@ export const Hero = () => {
                         </div>
                     </motion.div>
 
-                    {/* Trust Chips - Dark Background Theme */}
+                    {/* Trust Chips - Dark on Light */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -265,7 +248,7 @@ export const Hero = () => {
                             <motion.div
                                 key={index}
                                 whileHover={{ scale: 1.05 }}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white text-sm shadow-lg hover:bg-black/40 transition-all duration-300"
+                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/90 backdrop-blur-sm border border-blue-400/30 text-white text-sm shadow-lg hover:bg-slate-700 transition-all duration-300"
                             >
                                 <chip.icon size={14} className="text-blue-300" />
                                 <span className="font-medium">{chip.text}</span>

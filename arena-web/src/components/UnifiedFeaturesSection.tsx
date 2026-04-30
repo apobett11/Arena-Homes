@@ -7,7 +7,7 @@ import { Testimonials } from "./Testimonials";
 
 export const UnifiedFeaturesSection = () => {
     return (
-        <section className="py-6 md:py-8 bg-gradient-to-b from-blue-50/90 to-white/95">
+        <section className="py-6 md:py-8 bg-transparent">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Unified Card Container */}
                 <motion.div 
