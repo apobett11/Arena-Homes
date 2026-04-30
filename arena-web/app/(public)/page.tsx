@@ -49,11 +49,11 @@ export default function Home() {
   }, [router]);
 
   if (checkingSession) {
-    return <main className="min-h-screen p-6 text-sm text-slate-600">Checking your session...</main>;
+    return <div className="p-6 text-sm text-slate-600">Checking your session...</div>;
   }
 
   return (
-    <main className="min-h-screen">
+    <>
       {/* Hero Section */}
       <Hero />
 
@@ -64,7 +64,6 @@ export default function Home() {
       <UnifiedFeaturesSection />
       
       <FAQRulesSection />
-
-    </main>
+    </>
   );
 }
