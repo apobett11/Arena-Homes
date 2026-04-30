@@ -20,9 +20,16 @@ export const Navbar = () => {
     const [dashboardRoute, setDashboardRoute] = useState<string>("/auth/login");
     const [brandName, setBrandName] = useState("ArenaHomes");
     const [brandLogo, setBrandLogo] = useState<string>("");
+    const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
         setMounted(true);
+
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
 
         const hydrateRole = async () => {
             const result = await getCurrentUserRoleProfile();
@@ -82,7 +89,7 @@ export const Navbar = () => {
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="fixed top-0 z-50 w-full header-black py-3"
+            className={`fixed top-0 z-50 w-full py-3 transition-all duration-300 ${isScrolled ? 'bg-slate-950/95 backdrop-blur-xl shadow-lg shadow-black/20' : 'bg-transparent'}`}
         >
             {/* Subtle animated background glow */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -162,7 +169,7 @@ export const Navbar = () => {
                 </div>
 
                 {/* Mobile Menu Toggle */}
-                <div className="flex items-center gap-3 md:hidden">
+                <div className="flex items-center gap-3 md:hidden pr-2">
                     <button
                         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                         className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 text-white/80 hover:text-white transition-all"
@@ -171,7 +178,7 @@ export const Navbar = () => {
                     </button>
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl text-white hover:bg-white/10 transition-all"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl text-white hover:bg-white/10 transition-all mr-2"
                     >
                         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>

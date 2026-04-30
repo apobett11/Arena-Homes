@@ -126,7 +126,7 @@ export const FAQRulesSection = () => {
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
 
     return (
-        <section id="rules" className="py-8 md:py-10 bg-transparent">
+        <section id="rules" className="py-8 md:py-10 bg-slate-950">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Mobile Tab Switcher */}
                 <div className="lg:hidden flex gap-2 mb-4">
@@ -135,7 +135,7 @@ export const FAQRulesSection = () => {
                         className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
                             activeTab === 'faq' 
                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' 
-                                : 'bg-slate-200 text-slate-600'
+                                : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                     >
                         FAQ
@@ -145,7 +145,7 @@ export const FAQRulesSection = () => {
                         className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
                             activeTab === 'rules' 
                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' 
-                                : 'bg-slate-200 text-slate-600'
+                                : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                     >
                         Rules
@@ -165,7 +165,7 @@ export const FAQRulesSection = () => {
                             <div className="h-8 w-8 rounded-lg bg-blue-600/20 flex items-center justify-center">
                                 <ScrollText size={18} className="text-blue-400" />
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900">Frequently Asked Questions</h2>
+                            <h2 className="text-lg font-bold text-white">Frequently Asked Questions</h2>
                         </div>
                         
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
@@ -192,7 +192,7 @@ export const FAQRulesSection = () => {
                             <div className="h-8 w-8 rounded-lg bg-blue-600/20 flex items-center justify-center">
                                 <CheckCircle2 size={18} className="text-blue-400" />
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900">Rules & Guidelines</h2>
+                            <h2 className="text-lg font-bold text-white">House Rules</h2>
                         </div>
 
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
@@ -201,8 +201,8 @@ export const FAQRulesSection = () => {
                             ))}
                         </div>
 
-                        <p className="mt-3 text-xs text-slate-500 text-center">
-                            View full rules on our <a href="/rules" className="text-blue-600 hover:underline">rules page</a>
+                        <p className="mt-3 text-xs text-slate-400 text-center">
+                            View full rules on our <a href="/rules" className="text-blue-400 hover:underline">rules page</a>
                         </p>
                     </motion.div>
                 </div>

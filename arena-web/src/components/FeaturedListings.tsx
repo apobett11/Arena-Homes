@@ -140,7 +140,7 @@ export const FeaturedListings = () => {
     const visibleListings = dynamicListings;
 
     return (
-        <section className="py-10 md:py-14 bg-transparent">
+        <section className="py-10 md:py-14 bg-slate-950">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* New Listings Carousel */}
                 <motion.div 
@@ -206,14 +206,14 @@ export const FeaturedListings = () => {
                         viewport={{ once: true }}
                         className="max-w-xl"
                     >
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
-                            <span className="w-2 h-2 rounded-full bg-blue-600" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-400">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" />
                             Featured Properties
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
-                            Find Your Perfect <span className="text-blue-600">Student Home</span>
+                        <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                            Find Your Perfect <span className="text-blue-400">Student Home</span>
                         </h2>
-                        <p className="mt-2 text-slate-600 text-sm md:text-base">
+                        <p className="mt-2 text-slate-400 text-sm md:text-base">
                             Verified listings near Egerton University with transparent pricing
                         </p>
                     </motion.div>

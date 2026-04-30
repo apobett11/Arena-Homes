@@ -7,38 +7,38 @@ import { Testimonials } from "./Testimonials";
 
 export const UnifiedFeaturesSection = () => {
     return (
-        <section className="py-6 md:py-8 bg-transparent">
+        <section className="py-2 md:py-3 bg-slate-950">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Unified Card Container */}
+                {/* Glassmorphic Card with White Tint */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="card-dark p-4 md:p-6 radius-card"
+                    className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 md:p-4"
                 >
                     {/* Section 1: How It Works */}
-                    <div className="mb-6 pb-6 border-b border-slate-700/50">
-                        <div className="text-center mb-4">
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <div className="mb-3 pb-3 border-b border-white/10">
+                        <div className="text-center mb-2">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                                 Simple Process
                             </span>
-                            <h2 className="text-lg md:text-xl font-bold text-white mt-0.5">
-                                How It <span className="text-blue-400">Works</span>
+                            <h2 className="text-base md:text-lg font-bold text-white mt-0.5">
+                                How It <span className="text-blue-300">Works</span>
                             </h2>
                         </div>
                         <HowItWorksCompact />
                     </div>
 
                     {/* Section 2: Why Choose Us */}
-                    <div className="mb-6 pb-6 border-b border-slate-700/50">
-                        <div className="text-center mb-4">
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <div className="mb-3 pb-3 border-b border-white/10">
+                        <div className="text-center mb-2">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                                 Why Choose Us
                             </span>
-                            <h2 className="text-lg md:text-xl font-bold text-white mt-0.5">
-                                Why <span className="text-blue-400">Arena Homes</span>
+                            <h2 className="text-base md:text-lg font-bold text-white mt-0.5">
+                                Why <span className="text-blue-300">Arena Homes</span>
                             </h2>
                         </div>
                         <TrustSectionCompact />
@@ -46,13 +46,13 @@ export const UnifiedFeaturesSection = () => {
 
                     {/* Section 3: Testimonials + Stats */}
                     <div>
-                        <div className="text-center mb-4">
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        <div className="text-center mb-2">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                                 Student Stories
                             </span>
-                            <h2 className="text-lg md:text-xl font-bold text-white mt-0.5">
-                                Loved by <span className="text-blue-400">Students</span>
+                            <h2 className="text-base md:text-lg font-bold text-white mt-0.5">
+                                Loved by <span className="text-blue-300">Students</span>
                             </h2>
                         </div>
                         <TestimonialsCompact />
