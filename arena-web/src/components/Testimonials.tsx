@@ -54,7 +54,7 @@ export const Testimonials = () => {
     ];
 
     return (
-        <section className="py-8 md:py-10 bg-gradient-to-b from-[#EDE9E0] to-[#F0EDE6]">
+        <section className="py-8 md:py-10 bg-gradient-to-b from-white/95 to-blue-50/90">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -62,17 +62,17 @@ export const Testimonials = () => {
                     viewport={{ once: true }}
                     className="text-center mb-6"
                 >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                        <span className="w-2 h-2 rounded-full bg-[#0F172A]" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
+                        <span className="w-2 h-2 rounded-full bg-blue-600" />
                         Student Stories
                     </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#1F2937] mt-1">
-                        Loved by <span className="text-gradient">Students</span>
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 mt-1">
+                        Loved by <span className="text-blue-600">Students</span>
                     </h2>
                 </motion.div>
 
-                {/* Testimonials Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-6xl mx-auto">
+                {/* Testimonials Swipeable Carousel - Compact Cards */}
+                <div className="carousel-container -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                     {reviews.map((review, index) => (
                         <motion.div
                             key={index}
@@ -80,54 +80,60 @@ export const Testimonials = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1, duration: 0.4 }}
                             viewport={{ once: true }}
-                            className="card-premium p-4 group"
+                            className="carousel-item w-[200px] sm:w-[220px] flex-shrink-0"
                         >
-                            {/* Stars */}
-                            <div className="flex gap-0.5 mb-2">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star 
-                                        key={i} 
-                                        size={12} 
-                                        className={i < review.rating ? "text-[#C9B37F] fill-[#C9B37F]" : "text-[#EDE9E0]"} 
-                                    />
-                                ))}
-                            </div>
-
-                            {/* Quote */}
-                            <p className="text-[#4B5563] text-sm leading-relaxed mb-3 line-clamp-3">
-                                "{review.text}"
-                            </p>
-
-                            {/* Author */}
-                            <div className="flex items-center gap-2 pt-3 border-t border-[#EDE9E0]">
-                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#0F172A] to-[#334155] flex items-center justify-center text-white font-bold text-xs">
-                                    {review.avatar}
+                            <div className="card-dark p-2.5 radius-card h-full">
+                                {/* Stars */}
+                                <div className="flex gap-0.5 mb-1.5">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star 
+                                            key={i} 
+                                            size={10} 
+                                            className={i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-600"} 
+                                        />
+                                    ))}
                                 </div>
-                                <div>
-                                    <h4 className="font-semibold text-sm text-[#1F2937]">{review.name}</h4>
-                                    <p className="text-xs text-[#4B5563]">{review.role}</p>
+
+                                {/* Quote */}
+                                <p className="card-text text-xs leading-relaxed mb-2 line-clamp-3">
+                                    "{review.text}"
+                                </p>
+
+                                {/* Author */}
+                                <div className="flex items-center gap-2 pt-1.5 border-t border-slate-700/50">
+                                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-[10px]">
+                                        {review.avatar}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-xs text-slate-100">{review.name}</h4>
+                                        <p className="text-[10px] text-slate-400">{review.role}</p>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
                     ))}
                 </div>
 
-                {/* Trust Stats */}
+                {/* Stats Bar - Compact */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mt-6 md:mt-8 flex flex-wrap justify-center gap-6 md:gap-10 px-6 py-3 rounded-xl bg-[#F8F5F0] border border-[#C9B37F]/20 shadow-sm max-w-xl mx-auto"
+                    className="mt-5 flex flex-wrap justify-center gap-4 md:gap-6 px-4 py-2 rounded-xl bg-blue-600/10 border border-blue-400/20 shadow-sm max-w-md mx-auto"
                 >
                     {[
                         { value: "4.9/5", label: "Rating" },
                         { value: loading ? "..." : `${tenantCount.toLocaleString()}+`, label: "Students" },
                         { value: "98%", label: "Recommend" }
                     ].map((stat, index) => (
-                        <div key={index} className="text-center">
-                            <span className="block text-lg md:text-xl font-bold text-[#0F172A]">{stat.value}</span>
-                            <span className="text-xs text-[#4B5563]">{stat.label}</span>
-                        </div>
+                        <motion.div 
+                            key={index} 
+                            className="text-center px-2"
+                            whileHover={{ scale: 1.05 }}
+                        >
+                            <span className="block text-base md:text-lg font-bold text-blue-700">{stat.value}</span>
+                            <span className="text-[10px] text-slate-500">{stat.label}</span>
+                        </motion.div>
                     ))}
                 </motion.div>
             </div>

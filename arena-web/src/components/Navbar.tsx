@@ -6,15 +6,15 @@ import { Moon, Sun, Menu, X, Home, LogOut, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthApi } from "@/lib/api/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { getHomeRouteForRole, getCurrentUserRoleProfile } from "@/lib/auth/role-routing";
 import { safeMaybeSingle } from "@/lib/supabase/safe";
 
 export const Navbar = () => {
     const router = useRouter();
+    const pathname = usePathname();
     const [mounted, setMounted] = useState(false);
     const { theme, setTheme } = useTheme();
-    const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [role, setRole] = useState<string | null>(null);
     const [dashboardRoute, setDashboardRoute] = useState<string>("/auth/login");
@@ -23,10 +23,6 @@ export const Navbar = () => {
 
     useEffect(() => {
         setMounted(true);
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
-        window.addEventListener("scroll", handleScroll);
 
         const hydrateRole = async () => {
             const result = await getCurrentUserRoleProfile();
@@ -52,8 +48,6 @@ export const Navbar = () => {
             setBrandLogo(value.logo_url || "");
         };
         void hydrateBrand();
-
-        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const handleLogout = async () => {
@@ -78,23 +72,37 @@ export const Navbar = () => {
         { name: "FAQs", href: "#faqs" },
     ];
 
+    const isActive = (href: string) => {
+        if (href.startsWith('#')) return pathname === '/';
+        return pathname.startsWith(href);
+    };
+
     return (
-        <nav
-            className={`fixed top-0 z-50 w-full transition-all duration-500 ${isScrolled
-                ? "bg-[#F8F5F0]/95 py-3 shadow-soft border-b border-[#C9B37F]/25 backdrop-blur-xl"
-                : "bg-transparent py-5"
-                }`}
+        <motion.nav
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="fixed top-0 z-50 w-full header-black py-3"
         >
-            <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
+            {/* Subtle animated background glow */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
+                <div className="absolute top-0 right-1/4 w-48 h-48 bg-blue-400/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '-4s' }} />
+            </div>
+
+            <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 relative z-10">
                 <Link href="/" className="flex items-center gap-2.5 group">
                     {brandLogo ? (
-                        <img src={brandLogo} alt="Brand logo" className="h-10 w-10 rounded-xl object-cover shadow-lg shadow-[#0F172A]/10" />
+                        <img src={brandLogo} alt="Brand logo" className="h-10 w-10 rounded-xl object-cover shadow-lg shadow-blue-500/20" />
                     ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F172A] text-white shadow-lg shadow-[#0F172A]/20 group-hover:scale-105 transition-transform">
+                        <motion.div 
+                            whileHover={{ scale: 1.05 }}
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                        >
                             <Home size={22} />
-                        </div>
+                        </motion.div>
                     )}
-                    <span className={`text-xl md:text-2xl font-bold tracking-tight transition-colors duration-300 ${isScrolled ? "text-[#1F2937]" : "text-[#1F2937]"}`}>
+                    <span className="text-xl md:text-2xl font-bold tracking-tight text-white">
                         {brandName}
                     </span>
                 </Link>
@@ -105,56 +113,65 @@ export const Navbar = () => {
                         <Link
                             key={link.name}
                             href={link.href}
-                            className={`text-sm font-medium transition-all hover:text-[#0F172A] px-4 py-2 rounded-lg hover:bg-[#F0EDE6] ${isScrolled ? "text-[#4B5563]" : "text-[#4B5563]"}
-                            `}>
+                            className={`nav-link text-sm font-medium px-4 py-2 text-white/80 hover:text-white transition-all ${isActive(link.href) ? 'active text-white' : ''}`}
+                        >
                             {link.name}
                         </Link>
                     ))}
                     
-                    <div className="flex items-center gap-2 pl-4 ml-2 border-l border-[#EDE9E0]">
-                        <button
+                    <div className="flex items-center gap-2 pl-4 ml-2 border-l border-white/20">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                            className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all ${isScrolled ? "border-[#EDE9E0] bg-[#F0EDE6] text-[#4B5563] hover:bg-[#EDE9E0] hover:text-[#0F172A]" : "border-[#C9B37F]/30 bg-[#F8F5F0]/50 text-[#4B5563] hover:bg-[#F8F5F0] hover:text-[#0F172A]"}`}
+                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all"
                             aria-label="Toggle theme"
                         >
                             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-                        </button>
+                        </motion.button>
 
                         {role ? (
                             <div className="flex gap-2">
-                                <Link href={dashboardRoute} className="flex items-center gap-2 rounded-xl bg-[#F0EDE6] px-4 py-2.5 text-sm font-semibold text-[#1F2937] transition-all hover:bg-[#EDE9E0] hover:text-[#0F172A]">
+                                <Link href={dashboardRoute} className="flex items-center gap-2 rounded-xl bg-blue-600/20 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600/30 transition-all border border-blue-500/30">
                                     <User size={16} /> Dashboard
                                 </Link>
-                                <button onClick={handleLogout} className="flex items-center justify-center rounded-xl bg-rose-50 px-3 py-2.5 text-rose-600 transition-all hover:bg-rose-100" aria-label="Sign out">
+                                <motion.button 
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleLogout} 
+                                    className="flex items-center justify-center rounded-xl bg-rose-500/20 px-3 py-2.5 text-rose-300 hover:bg-rose-500/30 transition-all border border-rose-500/30" 
+                                    aria-label="Sign out"
+                                >
                                     <LogOut size={16} />
-                                </button>
+                                </motion.button>
                             </div>
                         ) : (
                             <>
-                                <Link href="/listings" className={`hidden lg:flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${isScrolled ? "text-[#4B5563] hover:bg-[#F0EDE6]" : "text-[#4B5563] hover:bg-[#F0EDE6]"}`}>
+                                <Link href="/listings" className="hidden lg:flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/80 hover:text-white transition-all">
                                     Browse Houses
                                 </Link>
-                                <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-[#0F172A] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#1E293B] hover:shadow-lg hover:shadow-[#0F172A]/20 active:scale-95 border-2 border-transparent hover:border-[#C9B37F]">
-                                    <User size={16} />
-                                    Login
-                                </Link>
+                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                    <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-500 shadow-lg shadow-blue-500/25">
+                                        <User size={16} />
+                                        Login
+                                    </Link>
+                                </motion.div>
                             </>
                         )}
                     </div>
                 </div>
 
-
                 {/* Mobile Menu Toggle */}
                 <div className="flex items-center gap-3 md:hidden">
                     <button
                         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all ${isScrolled ? "border-[#EDE9E0] bg-[#F0EDE6] text-[#4B5563]" : "border-[#C9B37F]/30 bg-[#F8F5F0]/50 text-[#4B5563]"}`}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 text-white/80 hover:text-white transition-all"
                     >
                         {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${isScrolled ? "text-[#1F2937]" : "text-[#1F2937]"}`}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl text-white hover:bg-white/10 transition-all"
                     >
                         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -168,31 +185,37 @@ export const Navbar = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="border-t border-[#EDE9E0] bg-[#F8F5F0]/95 backdrop-blur-xl md:hidden"
+                        className="border-t border-white/10 bg-[#0F172A]/98 backdrop-blur-xl md:hidden"
                     >
                         <div className="flex flex-col gap-2 p-4">
-                            {navLinks.map((link) => (
-                                <Link
+                            {navLinks.map((link, index) => (
+                                <motion.div
                                     key={link.name}
-                                    href={link.href}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="text-base font-medium text-[#4B5563] transition-colors hover:text-[#0F172A] hover:bg-[#F0EDE6] px-4 py-3 rounded-xl"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
                                 >
-                                    {link.name}
-                                </Link>
+                                    <Link
+                                        href={link.href}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="block text-base font-medium text-white/70 hover:text-white hover:bg-white/10 px-4 py-3 rounded-xl transition-all"
+                                    >
+                                        {link.name}
+                                    </Link>
+                                </motion.div>
                             ))}
-                            <div className="pt-4 border-t border-[#EDE9E0] mt-2">
+                            <div className="pt-4 border-t border-white/10 mt-2">
                                 {role ? (
                                     <div className="flex flex-col gap-2">
-                                        <Link href={dashboardRoute} className="w-full text-center rounded-xl bg-[#0F172A]/10 py-3 text-base font-semibold text-[#0F172A]">
+                                        <Link href={dashboardRoute} className="w-full text-center rounded-xl bg-blue-600/20 py-3 text-base font-semibold text-white border border-blue-500/30">
                                             Dashboard
                                         </Link>
-                                        <button onClick={handleLogout} className="w-full rounded-xl bg-rose-50 py-3 text-base font-semibold text-rose-600">
+                                        <button onClick={handleLogout} className="w-full rounded-xl bg-rose-500/20 py-3 text-base font-semibold text-rose-300 border border-rose-500/30">
                                             Sign Out
                                         </button>
                                     </div>
                                 ) : (
-                                    <Link href="/auth/login" className="block w-full text-center rounded-xl bg-[#0F172A] py-3 text-base font-semibold text-white shadow-lg shadow-[#0F172A]/20">
+                                    <Link href="/auth/login" className="block w-full text-center rounded-xl bg-blue-600 py-3 text-base font-semibold text-white shadow-lg shadow-blue-500/25">
                                         Sign In
                                     </Link>
                                 )}
@@ -201,6 +224,6 @@ export const Navbar = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </nav>
+        </motion.nav>
     );
 };

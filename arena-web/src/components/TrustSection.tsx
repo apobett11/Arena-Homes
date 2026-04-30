@@ -7,28 +7,28 @@ export const TrustSection = () => {
     const features = [
         { 
             icon: ShieldCheck, 
-            label: "Verified Before Listing", 
-            desc: "Every property is personally inspected and verified by our team for safety, quality, and accuracy before going live."
+            label: "Verified", 
+            desc: "Every property is inspected and verified for safety and quality."
         },
         { 
             icon: GraduationCap, 
-            label: "Built for Students", 
-            desc: "Designed specifically for Egerton University students with budget-friendly options, flexible leases, and campus proximity."
+            label: "Student First", 
+            desc: "Built for Egerton students with budget-friendly options."
         },
         { 
             icon: Scale, 
-            label: "Transparent Rent & Rules", 
-            desc: "Clear pricing with no hidden fees. View house rules, deposit requirements, and amenities upfront before applying."
+            label: "Transparent", 
+            desc: "Clear pricing with no hidden fees. View rules upfront."
         },
         { 
             icon: Headphones, 
-            label: "Fast Caretaker Response", 
-            desc: "Direct contact with verified caretakers who respond within 24 hours. Get answers, schedule viewings, and secure your room fast."
+            label: "Fast Response", 
+            desc: "Caretakers respond within 24 hours. Quick support."
         },
     ];
 
     return (
-        <section className="py-8 md:py-10 bg-gradient-to-b from-[#F0EDE6] to-[#EDE9E0]">
+        <section className="py-8 md:py-10 bg-gradient-to-b from-blue-50/90 to-white/95">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -36,16 +36,17 @@ export const TrustSection = () => {
                     viewport={{ once: true }}
                     className="text-center mb-6"
                 >
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                        <span className="w-2 h-2 rounded-full bg-[#0F172A]" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
+                        <span className="w-2 h-2 rounded-full bg-blue-600" />
                         Why Choose Us
                     </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#1F2937] mt-1">
-                        Why <span className="text-gradient">Arena Homes</span>
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 mt-1">
+                        Why <span className="text-blue-600">Arena Homes</span>
                     </h2>
                 </motion.div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                {/* Swipeable Carousel - Reasonable Card Widths */}
+                <div className="carousel-container -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}
@@ -53,13 +54,21 @@ export const TrustSection = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1, duration: 0.4 }}
                             viewport={{ once: true }}
-                            className="card-premium p-4 group hover:border-[#C9B37F]/40 transition-all"
+                            className="carousel-item w-[140px] sm:w-[160px] flex-shrink-0"
                         >
-                            <div className="mb-2 h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#0F172A]/10 to-[#0F172A]/5 text-[#0F172A] group-hover:scale-105 transition-transform">
-                                <feature.icon size={20} />
-                            </div>
-                            <h4 className="text-sm font-bold mb-1 text-[#1F2937]">{feature.label}</h4>
-                            <p className="text-[#4B5563] text-xs leading-relaxed line-clamp-3">{feature.desc}</p>
+                            <motion.div 
+                                whileHover={{ scale: 1.02 }}
+                                className="card-dark p-3 h-full radius-card"
+                            >
+                                <motion.div 
+                                    whileHover={{ scale: 1.1, rotate: -5 }}
+                                    className="mb-2 h-9 w-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/30"
+                                >
+                                    <feature.icon size={18} />
+                                </motion.div>
+                                <h4 className="card-title text-xs mb-0.5">{feature.label}</h4>
+                                <p className="card-text text-[10px] leading-tight line-clamp-3">{feature.desc}</p>
+                            </motion.div>
                         </motion.div>
                     ))}
                 </div>

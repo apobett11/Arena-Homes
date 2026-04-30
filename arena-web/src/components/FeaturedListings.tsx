@@ -140,7 +140,7 @@ export const FeaturedListings = () => {
     const visibleListings = dynamicListings;
 
     return (
-        <section className="py-10 md:py-14 bg-gradient-to-b from-[#F8F5F0] to-[#F0EDE6]">
+        <section className="py-10 md:py-14 bg-white/85 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* New Listings Carousel */}
                 <motion.div 
@@ -152,13 +152,13 @@ export const FeaturedListings = () => {
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                 Just Listed
                             </span>
-                            <h2 className="text-xl md:text-2xl font-bold text-[#1F2937]">New This Week</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-slate-900">New This Week</h2>
                         </div>
-                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#0F172A] hover:text-[#334155] transition-colors group">
+                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-600 transition-colors group">
                             View All 
                             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -206,21 +206,23 @@ export const FeaturedListings = () => {
                         viewport={{ once: true }}
                         className="max-w-xl"
                     >
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                            <span className="w-2 h-2 rounded-full bg-[#0F172A]" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
+                            <span className="w-2 h-2 rounded-full bg-blue-600" />
                             Featured Properties
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-[#1F2937] leading-tight">
-                            Find Your Perfect <span className="text-gradient">Student Home</span>
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                            Find Your Perfect <span className="text-blue-600">Student Home</span>
                         </h2>
-                        <p className="mt-2 text-[#4B5563] text-sm md:text-base">
+                        <p className="mt-2 text-slate-600 text-sm md:text-base">
                             Verified listings near Egerton University with transparent pricing
                         </p>
                     </motion.div>
-                    <Link href="/listings" className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0F172A] text-white font-semibold hover:bg-[#1E293B] hover:shadow-lg hover:shadow-[#0F172A]/20 transition-all active:scale-95 sm:w-auto w-full shrink-0 text-sm border-2 border-transparent hover:border-[#C9B37F]">
-                        Browse All
-                        <ArrowRight size={16} />
-                    </Link>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Link href="/listings" className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/25 transition-all active:scale-95 sm:w-auto w-full shrink-0 text-sm">
+                            Browse All
+                            <ArrowRight size={16} />
+                        </Link>
+                    </motion.div>
                 </div>
 
                 {/* Property Grid */}
@@ -265,10 +267,12 @@ export const FeaturedListings = () => {
                     viewport={{ once: true }}
                     className="mt-8 md:mt-10 text-center"
                 >
-                    <Link href="/listings" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F172A] text-white font-semibold text-sm hover:scale-105 transition-all shadow-lg shadow-[#0F172A]/20 border-2 border-transparent hover:border-[#C9B37F]">
-                        View All Properties
-                        <ArrowRight size={16} />
-                    </Link>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Link href="/listings" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25">
+                            View All Properties
+                            <ArrowRight size={16} />
+                        </Link>
+                    </motion.div>
                 </motion.div>
             </div>
 

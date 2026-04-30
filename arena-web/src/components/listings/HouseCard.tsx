@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, MapPin, Droplets, Home, Footprints, ArrowRight, ShieldCheck, Zap, Shield, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export interface HouseProps {
     id: string | number;
@@ -100,13 +101,13 @@ export const HouseCard = ({
     if (!validId) {
         return (
             <div className="block group h-full cursor-not-allowed opacity-60">
-                <div className="card-premium h-full flex flex-col overflow-hidden">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                <div className="card-dark h-full flex flex-col overflow-hidden radius-card">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-800 flex items-center justify-center">
                         <span className="text-slate-500 text-sm">Property not available</span>
                     </div>
                     <div className="p-3 flex-1 flex flex-col">
-                        <h3 className="text-sm font-bold text-slate-400 mb-1">{title || "Unknown"}</h3>
-                        <p className="text-xs text-slate-400">Please try again later</p>
+                        <h3 className="card-subtle text-sm font-bold mb-1">{title || "Unknown"}</h3>
+                        <p className="text-xs text-slate-500">Please try again later</p>
                     </div>
                 </div>
             </div>
@@ -115,7 +116,11 @@ export const HouseCard = ({
 
     return (
         <Link href={`/listings/${validId}`} className="block group h-full">
-            <div className="card-premium h-full flex flex-col overflow-hidden">
+            <motion.div 
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                className="card-dark h-full flex flex-col overflow-hidden radius-card cursor-pointer"
+            >
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -132,13 +137,13 @@ export const HouseCard = ({
                     <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                         {/* Available Rooms Badge */}
                         {availableRooms !== undefined && availableRooms > 0 && (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-emerald-500 text-white">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-emerald-500 text-white shadow-lg">
                                 {availableRoomsText}
                             </span>
                         )}
                         {/* Verified Badge */}
                         {(isVerified || verificationStatus === 'VERIFIED') && (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-500 text-white flex items-center gap-1">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-500 text-white flex items-center gap-1 shadow-lg">
                                 <ShieldCheck size={10} />
                                 Verified
                             </span>
@@ -148,7 +153,7 @@ export const HouseCard = ({
                     {/* Favorite Button with Count */}
                     <button 
                         onClick={(e) => e.preventDefault()}
-                        className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-md"
+                        className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-800/90 text-slate-300 hover:bg-rose-500/20 hover:text-rose-400 transition-all shadow-lg backdrop-blur-sm"
                     >
                         <Heart size={14} />
                         {likesCount > 0 && (
@@ -158,87 +163,90 @@ export const HouseCard = ({
 
                     {/* Price Badge */}
                     <div className="absolute bottom-3 left-3">
-                        <span className="px-3 py-1.5 bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-white rounded-lg font-bold text-sm shadow-md">
-                            KSh {price.toLocaleString()}<span className="text-xs font-normal text-slate-500">/mo</span>
+                        <span className="px-3 py-1.5 bg-slate-900/95 text-white rounded-lg font-bold text-sm shadow-lg border border-slate-700">
+                            KSh {price.toLocaleString()}<span className="text-xs font-normal text-slate-400">/mo</span>
                         </span>
                     </div>
                 </div>
 
-                {/* Content - Smaller padding */}
+                {/* Content - Dark Theme */}
                 <div className="p-3 flex-1 flex flex-col">
                     <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                            <Home size={14} className="text-primary" />
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                            <Home size={14} className="text-blue-400" />
                             <span className="text-xs font-medium">{type}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
+                        <div className="flex items-center gap-1 text-slate-400 text-xs">
                             <Footprints size={12} />
                             {displayDistance}
                         </div>
                     </div>
 
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                    <h3 className="card-title text-sm mb-1 group-hover:text-blue-400 transition-colors line-clamp-1">
                         {title}
                     </h3>
 
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs mb-2">
-                        <MapPin size={12} className="text-primary" />
+                    <div className="flex items-center gap-1.5 text-slate-400 text-xs mb-2">
+                        <MapPin size={12} className="text-blue-400" />
                         {location}
                     </div>
 
-                    {/* Amenities Row - Smaller */}
+                    {/* Amenities Row - Dark Theme */}
                     <div className="flex flex-wrap gap-1.5 mb-2">
                         {(amenities?.water || water) && (
-                            <div className="flex items-center gap-1 text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded">
+                            <div className="flex items-center gap-1 text-blue-300 text-[10px] font-medium bg-blue-500/20 px-1.5 py-0.5 rounded">
                                 <Droplets size={8} />
                                 <span>Water</span>
                             </div>
                         )}
                         {amenities?.electricity && (
-                            <div className="flex items-center gap-1 text-amber-600 text-[10px] font-medium bg-amber-100 px-1.5 py-0.5 rounded">
+                            <div className="flex items-center gap-1 text-amber-300 text-[10px] font-medium bg-amber-500/20 px-1.5 py-0.5 rounded">
                                 <Zap size={8} />
                                 <span>Power</span>
                             </div>
                         )}
                         {amenities?.security && (
-                            <div className="flex items-center gap-1 text-emerald-600 text-[10px] font-medium bg-emerald-100 px-1.5 py-0.5 rounded">
+                            <div className="flex items-center gap-1 text-emerald-300 text-[10px] font-medium bg-emerald-500/20 px-1.5 py-0.5 rounded">
                                 <Shield size={8} />
                                 <span>Secure</span>
                             </div>
                         )}
                         {amenities?.internet && (
-                            <div className="flex items-center gap-1 text-blue-600 text-[10px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">
+                            <div className="flex items-center gap-1 text-cyan-300 text-[10px] font-medium bg-cyan-500/20 px-1.5 py-0.5 rounded">
                                 <Wifi size={8} />
                                 <span>WiFi</span>
                             </div>
                         )}
                     </div>
 
-                    {/* Deposit Info - Smaller */}
+                    {/* Deposit Info */}
                     {depositAmount && depositAmount > 0 && (
-                        <div className="text-[10px] text-slate-500 mb-1">
+                        <div className="text-[10px] text-slate-400 mb-1">
                             Deposit: KSh {depositAmount.toLocaleString()}
                         </div>
                     )}
 
-                    {/* Last Updated - Smaller margin */}
+                    {/* Last Updated */}
                     {getLastUpdatedText() && (
-                        <div className="text-[9px] text-slate-400 mb-1">
+                        <div className="text-[9px] text-slate-500 mb-1">
                             {getLastUpdatedText()}
                         </div>
                     )}
 
-                    {/* CTA - Smaller */}
-                    <div className="mt-auto pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">
+                    {/* CTA */}
+                    <div className="mt-auto pt-2 border-t border-slate-700/50 flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
                             View Details
                         </span>
-                        <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all text-slate-400">
+                        <motion.div 
+                            whileHover={{ scale: 1.1 }}
+                            className="h-6 w-6 rounded-full bg-slate-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all text-slate-400"
+                        >
                             <ArrowRight size={12} />
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </Link>
     );
 };
