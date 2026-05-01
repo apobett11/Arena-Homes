@@ -1032,7 +1032,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowSuccessModal(false)}>
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 w-full max-w-md text-center shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle size={32} className="text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 size={32} className="text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Application Submitted!</h3>
                         <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
