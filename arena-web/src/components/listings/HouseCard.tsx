@@ -139,12 +139,12 @@ export const HouseCard = ({
     if (!validId) {
         return (
             <div className="block group h-full cursor-not-allowed opacity-60">
-                <div className="card-dark h-full flex flex-col overflow-hidden radius-card">
+                <div className="bg-slate-900 h-full flex flex-col overflow-hidden rounded-xl border-2 border-slate-700 shadow-xl shadow-black/30">
                     <div className="relative aspect-[4/3] overflow-hidden bg-slate-800 flex items-center justify-center">
                         <span className="text-slate-500 text-sm">Property not available</span>
                     </div>
                     <div className="p-3 flex-1 flex flex-col">
-                        <h3 className="card-subtle text-sm font-bold mb-1">{title || "Unknown"}</h3>
+                        <h3 className="text-slate-300 text-sm font-bold mb-1">{title || "Unknown"}</h3>
                         <p className="text-xs text-slate-500">Please try again later</p>
                     </div>
                 </div>
@@ -154,10 +154,10 @@ export const HouseCard = ({
 
     return (
         <Link href={`/listings/${validId}`} className="block group h-full">
-            <motion.div 
-                whileHover={{ y: -4 }}
+            <motion.div
+                whileHover={{ y: -8, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}
                 whileTap={{ scale: 0.98 }}
-                className="card-dark h-full flex flex-col overflow-hidden radius-card cursor-pointer"
+                className="bg-slate-900 h-full flex flex-col overflow-hidden rounded-xl cursor-pointer border-2 border-slate-700 shadow-xl shadow-black/30 hover:border-slate-600 transition-all duration-300"
             >
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">

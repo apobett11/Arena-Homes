@@ -11,14 +11,14 @@ const FAQItem = ({ faq, index, activeFaq, setActiveFaq }: { faq: any; index: num
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         viewport={{ once: true }}
-        className={`card-dark overflow-hidden transition-all ${activeFaq === index ? "border-blue-500/50" : ""}`}
+        className={`bg-slate-900 rounded-xl border border-slate-700 shadow-lg shadow-black/20 overflow-hidden transition-all ${activeFaq === index ? "border-blue-500/50 ring-1 ring-blue-500/30" : ""}`}
     >
         <button
             onClick={() => setActiveFaq(activeFaq === index ? null : index)}
             className="w-full flex items-center justify-between p-3 text-left gap-3"
             aria-expanded={activeFaq === index}
         >
-            <span className={`font-medium text-sm ${activeFaq === index ? "text-blue-400" : "text-slate-100"}`}>
+            <span className={`font-medium text-sm ${activeFaq === index ? "text-blue-400" : "text-white"}`}>
                 {faq.question}
             </span>
             <div className={`h-7 w-7 flex-shrink-0 flex items-center justify-center rounded-lg transition-all ${
@@ -39,8 +39,8 @@ const FAQItem = ({ faq, index, activeFaq, setActiveFaq }: { faq: any; index: num
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                 >
-                    <div className="px-3 pb-3 pt-0 card-text border-t border-slate-700/50">
-                        <p className="pt-2 text-xs">
+                    <div className="px-3 pb-3 pt-0 bg-slate-800/50 border-t border-slate-700/50">
+                        <p className="pt-2 text-xs text-slate-200 leading-relaxed">
                             {faq.answer}
                         </p>
                     </div>
@@ -57,7 +57,7 @@ const RuleItem = ({ rule, index }: { rule: any; index: number }) => (
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         viewport={{ once: true }}
-        className="card-dark p-3"
+        className="bg-slate-900 rounded-xl border border-slate-700 shadow-lg shadow-black/20 p-3"
     >
         <div className="flex items-start gap-3">
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
@@ -68,8 +68,8 @@ const RuleItem = ({ rule, index }: { rule: any; index: number }) => (
                 {rule.type === 'alert' ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
             </div>
             <div>
-                <h4 className="card-title text-sm mb-0.5">{rule.title}</h4>
-                <p className="card-text text-xs leading-relaxed">{rule.desc}</p>
+                <h4 className="text-white text-sm font-semibold mb-0.5">{rule.title}</h4>
+                <p className="text-slate-300 text-xs leading-relaxed">{rule.desc}</p>
             </div>
         </div>
     </motion.div>
@@ -126,10 +126,24 @@ export const FAQRulesSection = () => {
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
 
     return (
-        <section id="rules" className="py-8 md:py-10 bg-slate-100">
+        <section id="rules" className="py-12 md:py-16 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Section Header */}
+                <div className="text-center mb-8">
+                    <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-600">
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        Information
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">
+                        FAQs & <span className="text-blue-600">House Rules</span>
+                    </h2>
+                    <p className="mt-2 text-slate-500 max-w-xl mx-auto">
+                        Everything you need to know about finding and living in your student home
+                    </p>
+                </div>
+
                 {/* Mobile Tab Switcher */}
-                <div className="lg:hidden flex gap-2 mb-4">
+                <div className="lg:hidden flex gap-2 mb-6">
                     <button
                         onClick={() => setActiveTab('faq')}
                         className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
@@ -153,7 +167,7 @@ export const FAQRulesSection = () => {
                 </div>
 
                 {/* Desktop: Side by Side / Mobile: Swipeable */}
-                <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+                <div className="lg:grid lg:grid-cols-2 lg:gap-8">
                     {/* FAQ Column */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
@@ -161,11 +175,11 @@ export const FAQRulesSection = () => {
                         viewport={{ once: true }}
                         className={`${activeTab !== 'faq' ? 'hidden lg:block' : ''}`}
                     >
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-blue-600/20 flex items-center justify-center">
-                                <ScrollText size={18} className="text-blue-400" />
+                        <div className="flex items-center gap-3 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div className="h-10 w-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
+                                <ScrollText size={20} className="text-blue-600" />
                             </div>
-                            <h2 className="text-lg font-bold text-white">Frequently Asked Questions</h2>
+                            <h2 className="text-lg font-bold text-slate-900">Frequently Asked Questions</h2>
                         </div>
                         
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
@@ -188,11 +202,11 @@ export const FAQRulesSection = () => {
                         viewport={{ once: true }}
                         className={`${activeTab !== 'rules' ? 'hidden lg:block' : ''}`}
                     >
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-blue-600/20 flex items-center justify-center">
-                                <CheckCircle2 size={18} className="text-blue-400" />
+                        <div className="flex items-center gap-3 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div className="h-10 w-10 rounded-lg bg-emerald-600/20 flex items-center justify-center">
+                                <CheckCircle2 size={20} className="text-emerald-600" />
                             </div>
-                            <h2 className="text-lg font-bold text-white">House Rules</h2>
+                            <h2 className="text-lg font-bold text-slate-900">House Rules</h2>
                         </div>
 
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
@@ -201,8 +215,8 @@ export const FAQRulesSection = () => {
                             ))}
                         </div>
 
-                        <p className="mt-3 text-xs text-slate-400 text-center">
-                            View full rules on our <a href="/rules" className="text-blue-400 hover:underline">rules page</a>
+                        <p className="mt-3 text-xs text-slate-500 text-center">
+                            View full rules on our <a href="/rules" className="text-blue-600 hover:underline">rules page</a>
                         </p>
                     </motion.div>
                 </div>

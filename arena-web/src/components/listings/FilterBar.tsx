@@ -99,22 +99,22 @@ export const FilterBar = ({
                             </button>
 
                             {/* Dropdown Content */}
-                            <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-4 w-72 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-slate-100 dark:border-white/10 z-50 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-4 w-72 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50 animate-in fade-in zoom-in-95 duration-200">
                                 <div className="space-y-4">
-                                    <h4 className="font-bold text-sm">Price Range (KES)</h4>
+                                    <h4 className="font-bold text-sm text-white">Price Range (KES)</h4>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="number"
                                             value={filters.priceRange[0]}
                                             onChange={(e) => updatePrice(0, Number(e.target.value))}
-                                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm"
+                                            className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-sm text-white"
                                         />
                                         <span className="text-slate-400">-</span>
                                         <input
                                             type="number"
                                             value={filters.priceRange[1]}
                                             onChange={(e) => updatePrice(1, Number(e.target.value))}
-                                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm"
+                                            className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-sm text-white"
                                         />
                                     </div>
                                     <div className="relative h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
@@ -145,22 +145,22 @@ export const FilterBar = ({
                                 <ChevronDown size={14} className="text-slate-400" />
                             </button>
 
-                            <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-2 w-56 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-slate-100 dark:border-white/10 z-50">
+                            <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-2 w-56 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50">
                                 <div className="max-h-60 overflow-y-auto space-y-1 p-1">
                                     {availableLocations.map(loc => (
                                         <div
                                             key={loc}
                                             onClick={() => toggleLocation(loc)}
                                             className={cn(
-                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors",
+                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors text-white",
                                                 filters.locations.includes(loc)
-                                                    ? "bg-[#0066FF]/10 text-[#0066FF]"
-                                                    : "hover:bg-slate-50 dark:hover:bg-white/5"
+                                                    ? "bg-[#0066FF]/20 text-[#0066FF]"
+                                                    : "hover:bg-white/10"
                                             )}
                                         >
                                             <div className={cn(
                                                 "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                                filters.locations.includes(loc) ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-300 dark:border-white/20"
+                                                filters.locations.includes(loc) ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-500"
                                             )}>
                                                 {filters.locations.includes(loc) && <Filter size={10} className="text-white" />}
                                             </div>
@@ -182,22 +182,22 @@ export const FilterBar = ({
                                 <ChevronDown size={14} className="text-slate-400" />
                             </button>
 
-                            <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-2 w-56 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-slate-100 dark:border-white/10 z-50">
+                            <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-2 w-56 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50">
                                 <div className="space-y-1 p-1">
                                     {availableTypes.map(type => (
                                         <div
                                             key={type}
                                             onClick={() => toggleType(type)}
                                             className={cn(
-                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors",
+                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors text-white",
                                                 filters.houseTypes.includes(type)
-                                                    ? "bg-[#0066FF]/10 text-[#0066FF]"
-                                                    : "hover:bg-slate-50 dark:hover:bg-white/5"
+                                                    ? "bg-[#0066FF]/20 text-[#0066FF]"
+                                                    : "hover:bg-white/10"
                                             )}
                                         >
                                             <div className={cn(
                                                 "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                                filters.houseTypes.includes(type) ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-300 dark:border-white/20"
+                                                filters.houseTypes.includes(type) ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-500"
                                             )}>
                                                 {filters.houseTypes.includes(type) && <Filter size={10} className="text-white" />}
                                             </div>
@@ -221,22 +221,22 @@ export const FilterBar = ({
                                 <ChevronDown size={14} className="text-slate-400" />
                             </button>
 
-                            <div className="hidden group-hover:block hover:block absolute top-full right-0 mt-2 p-2 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-slate-100 dark:border-white/10 z-50">
+                            <div className="hidden group-hover:block hover:block absolute top-full right-0 mt-2 p-2 w-48 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50">
                                 <div className="space-y-1 p-1">
                                     {(['price', 'location', 'type'] as SortOption[]).map((option) => (
                                         <div
                                             key={option}
                                             onClick={() => setSortBy(option)}
                                             className={cn(
-                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors",
+                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors text-white",
                                                 filters.sortBy === option
-                                                    ? "bg-[#0066FF]/10 text-[#0066FF]"
-                                                    : "hover:bg-slate-50 dark:hover:bg-white/5"
+                                                    ? "bg-[#0066FF]/20 text-[#0066FF]"
+                                                    : "hover:bg-white/10"
                                             )}
                                         >
                                             <div className={cn(
                                                 "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                                filters.sortBy === option ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-300 dark:border-white/20"
+                                                filters.sortBy === option ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-500"
                                             )}>
                                                 {filters.sortBy === option && <Filter size={10} className="text-white" />}
                                             </div>

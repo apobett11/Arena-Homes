@@ -152,14 +152,14 @@ export const FeaturedListings = () => {
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-400">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                 Just Listed
                             </span>
-                            <h2 className="text-xl md:text-2xl font-bold text-slate-900">New This Week</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">New This Week</h2>
                         </div>
-                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-600 transition-colors group">
-                            View All 
+                        <Link href="/listings" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors group">
+                            View All
                             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
@@ -167,10 +167,10 @@ export const FeaturedListings = () => {
                     <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                         {loading ? (
                             <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center">
-                                <div className="animate-pulse bg-[#EDE9E0] rounded-2xl h-64" />
+                                <div className="animate-pulse bg-slate-800 rounded-2xl h-64" />
                             </div>
                         ) : newThisWeek.length === 0 ? (
-                            <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center text-[#4B5563] bg-[#F0EDE6] rounded-2xl">
+                            <div className="min-w-[180px] sm:min-w-[220px] p-6 text-center text-slate-400 bg-slate-800/50 rounded-2xl border border-slate-700">
                                 No new listings this week
                             </div>
                         ) : (

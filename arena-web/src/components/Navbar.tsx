@@ -2,13 +2,251 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Moon, Sun, Menu, X, Home, LogOut, User } from "lucide-react";
+import { Moon, Sun, Menu, X, Home, LogOut, User, Phone, Mail, MapPin } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthApi } from "@/lib/api/auth";
 import { useRouter, usePathname } from "next/navigation";
 import { getHomeRouteForRole, getCurrentUserRoleProfile } from "@/lib/auth/role-routing";
 import { safeMaybeSingle } from "@/lib/supabase/safe";
+import { getSupabaseClient } from "@/lib/supabase/client";
+
+// Contact Us Button Component
+function ContactUsButton() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string; address?: string }>({});
+
+    useEffect(() => {
+        async function loadContactInfo() {
+            try {
+                const supabase = getSupabaseClient();
+                const { data } = await supabase
+                    .from('site_settings')
+                    .select('contact_email, contact_phone, contact_address')
+                    .eq('id', 'default')
+                    .maybeSingle();
+                if (data) {
+                    const settings = data as { contact_email?: string; contact_phone?: string; contact_address?: string };
+                    setContactInfo({
+                        email: settings.contact_email,
+                        phone: settings.contact_phone,
+                        address: settings.contact_address,
+                    });
+                }
+            } catch {
+                setContactInfo({
+                    email: 'info@arenahomes.co.ke',
+                    phone: '+254 712 345 678',
+                    address: 'Egerton University, Njoro',
+                });
+            }
+        }
+        if (isOpen) {
+            void loadContactInfo();
+        }
+    }, [isOpen]);
+
+    return (
+        <>
+            <button
+                onClick={() => setIsOpen(true)}
+                className="nav-link text-sm font-medium px-4 py-2 text-white/80 hover:text-white transition-all"
+            >
+                Contact Us
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl shadow-black/50 border border-slate-700"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold text-white">Contact Us</h3>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                                >
+                                    <X size={20} className="text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                {contactInfo.email && (
+                                    <a
+                                        href={`mailto:${contactInfo.email}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                            <Mail size={20} className="text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Email</p>
+                                            <p className="text-white font-medium group-hover:text-blue-400 transition-colors">{contactInfo.email}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.phone && (
+                                    <a
+                                        href={`tel:${contactInfo.phone.replace(/\s/g, '')}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                            <Phone size={20} className="text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Phone</p>
+                                            <p className="text-white font-medium group-hover:text-emerald-400 transition-colors">{contactInfo.phone}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.address && (
+                                    <div className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl">
+                                        <div className="h-10 w-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                            <MapPin size={20} className="text-amber-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Address</p>
+                                            <p className="text-white font-medium">{contactInfo.address}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    );
+}
+
+// Mobile Contact Button Component
+function MobileContactButton({ setMobileMenuOpen }: { setMobileMenuOpen: (open: boolean) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string; address?: string }>({});
+
+    useEffect(() => {
+        async function loadContactInfo() {
+            try {
+                const supabase = getSupabaseClient();
+                const { data } = await supabase
+                    .from('site_settings')
+                    .select('contact_email, contact_phone, contact_address')
+                    .eq('id', 'default')
+                    .maybeSingle();
+                if (data) {
+                    const settings = data as { contact_email?: string; contact_phone?: string; contact_address?: string };
+                    setContactInfo({
+                        email: settings.contact_email,
+                        phone: settings.contact_phone,
+                        address: settings.contact_address,
+                    });
+                }
+            } catch {
+                setContactInfo({
+                    email: 'info@arenahomes.co.ke',
+                    phone: '+254 712 345 678',
+                    address: 'Egerton University, Njoro',
+                });
+            }
+        }
+        if (isOpen) {
+            void loadContactInfo();
+        }
+    }, [isOpen]);
+
+    return (
+        <>
+            <button
+                onClick={() => {
+                    setMobileMenuOpen(false);
+                    setTimeout(() => setIsOpen(true), 300);
+                }}
+                className="block w-full text-left text-base font-medium text-white/70 hover:text-white hover:bg-white/10 px-4 py-3 rounded-xl transition-all"
+            >
+                Contact Us
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl shadow-black/50 border border-slate-700"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold text-white">Contact Us</h3>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                                >
+                                    <X size={20} className="text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                {contactInfo.email && (
+                                    <a
+                                        href={`mailto:${contactInfo.email}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                            <Mail size={20} className="text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Email</p>
+                                            <p className="text-white font-medium group-hover:text-blue-400 transition-colors">{contactInfo.email}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.phone && (
+                                    <a
+                                        href={`tel:${contactInfo.phone.replace(/\s/g, '')}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                            <Phone size={20} className="text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Phone</p>
+                                            <p className="text-white font-medium group-hover:text-emerald-400 transition-colors">{contactInfo.phone}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.address && (
+                                    <div className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl">
+                                        <div className="h-10 w-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                            <MapPin size={20} className="text-amber-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Address</p>
+                                            <p className="text-white font-medium">{contactInfo.address}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    );
+}
 
 export const Navbar = () => {
     const router = useRouter();
@@ -73,10 +311,9 @@ export const Navbar = () => {
     if (!mounted) return null;
 
     const navLinks = [
+        { name: "Home", href: "/" },
         { name: "Browse Houses", href: "/listings" },
-        { name: "How It Works", href: "#how-it-works" },
-        { name: "Rules", href: "#rules" },
-        { name: "FAQs", href: "#faqs" },
+        { name: "About Us", href: "#how-it-works" },
     ];
 
     const isActive = (href: string) => {
@@ -89,7 +326,7 @@ export const Navbar = () => {
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className={`fixed top-0 z-50 w-full py-3 transition-all duration-300 ${isScrolled ? 'bg-slate-950/95 backdrop-blur-xl shadow-lg shadow-black/20' : 'bg-transparent'}`}
+            className={`fixed top-0 z-50 w-full py-3 transition-all duration-300 bg-black shadow-lg shadow-black/40`}
         >
             {/* Subtle animated background glow */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -125,6 +362,7 @@ export const Navbar = () => {
                             {link.name}
                         </Link>
                     ))}
+                    <ContactUsButton />
                     
                     <div className="flex items-center gap-2 pl-4 ml-2 border-l border-white/20">
                         <motion.button
@@ -211,6 +449,13 @@ export const Navbar = () => {
                                     </Link>
                                 </motion.div>
                             ))}
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: navLinks.length * 0.1 }}
+                            >
+                                <MobileContactButton setMobileMenuOpen={setMobileMenuOpen} />
+                            </motion.div>
                             <div className="pt-4 border-t border-white/10 mt-2">
                                 {role ? (
                                     <div className="flex flex-col gap-2">
@@ -234,3 +479,241 @@ export const Navbar = () => {
         </motion.nav>
     );
 };
+
+// Contact Us Button Component
+function ContactUsButton() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string; address?: string }>({});
+
+    useEffect(() => {
+        async function loadContactInfo() {
+            try {
+                const supabase = getSupabaseClient();
+                const { data } = await supabase
+                    .from('site_settings')
+                    .select('contact_email, contact_phone, contact_address')
+                    .eq('id', 'default')
+                    .maybeSingle();
+                if (data) {
+                    const settings = data as { contact_email?: string; contact_phone?: string; contact_address?: string };
+                    setContactInfo({
+                        email: settings.contact_email,
+                        phone: settings.contact_phone,
+                        address: settings.contact_address,
+                    });
+                }
+            } catch {
+                // Fallback contact info
+                setContactInfo({
+                    email: 'info@arenahomes.co.ke',
+                    phone: '+254 712 345 678',
+                    address: 'Egerton University, Njoro',
+                });
+            }
+        }
+        if (isOpen) {
+            void loadContactInfo();
+        }
+    }, [isOpen]);
+
+    return (
+        <>
+            <button
+                onClick={() => setIsOpen(true)}
+                className="nav-link text-sm font-medium px-4 py-2 text-white/80 hover:text-white transition-all"
+            >
+                Contact Us
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl shadow-black/50 border border-slate-700"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold text-white">Contact Us</h3>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                                >
+                                    <X size={20} className="text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                {contactInfo.email && (
+                                    <a
+                                        href={`mailto:${contactInfo.email}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                            <Mail size={20} className="text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Email</p>
+                                            <p className="text-white font-medium group-hover:text-blue-400 transition-colors">{contactInfo.email}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.phone && (
+                                    <a
+                                        href={`tel:${contactInfo.phone.replace(/\s/g, '')}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                            <Phone size={20} className="text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Phone</p>
+                                            <p className="text-white font-medium group-hover:text-emerald-400 transition-colors">{contactInfo.phone}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.address && (
+                                    <div className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl">
+                                        <div className="h-10 w-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                            <MapPin size={20} className="text-amber-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Address</p>
+                                            <p className="text-white font-medium">{contactInfo.address}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    );
+}
+
+// Mobile Contact Button Component
+function MobileContactButton({ setMobileMenuOpen }: { setMobileMenuOpen: (open: boolean) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [contactInfo, setContactInfo] = useState<{ email?: string; phone?: string; address?: string }>({});
+
+    useEffect(() => {
+        async function loadContactInfo() {
+            try {
+                const supabase = getSupabaseClient();
+                const { data } = await supabase
+                    .from('site_settings')
+                    .select('contact_email, contact_phone, contact_address')
+                    .eq('id', 'default')
+                    .maybeSingle();
+                if (data) {
+                    const settings = data as { contact_email?: string; contact_phone?: string; contact_address?: string };
+                    setContactInfo({
+                        email: settings.contact_email,
+                        phone: settings.contact_phone,
+                        address: settings.contact_address,
+                    });
+                }
+            } catch {
+                setContactInfo({
+                    email: 'info@arenahomes.co.ke',
+                    phone: '+254 712 345 678',
+                    address: 'Egerton University, Njoro',
+                });
+            }
+        }
+        if (isOpen) {
+            void loadContactInfo();
+        }
+    }, [isOpen]);
+
+    return (
+        <>
+            <button
+                onClick={() => {
+                    setMobileMenuOpen(false);
+                    setTimeout(() => setIsOpen(true), 300);
+                }}
+                className="block w-full text-left text-base font-medium text-white/70 hover:text-white hover:bg-white/10 px-4 py-3 rounded-xl transition-all"
+            >
+                Contact Us
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl shadow-black/50 border border-slate-700"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold text-white">Contact Us</h3>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                                >
+                                    <X size={20} className="text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                {contactInfo.email && (
+                                    <a
+                                        href={`mailto:${contactInfo.email}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                            <Mail size={20} className="text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Email</p>
+                                            <p className="text-white font-medium group-hover:text-blue-400 transition-colors">{contactInfo.email}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.phone && (
+                                    <a
+                                        href={`tel:${contactInfo.phone.replace(/\s/g, '')}`}
+                                        className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="h-10 w-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                            <Phone size={20} className="text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Phone</p>
+                                            <p className="text-white font-medium group-hover:text-emerald-400 transition-colors">{contactInfo.phone}</p>
+                                        </div>
+                                    </a>
+                                )}
+                                {contactInfo.address && (
+                                    <div className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl">
+                                        <div className="h-10 w-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                            <MapPin size={20} className="text-amber-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-400">Address</p>
+                                            <p className="text-white font-medium">{contactInfo.address}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    );
+}
