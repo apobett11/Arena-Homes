@@ -372,4 +372,75 @@ export const PropertyApi = {
             created_at: p.created_at,
         }));
     },
+
+    // Get distinct locations for filter dropdowns
+    getDistinctLocations: async (): Promise<string[]> => {
+        const supabase = getSupabaseClient() as any;
+
+        try {
+            const { data, error } = await supabase
+                .rpc('get_distinct_locations');
+
+            if (error) {
+                console.error('Error fetching locations:', error);
+                // Fallback to hardcoded values
+                return ["Main Gate", "Njokerio", "Milimani", "Town", "Blue Valley"];
+            }
+
+            return (data || []).map((item: { location: string }) => item.location);
+        } catch (err) {
+            console.error('Failed to fetch locations:', err);
+            return ["Main Gate", "Njokerio", "Milimani", "Town", "Blue Valley"];
+        }
+    },
+
+    // Get distinct property types for filter dropdowns
+    getDistinctPropertyTypes: async (): Promise<string[]> => {
+        const supabase = getSupabaseClient() as any;
+
+        try {
+            const { data, error } = await supabase
+                .rpc('get_distinct_property_types');
+
+            if (error) {
+                console.error('Error fetching property types:', error);
+                // Fallback to hardcoded values
+                return ["Single Room", "Bedsitter", "One Bedroom", "Two Bedroom", "Apartment"];
+            }
+
+            // Format property types for display (convert SINGLE_ROOM to "Single Room")
+            return (data || []).map((item: { property_type: string }) => {
+                const type = item.property_type;
+                return type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+            });
+        } catch (err) {
+            console.error('Failed to fetch property types:', err);
+            return ["Single Room", "Bedsitter", "One Bedroom", "Two Bedroom", "Apartment"];
+        }
+    },
+
+    // Get distinct unit types (room types) for filter dropdowns
+    getDistinctUnitTypes: async (): Promise<string[]> => {
+        const supabase = getSupabaseClient() as any;
+
+        try {
+            const { data, error } = await supabase
+                .rpc('get_distinct_unit_types');
+
+            if (error) {
+                console.error('Error fetching unit types:', error);
+                // Fallback to hardcoded values
+                return ["Single Room", "Bedsitter", "One Bedroom", "Two Bedroom", "Apartment"];
+            }
+
+            // Format unit types for display
+            return (data || []).map((item: { unit_type: string }) => {
+                const type = item.unit_type;
+                return type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+            });
+        } catch (err) {
+            console.error('Failed to fetch unit types:', err);
+            return ["Single Room", "Bedsitter", "One Bedroom", "Two Bedroom", "Apartment"];
+        }
+    },
 };

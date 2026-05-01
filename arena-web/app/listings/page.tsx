@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FilterBar, FilterState } from "@/components/listings/FilterBar";
+import { FilterBar, FilterState, SortOption } from "@/components/listings/FilterBar";
 import { HouseCard, HouseProps } from "@/components/listings/HouseCard";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -69,12 +69,15 @@ function ListingsContent() {
         priceRange: [2500, 20000],
         locations: [],
         houseTypes: [],
+        sortBy: 'price',
         sortDirection: 'asc'
     });
 
     const [loading, setLoading] = useState(true);
     const [pinCode, setPinCode] = useState("");
     const [pinSearchError, setPinSearchError] = useState("");
+    const [availableLocations, setAvailableLocations] = useState<string[]>(["Main Gate", "Njokerio", "Milimani", "Town", "Blue Valley"]);
+    const [availableTypes, setAvailableTypes] = useState<string[]>(["Single Room", "Bedsitter", "One Bedroom", "Two Bedroom", "Apartment"]);
 
     // Read URL Params on Mount
     useEffect(() => {
@@ -87,6 +90,7 @@ function ListingsContent() {
                 ...prev,
                 houseTypes: typeParam ? [typeParam] : prev.houseTypes,
                 locations: locParam ? [locParam] : prev.locations,
+                sortBy: (sortParam as SortOption) || 'price',
                 sortDirection: (sortParam === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
             }));
         }
@@ -98,7 +102,7 @@ function ListingsContent() {
             try {
                 // Use the PropertyApi to get properties with vacancy info
                 const propertiesWithVacancy = await PropertyApi.getPropertiesWithVacancy();
-                
+
                 // Filter to only show properties with at least one vacant unit
                 // Fully occupied properties will not be shown
                 const mappedListings: HouseProps[] = propertiesWithVacancy
@@ -117,7 +121,7 @@ function ListingsContent() {
                         rentRange: p.rentRange,
                         likes_count: p.likes_count,
                     }));
-                
+
                 setListings(mappedListings);
             } catch (err) {
                 console.error("Failed to fetch listings", err);
@@ -126,6 +130,29 @@ function ListingsContent() {
             }
         }
         fetchListings();
+    }, []);
+
+    // Fetch dynamic locations and types from database
+    useEffect(() => {
+        async function fetchFilterOptions() {
+            try {
+                const [locations, types] = await Promise.all([
+                    PropertyApi.getDistinctLocations(),
+                    PropertyApi.getDistinctUnitTypes()
+                ]);
+
+                if (locations.length > 0) {
+                    setAvailableLocations(locations);
+                }
+                if (types.length > 0) {
+                    setAvailableTypes(types);
+                }
+            } catch (err) {
+                console.error("Failed to fetch filter options", err);
+                // Keep default values on error
+            }
+        }
+        fetchFilterOptions();
     }, []);
 
     async function searchByInvitePin() {
@@ -180,9 +207,20 @@ function ListingsContent() {
             return matchesPrice && matchesLocation && matchesType;
         });
 
-        // Sorting
+        // Sorting based on selected option
         result.sort((a, b) => {
-            return filters.sortDirection === 'asc' ? a.price - b.price : b.price - a.price;
+            const direction = filters.sortDirection === 'asc' ? 1 : -1;
+
+            switch (filters.sortBy) {
+                case 'price':
+                    return (a.price - b.price) * direction;
+                case 'location':
+                    return a.location.localeCompare(b.location) * direction;
+                case 'type':
+                    return a.type.localeCompare(b.type) * direction;
+                default:
+                    return (a.price - b.price) * direction;
+            }
         });
 
         return result;
@@ -209,36 +247,40 @@ function ListingsContent() {
     }, [filteredListings, loading]);
 
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-[#0066FF] selection:text-white">
-            <Navbar />
+        <div className="min-h-screen bg-slate-100 text-slate-900 font-sans selection:bg-[#0066FF] selection:text-white">
+            <div className="bg-[#020617]">
+                <Navbar />
+            </div>
 
-            <main className="pt-24 pb-20">
-                {/* Header Section */}
-                <section className="container mx-auto px-4 mb-8 text-center md:text-left">
-                    <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400 mb-3">
-                        Available Houses Near Egerton
-                    </h1>
-                    <p className="text-slate-400 max-w-2xl text-lg">
-                        Real-time vacancy updates. Filtered for students.
-                        <span className="inline-block ml-3 px-2 py-0.5 rounded-full bg-[#00D084]/10 text-[#00D084] text-xs font-bold border border-[#00D084]/20">
-                            {filteredListings.length} Found
-                        </span>
-                    </p>
-                    <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <input
-                            value={pinCode}
-                            onChange={(e) => setPinCode(e.target.value)}
-                            placeholder="Enter host invite PIN code"
-                            className="w-full sm:w-80 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
-                        />
-                        <button
-                            onClick={searchByInvitePin}
-                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
-                        >
-                            Find by PIN
-                        </button>
+            <main className="pt-0 pb-20">
+                {/* Header Section - Dark Background */}
+                <section className="bg-[#020617] py-8 pb-12">
+                    <div className="container mx-auto px-4">
+                        <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400 mb-3">
+                            Available Houses Near Egerton
+                        </h1>
+                        <p className="text-slate-400 max-w-2xl text-lg">
+                            Real-time vacancy updates. Filtered for students.
+                            <span className="inline-block ml-3 px-2 py-0.5 rounded-full bg-[#00D084]/10 text-[#00D084] text-xs font-bold border border-[#00D084]/20">
+                                {filteredListings.length} Found
+                            </span>
+                        </p>
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <input
+                                value={pinCode}
+                                onChange={(e) => setPinCode(e.target.value)}
+                                placeholder="Enter host invite PIN code"
+                                className="w-full sm:w-80 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+                            />
+                            <button
+                                onClick={searchByInvitePin}
+                                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+                            >
+                                Find by PIN
+                            </button>
+                        </div>
+                        {pinSearchError && <p className="mt-2 text-sm text-rose-400">{pinSearchError}</p>}
                     </div>
-                    {pinSearchError && <p className="mt-2 text-sm text-rose-400">{pinSearchError}</p>}
                 </section>
 
                 {/* Filters */}
@@ -248,50 +290,53 @@ function ListingsContent() {
                         setFilters={setFilters}
                         minPrice={2500}
                         maxPrice={20000}
-                        // Available locations/types should be dynamic ideally
-                        availableLocations={["Main Gate", "Njokerio", "Milimani", "Town", "Blue Valley"]}
-                        availableTypes={["Single Room", "Bedsitter", "One Bedroom", "Two Bedroom", "Apartment"]}
+                        // Dynamic locations and types from database
+                        availableLocations={availableLocations}
+                        availableTypes={availableTypes}
                     />
                 </div>
 
-                {/* Listings Grid */}
-                <div ref={containerRef} className="container mx-auto px-4 min-h-[60vh]">
-                    {loading ? (
-                        // Skeleton State
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                                <div key={i} className="aspect-[3/4] rounded-3xl bg-slate-800/50 animate-pulse border border-white/5" />
-                            ))}
-                        </div>
-                    ) : filteredListings.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                            {filteredListings.map((house) => (
-                                <div key={house.id} className="house-card-wrapper h-full">
-                                    <HouseCard {...house} />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        // Empty State
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-6">
-                                <Filter size={32} className="text-slate-400" />
+                {/* Listings Grid - Light Background, Dark Cards */}
+                <div ref={containerRef} className="bg-slate-100 py-8">
+                    <div className="container mx-auto px-4 min-h-[60vh]">
+                        {loading ? (
+                            // Skeleton State - Dark skeletons on light background
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                    <div key={i} className="aspect-[3/4] rounded-3xl bg-slate-300 animate-pulse border border-slate-200" />
+                                ))}
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">No houses found</h3>
-                            <p className="text-slate-400 mb-6">Try adjusting your filters to see more results.</p>
-                            <button
-                                onClick={() => setFilters({
-                                    priceRange: [2500, 20000],
-                                    locations: [],
-                                    houseTypes: [],
-                                    sortDirection: 'asc'
-                                })}
-                                className="px-6 py-2 rounded-xl bg-[#0066FF] text-white font-bold hover:bg-[#0052cc] transition-colors"
-                            >
-                                Clear Filters
-                            </button>
-                        </div>
-                    )}
+                        ) : filteredListings.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                {filteredListings.map((house) => (
+                                    <div key={house.id} className="house-card-wrapper h-full">
+                                        <HouseCard {...house} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            // Empty State
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mb-6">
+                                    <Filter size={32} className="text-slate-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-2">No houses found</h3>
+                                <p className="text-slate-500 mb-6">Try adjusting your filters to see more results.</p>
+                                <button
+                                    onClick={() => setFilters({
+                                        priceRange: [2500, 20000],
+                                        locations: [],
+                                        houseTypes: [],
+                                        sortBy: 'price',
+                                        sortDirection: 'asc'
+                                    })}
+                                    className="px-6 py-2 rounded-xl bg-[#0066FF] text-white font-bold hover:bg-[#0052cc] transition-colors"
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
             </main>

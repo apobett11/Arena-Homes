@@ -134,6 +134,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         phone: "",
         message: ""
     });
+    const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
 
     useEffect(() => {
         const pin = searchParams.get("pin");
@@ -333,19 +334,21 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
     };
 
     // Application submission
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
     const handleApply = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!applicationForm.fullName || !applicationForm.email || !applicationForm.phone) {
             setSubmitMessage("Please fill in all required fields");
             return;
         }
-        
+
         setSubmitting(true);
         setSubmitMessage("");
-        
+
         try {
             const { ApplicationApi } = await import('@/lib/api/domains/applications');
-            
+
             await ApplicationApi.submit({
                 propertyId: propertyId!,
                 caretakerId: caretaker?.id || '',
@@ -354,10 +357,11 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 phoneNumber: applicationForm.phone,
                 message: applicationForm.message,
             });
-            
-            setSubmitMessage("Application submitted successfully! The caretaker will contact you soon.");
+
+            // Show success modal instead of inline message
+            setShowApplyModal(false);
+            setShowSuccessModal(true);
             setApplicationForm({ fullName: "", email: "", phone: "", message: "" });
-            setTimeout(() => setShowApplyModal(false), 2000);
         } catch (error) {
             console.error("Failed to submit application:", error);
             setSubmitMessage("Failed to submit application. Please try again.");
@@ -504,7 +508,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             {/* --- Main Content --- */}
             <div className="rounded-t-3xl -mt-6 relative bg-slate-50 dark:bg-black p-6 space-y-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
 
-                {/* Header Info */}
+                {/* 1. Name, Location and Price */}
                 <div className="space-y-4">
                     <div className="flex items-start justify-between">
                         <div>
@@ -517,77 +521,32 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </div>
 
                     <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-primary">${houseData.price.toLocaleString()}</span>
+                        <span className="text-3xl font-bold text-primary">KSh {houseData.price.toLocaleString()}</span>
                         <span className="text-slate-500 dark:text-slate-400 font-medium">/ month</span>
                     </div>
                 </div>
 
                 <div className="h-px bg-slate-200 dark:bg-zinc-800" />
 
-                {/* Reviews Summary - Clickable Area */}
-                <Link href={`/listings/${houseData.id}/reviews`} className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 hover:border-primary/30 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 w-12 h-12 rounded-full font-bold text-lg">
-                            {houseData.rating}
-                        </div>
-                        <div>
-                            <div className="flex text-amber-500">
-                                {[1, 2, 3, 4, 5].map(s => <Star key={s} size={12} fill={s <= Math.round(houseData.rating) ? "currentColor" : "none"} className={s > Math.round(houseData.rating) ? "text-slate-300 dark:text-slate-700" : ""} />)}
-                            </div>
-                            <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wide">Excellent • {houseData.reviewCount} Reviews</p>
-                        </div>
+                {/* 2. Rating Stars (Default 5) and Number of Ratings */}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                                key={star}
+                                size={20}
+                                className="text-amber-400 fill-amber-400"
+                            />
+                        ))}
                     </div>
-                    <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" />
-                </Link>
-
-                {/* About this home - First */}
-                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
-                    <h3 className="text-lg font-bold mb-3">About this home</h3>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm text-justify">
-                        {houseData.longDescription}
-                    </p>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                        <span className="font-semibold text-slate-900 dark:text-white">5.0</span>
+                        <span className="mx-1">•</span>
+                        <span>{reviews.length > 0 ? reviews.length : 'No'} ratings</span>
+                    </div>
                 </div>
 
-                {/* House Rules - Below About */}
-                {rules.length > 0 && (
-                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <FileText size={20} className="text-primary" />
-                            House Rules
-                        </h3>
-                        <div className="space-y-3">
-                            {rules.map((rule) => (
-                                <div key={rule.id} className="flex gap-3">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-primary shrink-0" />
-                                    <div>
-                                        <p className="font-semibold text-sm">{rule.title}</p>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">{rule.details}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* FAQ Section - Below Rules */}
-                {faqs.length > 0 && (
-                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <HelpCircle size={20} className="text-primary" />
-                            Frequently Asked Questions
-                        </h3>
-                        <div className="space-y-4">
-                            {faqs.map((faq) => (
-                                <div key={faq.id} className="border-b border-slate-100 dark:border-zinc-800 last:border-0 pb-3 last:pb-0">
-                                    <p className="font-semibold text-sm text-slate-900 dark:text-white">{faq.question}</p>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{faq.answer}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Amenities & Policies */}
+                {/* 3. Amenities & Policies */}
                 <div>
                     <h3 className="text-lg font-bold mb-4">Amenities & Policies</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -603,10 +562,147 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                             </div>
                         ))}
                     </div>
+                </div>
 
-                    <div className="mt-4 flex items-center justify-center gap-2 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold uppercase tracking-widest border border-blue-100 dark:border-blue-800/30">
-                        <ShieldCheck size={14} />
-                        Fulfilled by {caretaker?.full_name || "Arena Homes"}
+                {/* 4. Fulfilled By */}
+                <div className="flex items-center justify-center gap-2 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold uppercase tracking-widest border border-blue-100 dark:border-blue-800/30">
+                    <ShieldCheck size={14} />
+                    Fulfilled by {caretaker?.full_name || "Arena Homes"}
+                </div>
+
+                {/* 5. Reviews and Comments */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Reviews & Comments</h3>
+                        <Link href={`/listings/${houseData.id}/reviews`} className="text-primary text-sm font-bold hover:underline">
+                            {reviews.length > 0 ? 'View all' : 'Write a review'}
+                        </Link>
+                    </div>
+                    <div className="space-y-3">
+                        {reviews.length === 0 ? (
+                            <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 text-center">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet. Be the first to review!</p>
+                            </div>
+                        ) : (
+                            reviews.slice(0, 4).map((review) => (
+                                <div key={review.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-sm">Tenant</h4>
+                                        <span className="text-[10px] text-slate-400 font-medium bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
+                                            {new Date(review.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex text-amber-500 mb-2">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} size={10} fill={i < review.rating ? "currentColor" : "none"} className={i >= review.rating ? "text-slate-200 dark:text-zinc-700" : ""} />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 italic">&quot;{review.comment}&quot;</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* 6. FAQ and Rules - Side by side, swipeable on mobile */}
+                <div id="rules-faq-section">
+                    {/* Mobile Tab Switcher */}
+                    <div className="lg:hidden flex gap-2 mb-4">
+                        <button
+                            onClick={() => setActiveTab('faq')}
+                            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
+                                activeTab === 'faq'
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                    : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-zinc-800'
+                            }`}
+                        >
+                            FAQ
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('rules')}
+                            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
+                                activeTab === 'rules'
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                    : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-zinc-800'
+                            }`}
+                        >
+                            Rules
+                        </button>
+                    </div>
+
+                    <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+                        {/* FAQ Column */}
+                        <div className={`${activeTab !== 'faq' ? 'hidden lg:block' : ''}`}>
+                            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800 h-full">
+                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <HelpCircle size={20} className="text-primary" />
+                                    Frequently Asked Questions
+                                </h3>
+                                {faqs.length > 0 ? (
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                                        {faqs.map((faq) => (
+                                            <div key={faq.id} className="border-b border-slate-100 dark:border-zinc-800 last:border-0 pb-3 last:pb-0">
+                                                <p className="font-semibold text-sm text-slate-900 dark:text-white">{faq.question}</p>
+                                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{faq.answer}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">No FAQs available for this property.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Rules Column */}
+                        <div className={`${activeTab !== 'rules' ? 'hidden lg:block' : ''}`}>
+                            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800 h-full">
+                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <FileText size={20} className="text-primary" />
+                                    House Rules
+                                </h3>
+                                {rules.length > 0 ? (
+                                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                                        {rules.map((rule) => (
+                                            <div key={rule.id} className="flex gap-3">
+                                                <div className="mt-1 w-2 h-2 rounded-full bg-primary shrink-0" />
+                                                <div>
+                                                    <p className="font-semibold text-sm">{rule.title}</p>
+                                                    <p className="text-xs text-slate-600 dark:text-slate-400">{rule.details}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">No rules specified for this property.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 7. About this home */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
+                    <h3 className="text-lg font-bold mb-3">About this home</h3>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm text-justify">
+                        {houseData.longDescription}
+                    </p>
+                </div>
+
+                {/* 8. Similar Homes - Fetched from database */}
+                <div>
+                    <h3 className="text-lg font-bold mb-4">Similar Homes</h3>
+                    <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 scrollbar-hide">
+                        {similarHouses.length > 0 ? (
+                            similarHouses.map((house) => (
+                                <div key={house.id} className="min-w-[200px] sm:min-w-[240px]">
+                                    <HouseCard {...house} />
+                                </div>
+                            ))
+                        ) : (
+                            <div className="min-w-full p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 text-center">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">No similar homes found.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -641,54 +737,8 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                 )}
 
-                {/* Reviews Preview Section */}
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold">What people say</h3>
-                        {reviews.length > 0 && (
-                            <Link href={`/listings/${houseData.id}/reviews`} className="text-primary text-sm font-bold hover:underline">View all</Link>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                        {reviews.length === 0 ? (
-                            <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 text-center">
-                                <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet. Be the first to review!</p>
-                            </div>
-                        ) : (
-                            reviews.slice(0, 4).map((review) => (
-                                <div key={review.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className="font-bold text-sm">Tenant</h4>
-                                        <span className="text-[10px] text-slate-400 font-medium bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
-                                            {new Date(review.created_at).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                    <div className="flex text-amber-500 mb-2">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} size={10} fill={i < review.rating ? "currentColor" : "none"} className={i >= review.rating ? "text-slate-200 dark:text-zinc-700" : ""} />
-                                        ))}
-                                    </div>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 italic">&quot;{review.comment}&quot;</p>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* Similar Houses Carousel - Last before footer */}
-                <div>
-                    <h3 className="text-lg font-bold mb-4">Similar Homes</h3>
-                    <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 scrollbar-hide">
-                        {similarHouses.map(house => (
-                            <div key={house.id} className="min-w-[200px] sm:min-w-[240px]">
-                                <HouseCard {...house} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* --- Contact Section --- */}
-                <div id="rules-faq-section" className="space-y-8 pt-4">
+                {/* 9. Contact Section */}
+                <div id="contact-section" className="pt-4">
 
                     {/* Contact Section */}
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
@@ -825,23 +875,23 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* --- Bottom Action Bar --- */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-950 border-t border-slate-200 dark:border-white/10 p-4 pb-8 z-40">
+            <div className="fixed bottom-0 left-0 right-0 bg-blue-600 dark:bg-blue-700 border-t border-blue-500 dark:border-blue-600 p-4 pb-8 z-40 shadow-lg shadow-blue-500/30">
                 <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
                     <div className="hidden sm:flex flex-col">
-                        <p className="text-xs text-slate-500 uppercase font-bold">Rent</p>
-                        <p className="text-xl font-bold text-primary">KSh {houseData.price.toLocaleString()}<span className="text-sm font-normal text-slate-400">/mo</span></p>
+                        <p className="text-xs text-blue-100 uppercase font-bold">Rent</p>
+                        <p className="text-xl font-bold text-white">KSh {houseData.price.toLocaleString()}<span className="text-sm font-normal text-blue-200">/mo</span></p>
                     </div>
 
                     <div className="flex gap-3 flex-1 sm:flex-none w-full sm:w-auto">
-                        <button 
+                        <button
                             onClick={() => setShowApplyModal(true)}
-                            className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-primary text-white font-bold hover:brightness-110 shadow-lg shadow-primary/20 transition-all whitespace-nowrap text-center"
+                            className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-white text-blue-600 font-bold hover:bg-blue-50 shadow-lg transition-all whitespace-nowrap text-center"
                         >
                             Apply Now
                         </button>
-                        <button 
+                        <button
                             onClick={() => alert("We are working on the chat feature. Coming soon!")}
-                            className="flex-1 sm:flex-none px-6 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap text-center"
+                            className="flex-1 sm:flex-none px-6 py-3 rounded-xl border-2 border-blue-300 text-white font-bold hover:bg-blue-500 transition-colors whitespace-nowrap text-center"
                         >
                             Chat
                         </button>
@@ -973,6 +1023,29 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                                 {submitting ? 'Submitting...' : 'Submit Application'}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Success Modal --- */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowSuccessModal(false)}>
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 w-full max-w-md text-center shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle size={32} className="text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Application Submitted!</h3>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+                            Your application has been submitted. You will be approved and contacted by the tenant for the site visit and move in.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => setShowSuccessModal(false)}
+                                className="w-full py-3 rounded-xl bg-primary text-white font-bold hover:brightness-110 transition-all"
+                            >
+                                Keep Browsing
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

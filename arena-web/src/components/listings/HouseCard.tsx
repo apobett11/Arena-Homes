@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { Heart, MapPin, Droplets, Home, Footprints, ArrowRight, ShieldCheck, Zap, Shield, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export interface HouseProps {
     id: string | number;
@@ -54,8 +56,44 @@ export const HouseCard = ({
     amenities,
     availableRooms,
     totalRooms,
-    likesCount = 0
+    likesCount: initialLikesCount = 0
 }: HouseProps) => {
+    const [isLiked, setIsLiked] = useState(false);
+    const [likesCount, setLikesCount] = useState(initialLikesCount);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLike = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (isLoading) return;
+        setIsLoading(true);
+
+        try {
+            const supabase = getSupabaseClient();
+
+            // Toggle like status
+            if (isLiked) {
+                // Unlike
+                setLikesCount(prev => Math.max(0, prev - 1));
+                setIsLiked(false);
+            } else {
+                // Like
+                setLikesCount(prev => prev + 1);
+                setIsLiked(true);
+            }
+
+            // TODO: Call API to persist like (would need user authentication)
+            // For now, we just update the UI state
+        } catch (error) {
+            console.error("Failed to toggle like:", error);
+            // Revert on error
+            setLikesCount(initialLikesCount);
+            setIsLiked(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
     // Determine badge color based on availability
     const getAvailabilityBadge = () => {
         const status = availabilityStatus || (vacancy === "Available" ? 'AVAILABLE' : 'OCCUPIED');
@@ -150,16 +188,27 @@ export const HouseCard = ({
                         )}
                     </div>
 
-                    {/* Favorite Button with Count */}
-                    <button 
-                        onClick={(e) => e.preventDefault()}
-                        className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-800/90 text-slate-300 hover:bg-rose-500/20 hover:text-rose-400 transition-all shadow-lg backdrop-blur-sm"
-                    >
-                        <Heart size={14} />
-                        {likesCount > 0 && (
-                            <span className="text-xs font-semibold">{likesCount}</span>
+                    {/* Favorite Button with Count - Reactive */}
+                    <motion.button
+                        onClick={handleLike}
+                        whileTap={{ scale: 0.9 }}
+                        disabled={isLoading}
+                        className={cn(
+                            "absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all shadow-lg backdrop-blur-sm",
+                            isLiked
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-slate-800/90 text-slate-300 hover:bg-rose-500/20 hover:text-rose-400"
                         )}
-                    </button>
+                    >
+                        <Heart
+                            size={14}
+                            className={cn(
+                                "transition-all",
+                                isLiked && "fill-current"
+                            )}
+                        />
+                        <span className="text-xs font-semibold">{likesCount}</span>
+                    </motion.button>
 
                     {/* Price Badge */}
                     <div className="absolute bottom-3 left-3">

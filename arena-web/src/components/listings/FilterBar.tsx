@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Filter, X, ChevronDown, ArrowUp, ArrowDown, MapPin, Home, DollarSign } from "lucide-react";
+import { Filter, X, ChevronDown, ArrowUp, ArrowDown, MapPin, Home, DollarSign, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export type SortOption = 'price' | 'location' | 'type';
 
 export interface FilterState {
     priceRange: [number, number];
     locations: string[];
     houseTypes: string[];
+    sortBy: SortOption;
     sortDirection: 'asc' | 'desc';
 }
 
@@ -62,10 +65,17 @@ export const FilterBar = ({
         setFilters({ ...filters, houseTypes: newTypes });
     };
 
-    const toggleSort = () => {
+    const toggleSortDirection = () => {
         setFilters({
             ...filters,
             sortDirection: filters.sortDirection === 'asc' ? 'desc' : 'asc'
+        });
+    };
+
+    const setSortBy = (option: SortOption) => {
+        setFilters({
+            ...filters,
+            sortBy: option
         });
     };
 
@@ -202,13 +212,48 @@ export const FilterBar = ({
 
                     {/* Sort Control */}
                     <div className="flex items-center gap-3">
+                        {/* Sort By Dropdown */}
+                        <div className="relative group">
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300">
+                                <SlidersHorizontal size={14} className="text-[#0066FF]" />
+                                <span className="text-xs uppercase tracking-wider text-slate-400">Sort by</span>
+                                <span className="capitalize">{filters.sortBy}</span>
+                                <ChevronDown size={14} className="text-slate-400" />
+                            </button>
+
+                            <div className="hidden group-hover:block hover:block absolute top-full right-0 mt-2 p-2 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-slate-100 dark:border-white/10 z-50">
+                                <div className="space-y-1 p-1">
+                                    {(['price', 'location', 'type'] as SortOption[]).map((option) => (
+                                        <div
+                                            key={option}
+                                            onClick={() => setSortBy(option)}
+                                            className={cn(
+                                                "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors",
+                                                filters.sortBy === option
+                                                    ? "bg-[#0066FF]/10 text-[#0066FF]"
+                                                    : "hover:bg-slate-50 dark:hover:bg-white/5"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                                                filters.sortBy === option ? "bg-[#0066FF] border-[#0066FF]" : "border-slate-300 dark:border-white/20"
+                                            )}>
+                                                {filters.sortBy === option && <Filter size={10} className="text-white" />}
+                                            </div>
+                                            <span className="capitalize">{option}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sort Direction Toggle */}
                         <button
-                            onClick={toggleSort}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300"
+                            onClick={toggleSortDirection}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold"
+                            title={filters.sortDirection === 'asc' ? 'Ascending' : 'Descending'}
                         >
-                            <span className="text-xs uppercase tracking-wider text-slate-400">Sort</span>
                             {filters.sortDirection === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                            Price
                         </button>
                     </div>
 

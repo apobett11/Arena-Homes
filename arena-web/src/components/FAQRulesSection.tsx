@@ -126,7 +126,7 @@ export const FAQRulesSection = () => {
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
 
     return (
-        <section id="rules" className="py-8 md:py-10 bg-slate-950">
+        <section id="rules" className="py-8 md:py-10 bg-slate-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Mobile Tab Switcher */}
                 <div className="lg:hidden flex gap-2 mb-4">

@@ -225,55 +225,64 @@ export const FeaturedListings = () => {
                     </motion.div>
                 </div>
 
-                {/* Property Grid - 2 columns on mobile for smaller cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                    {loading ? (
-                        // Loading skeleton
-                        [...Array(6)].map((_, index) => (
-                            <div key={index} className="animate-pulse">
-                                <div className="aspect-[4/3] bg-[#EDE9E0] rounded-2xl mb-4" />
-                                <div className="h-4 bg-[#EDE9E0] rounded w-3/4 mb-2" />
-                                <div className="h-3 bg-[#EDE9E0] rounded w-1/2" />
+                {/* Property Grid Container - Glassmorphism with white hue */}
+                <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-3xl p-4 md:p-6 border-b-2 border-white/30 shadow-lg shadow-black/5">
+                    {/* Property Grid - 2 columns on mobile for smaller cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                        {loading ? (
+                            // Loading skeleton
+                            [...Array(6)].map((_, index) => (
+                                <div key={index} className="animate-pulse">
+                                    <div className="aspect-[4/3] bg-slate-700/50 rounded-2xl mb-4" />
+                                    <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-2" />
+                                    <div className="h-3 bg-slate-700/50 rounded w-1/2" />
+                                </div>
+                            ))
+                        ) : visibleListings.length === 0 ? (
+                            <div className="col-span-full text-center py-16">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+                                    <Home size={24} className="text-slate-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-white mb-2">No properties available</h3>
+                                <p className="text-slate-400">Check back soon for new listings</p>
                             </div>
-                        ))
-                    ) : visibleListings.length === 0 ? (
-                        <div className="col-span-full text-center py-16">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#F0EDE6] flex items-center justify-center">
-                                <Home size={24} className="text-[#9CA3AF]" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-[#1F2937] mb-2">No properties available</h3>
-                            <p className="text-[#4B5563]">Check back soon for new listings</p>
-                        </div>
-                    ) : (
-                        visibleListings.map((item, index) => (
-                            <motion.div
-                                key={item.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1, duration: 0.5 }}
-                                viewport={{ once: true }}
-                                className="min-w-0"
-                            >
-                                <HouseCard {...item} />
-                            </motion.div>
-                        ))
-                    )}
-                </div>
+                        ) : (
+                            visibleListings.map((item, index) => (
+                                <motion.div
+                                    key={item.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                                    viewport={{ once: true }}
+                                    className="min-w-0"
+                                >
+                                    <HouseCard {...item} />
+                                </motion.div>
+                            ))
+                        )}
+                    </div>
 
-                {/* CTA */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="mt-8 md:mt-10 text-center"
-                >
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Link href="/listings" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25">
-                            View All Properties
-                            <ArrowRight size={16} />
-                        </Link>
+                    {/* CTA - View All Properties Button with Styled Container */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="mt-8 md:mt-10"
+                    >
+                        <div className="flex justify-center">
+                            <motion.div
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="bg-gradient-to-r from-blue-600/20 to-blue-400/20 backdrop-blur-sm border border-blue-400/30 rounded-2xl p-1 shadow-lg shadow-blue-500/10"
+                            >
+                                <Link href="/listings" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25">
+                                    View All Properties
+                                    <ArrowRight size={18} />
+                                </Link>
+                            </motion.div>
+                        </div>
                     </motion.div>
-                </motion.div>
+                </div>
             </div>
 
             {/* Application Modal */}
