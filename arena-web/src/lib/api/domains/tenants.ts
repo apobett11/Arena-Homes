@@ -3,7 +3,7 @@ import { fetchClient } from '../client';
 export interface Tenant {
     id: string;
     userId: string;
-    status: 'PROSPECT' | 'ACTIVE' | 'PAST' | 'EVICTED';
+    status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'MOVED_OUT';
     user?: {
         email: string;
         profile?: {

@@ -348,12 +348,12 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             const applicationData = {
                 unit_id: id,
                 property_id: propertyId,
-                caretaker_id: caretaker?.id || null,
+                caretaker_employee_id: caretaker?.id || null,
                 full_name: applicationForm.fullName,
                 email: applicationForm.email,
                 phone_number: applicationForm.phone,
                 message: applicationForm.message,
-                status: 'PENDING' as const
+                status: 'PENDING'
             };
             const { error } = await (supabase as any).from('tenant_applications').insert(applicationData);
             

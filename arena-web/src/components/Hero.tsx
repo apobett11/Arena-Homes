@@ -1,62 +1,23 @@
 "use client";
 
-import { Search, MapPin, Home, DollarSign, ShieldCheck, BadgeCheck, Clock, Users, Sparkles, ChevronDown } from "lucide-react";
+import { Search, MapPin, Home, DollarSign, Sparkles, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-interface HeroStats {
-    propertyCount: number;
-    tenantCount: number;
-    availableRooms: number;
-    verifiedProperties: number;
-}
-
 export const Hero = () => {
     const router = useRouter();
     const [location, setLocation] = useState("");
     const [type, setType] = useState("");
     const [priceRange, setPriceRange] = useState("");
-    const [stats, setStats] = useState<HeroStats>({
-        propertyCount: 0,
-        tenantCount: 0,
-        availableRooms: 0,
-        verifiedProperties: 0,
-    });
-    const [statsLoading, setStatsLoading] = useState(true);
     const [locations, setLocations] = useState<string[]>([]);
-    const selectBaseClass =
-        "border-none p-0 focus:ring-0 text-xs md:text-base font-medium w-full outline-none appearance-none cursor-pointer text-[#1F2937] truncate bg-[#F8F5F0] rounded-md";
-    const optionClass = "bg-[#F8F5F0] text-[#1F2937]";
 
     useEffect(() => {
-        async function loadStats() {
+        async function loadLocations() {
             const supabase = getSupabaseClient();
             try {
-                // Get property count
-                const { count: propertyCount } = await supabase
-                    .from('properties')
-                    .select('*', { count: 'exact', head: true });
-
-                // Get tenant count
-                const { count: tenantCount } = await supabase
-                    .from('tenants')
-                    .select('*', { count: 'exact', head: true });
-
-                // Get available rooms count
-                const { count: availableRooms } = await supabase
-                    .from('units')
-                    .select('*', { count: 'exact', head: true })
-                    .or('status.eq.VACANT,availability_status.eq.AVAILABLE');
-
-                // Get verified properties count
-                const { count: verifiedProperties } = await supabase
-                    .from('properties')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('verification_status', 'VERIFIED');
-
                 // Get unique locations from properties
                 const { data: locationData } = await supabase
                     .from('properties')
@@ -65,28 +26,12 @@ export const Hero = () => {
 
                 const uniqueLocations = [...new Set(locationData?.map((p: { location: string }) => p.location).filter(Boolean))].sort();
                 setLocations(uniqueLocations);
-
-                setStats({
-                    propertyCount: propertyCount || 0,
-                    tenantCount: tenantCount || 0,
-                    availableRooms: availableRooms || 0,
-                    verifiedProperties: verifiedProperties || 0,
-                });
             } catch (e) {
-                console.error('Failed to load hero stats:', e);
-            } finally {
-                setStatsLoading(false);
+                console.error('Failed to load locations:', e);
             }
         }
-        loadStats();
+        loadLocations();
     }, []);
-
-    const formatNumber = (num: number): string => {
-        if (num >= 1000) {
-            return `${(num / 1000).toFixed(1)}k`;
-        }
-        return num.toString();
-    };
 
     const handleSearch = () => {
         const params = new URLSearchParams();
@@ -98,20 +43,6 @@ export const Hero = () => {
     };
 
     const heroImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
-
-    const displayStats = statsLoading
-        ? [
-            { value: "...", label: "Properties Listed" },
-            { value: "...", label: "Happy Students" },
-            { value: "...", label: "Available Rooms" },
-            { value: "...", label: "Verified" },
-        ]
-        : [
-            { value: formatNumber(stats.propertyCount), label: "Properties Listed" },
-            { value: formatNumber(stats.tenantCount), label: "Happy Students" },
-            { value: formatNumber(stats.availableRooms), label: "Available Rooms" },
-            { value: formatNumber(stats.verifiedProperties), label: "Verified" },
-        ];
 
     return (
         <section className="relative min-h-[90vh] md:min-h-screen flex items-center overflow-hidden">
@@ -162,6 +93,7 @@ export const Hero = () => {
                         near <span className="text-blue-300">Egerton University</span>
                     </h1>
 
+                    {/* Description */}
                     <p className="mb-10 text-lg md:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
                         Browse trusted rooms, bedsitters, and apartments built around student budgets,
                         safety, and campus convenience.
@@ -247,31 +179,6 @@ export const Hero = () => {
                         </div>
                     </motion.div>
 
-                    {/* Trust Chips - Dark on Image Background */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5, duration: 0.6 }}
-                        className="mt-8 flex flex-wrap justify-center gap-3"
-                    >
-                        {[
-                            { icon: ShieldCheck, text: "Verified listings" },
-                            { icon: BadgeCheck, text: "Near campus" },
-                            { icon: Users, text: "Student budget friendly" },
-                            { icon: Clock, text: "Direct caretaker contact" },
-                        ].map((chip, index) => (
-                            <motion.div
-                                key={index}
-                                whileHover={{ scale: 1.05 }}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white text-sm shadow-lg hover:bg-black/40 transition-all duration-300"
-                            >
-                                <chip.icon size={14} className="text-blue-300" />
-                                <span className="font-medium">{chip.text}</span>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-
-                    {/* Stats - Compact, moved to unified section later */}
                 </motion.div>
             </div>
         </section>

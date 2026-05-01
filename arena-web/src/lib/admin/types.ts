@@ -1,8 +1,9 @@
 // Admin Dashboard Types - Universal Database Contract
 
 export type EmployeeStatus = 'ACTIVE' | 'SUSPENDED' | 'INACTIVE';
-export type IssueStatus = 'OPEN' | 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'ESCALATED';
-export type IssuePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL';
+export type TenantStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'MOVED_OUT';
+export type IssueStatus = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'ESCALATED';
+export type IssuePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 export type AnnouncementTargetRole = 'TENANT' | 'CARETAKER' | 'EMPLOYEE' | 'ALL' | 'PUBLIC';
 
 export interface AdminEmployee {

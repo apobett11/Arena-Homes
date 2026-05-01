@@ -92,8 +92,8 @@ export default function AdminDashboardPage() {
                 const totalUnits = unitRows.length;
                 const totalTenants = tenantRows.length;
                 const activeTenants = tenantRows.filter((t) => t.status === "ACTIVE").length;
-                const pendingTenants = tenantRows.filter((t) => t.status === "PROSPECT").length;
-                const inactiveTenants = tenantRows.filter((t) => t.status === "PAST" || t.status === "EVICTED").length;
+                const pendingTenants = tenantRows.filter((t) => t.status === "PENDING").length;
+                const inactiveTenants = tenantRows.filter((t) => t.status === "INACTIVE" || t.status === "SUSPENDED" || t.status === "MOVED_OUT").length;
                 const occupiedUnits = unitRows.filter((u) => u.status === "TAKEN").length;
                 const vacantUnits = unitRows.filter((u) => u.status === "VACANT").length;
                 const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
@@ -222,7 +222,7 @@ export default function AdminDashboardPage() {
                             <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div className="rounded-lg border border-slate-800 p-3">Total: {stats.totalTenants}</div>
                                 <div className="rounded-lg border border-slate-800 p-3">Approved: {stats.activeTenants}</div>
-                                <div className="rounded-lg border border-slate-800 p-3">Prospect: {stats.pendingTenants}</div>
+                                <div className="rounded-lg border border-slate-800 p-3">Pending: {stats.pendingTenants}</div>
                                 <div className="rounded-lg border border-slate-800 p-3">Inactive: {stats.inactiveTenants}</div>
                             </div>
                         </div>

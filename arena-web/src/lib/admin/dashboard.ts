@@ -645,8 +645,8 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
   const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
 
   const activeTenants = tenants.filter((t: any) => t.status === 'ACTIVE').length;
-  const pendingTenants = tenants.filter((t: any) => t.status === 'PROSPECT').length;
-  const inactiveTenants = tenants.filter((t: any) => t.status === 'PAST' || t.status === 'EVICTED').length;
+  const pendingTenants = tenants.filter((t: any) => t.status === 'PENDING').length;
+  const inactiveTenants = tenants.filter((t: any) => t.status === 'INACTIVE' || t.status === 'SUSPENDED' || t.status === 'MOVED_OUT').length;
 
   const activeEmployees = employees.filter((e: any) => e.status === 'ACTIVE').length;
   const suspendedEmployees = employees.filter((e: any) => e.status === 'SUSPENDED').length;

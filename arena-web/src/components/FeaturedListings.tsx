@@ -225,8 +225,8 @@ export const FeaturedListings = () => {
                     </motion.div>
                 </div>
 
-                {/* Property Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                {/* Property Grid - 2 columns on mobile for smaller cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {loading ? (
                         // Loading skeleton
                         [...Array(6)].map((_, index) => (

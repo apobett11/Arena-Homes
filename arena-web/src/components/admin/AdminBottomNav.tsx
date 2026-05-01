@@ -1,8 +1,9 @@
 "use client";
 
-import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { AuthApi } from "@/lib/api/auth";
 
 const navItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin/dashboard" },
@@ -15,10 +16,22 @@ const navItems = [
 
 export default function AdminBottomNav() {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await AuthApi.logout();
+        localStorage.removeItem('user_role');
+        sessionStorage.removeItem('user_role');
+        localStorage.removeItem('access_token');
+        sessionStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('refresh_token');
+        router.replace('/');
+    };
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/50 pb-safe">
-            <div className="grid h-16 grid-cols-6 items-center px-2">
+            <div className="grid h-16 grid-cols-7 items-center px-2">
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -27,7 +40,7 @@ export default function AdminBottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center justify-center gap-1 px-2 py-1 rounded-lg transition-all ${isActive
+                            className={`flex flex-col items-center justify-center gap-1 px-1 py-1 rounded-lg transition-all ${isActive
                                 ? "text-[#0066FF]"
                                 : "text-slate-400 hover:text-white"
                                 }`}
@@ -37,6 +50,14 @@ export default function AdminBottomNav() {
                         </Link>
                     );
                 })}
+                {/* Logout Button */}
+                <button
+                    onClick={handleLogout}
+                    className="flex flex-col items-center justify-center gap-1 px-1 py-1 rounded-lg transition-all text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                >
+                    <LogOut className="w-5 h-5" />
+                    <span className="text-[10px] font-medium tracking-wide">Logout</span>
+                </button>
             </div>
         </nav>
     );
