@@ -391,17 +391,12 @@ export const Navbar = () => {
                                 </motion.button>
                             </div>
                         ) : (
-                            <>
-                                <Link href="/listings" className="hidden lg:flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/80 hover:text-white transition-all">
-                                    Browse Houses
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-500 shadow-lg shadow-blue-500/25">
+                                    <User size={16} />
+                                    Login
                                 </Link>
-                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-500 shadow-lg shadow-blue-500/25">
-                                        <User size={16} />
-                                        Login
-                                    </Link>
-                                </motion.div>
-                            </>
+                            </motion.div>
                         )}
                     </div>
                 </div>

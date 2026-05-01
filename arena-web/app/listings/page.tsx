@@ -283,8 +283,8 @@ function ListingsContent() {
                     </div>
                 </section>
 
-                {/* Filters */}
-                <div className="sticky top-16 z-30 mb-8">
+                {/* Filters - Directly below header with no gap */}
+                <div className="sticky top-16 z-30">
                     <FilterBar
                         filters={filters}
                         setFilters={setFilters}
@@ -296,9 +296,26 @@ function ListingsContent() {
                     />
                 </div>
 
-                {/* Listings Grid - Light Background, Dark Cards */}
-                <div ref={containerRef} className="bg-slate-100 py-8">
-                    <div className="container mx-auto px-4 min-h-[60vh]">
+                {/* Listings Grid - With squiggly lines, gradient and glassmorphism background */}
+                <div ref={containerRef} className="relative py-8 overflow-hidden">
+                    {/* Background gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-blue-50/30 to-slate-100" />
+                    
+                    {/* Squiggly lines SVG background */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <pattern id="squiggles" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                                <path d="M10 50 Q 25 25, 40 50 T 70 50 T 100 50" stroke="#0066FF" strokeWidth="0.5" fill="none" opacity="0.3"/>
+                                <path d="M0 70 Q 15 45, 30 70 T 60 70 T 90 70" stroke="#00D084" strokeWidth="0.5" fill="none" opacity="0.3"/>
+                                <path d="M20 20 Q 35 5, 50 20 T 80 20" stroke="#8B5CF6" strokeWidth="0.5" fill="none" opacity="0.2"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#squiggles)"/>
+                    </svg>
+                    
+                    {/* Glassmorphism overlay */}
+                    <div className="absolute inset-0 backdrop-blur-[1px] bg-white/10" />
+                    <div className="relative z-10 container mx-auto px-4 min-h-[60vh]">
                         {loading ? (
                             // Skeleton State - Dark skeletons on light background
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

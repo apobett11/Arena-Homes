@@ -92,9 +92,9 @@ export const FilterBar = ({
 
                         {/* Price Filter */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold">
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold text-slate-700 dark:text-white">
                                 <DollarSign size={14} className="text-[#0066FF]" />
-                                <span>Price</span>
+                                <span className="text-slate-700 dark:text-white">Price</span>
                                 <ChevronDown size={14} className="text-slate-400" />
                             </button>
 
@@ -136,9 +136,9 @@ export const FilterBar = ({
 
                         {/* Location Filter */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold">
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold text-slate-700 dark:text-white">
                                 <MapPin size={14} className="text-[#0066FF]" />
-                                <span>Location</span>
+                                <span className="text-slate-700 dark:text-white">Location</span>
                                 {filters.locations.length > 0 && (
                                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#0066FF] text-white text-[10px]">{filters.locations.length}</span>
                                 )}
@@ -173,9 +173,9 @@ export const FilterBar = ({
 
                         {/* Type Filter */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold">
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold text-slate-700 dark:text-white">
                                 <Home size={14} className="text-[#0066FF]" />
-                                <span>Type</span>
+                                <span className="text-slate-700 dark:text-white">Type</span>
                                 {filters.houseTypes.length > 0 && (
                                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#0066FF] text-white text-[10px]">{filters.houseTypes.length}</span>
                                 )}

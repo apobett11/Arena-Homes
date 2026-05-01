@@ -193,19 +193,23 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
 
     if (endpoint === '/applications' && method === 'POST') {
         // Map frontend camelCase fields to database snake_case with correct column names
-        const applicationData = {
+        // Only include fields that exist in the database schema
+        const applicationData: Record<string, unknown> = {
             property_id: body.property_id,
-            unit_id: body.unit_id,
-            caretaker_employee_id: body.caretaker_id,  // Map caretaker_id to caretaker_employee_id
             full_name: body.full_name,
             email: body.email,
             phone_number: body.phone_number,
-            whatsapp_number: body.whatsapp_number,
-            registration_number: body.university_reg_no,  // Map university_reg_no to registration_number
-            preferred_move_in_date: body.preferred_move_in_date,
-            notes: body.message,
+            whatsapp_number: body.whatsapp_number || null,
+            registration_number: body.university_reg_no || null,
+            preferred_move_in_date: body.preferred_move_in_date || null,
+            notes: body.message || null,
             status: 'PENDING',
         };
+        // Only add caretaker_id if it's a valid non-empty value
+        // caretaker_id references auth.users(id) - must be valid UUID or null
+        if (body.caretaker_id && typeof body.caretaker_id === 'string' && body.caretaker_id.trim() !== '') {
+            applicationData.caretaker_id = body.caretaker_id;
+        }
         const { data, error } = await supabase.from('tenant_applications').insert(applicationData).select('id').single();
         if (error) throw new Error(error.message);
         return ({ message: 'Application submitted', applicationId: data.id } as T);

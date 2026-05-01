@@ -351,7 +351,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
             await ApplicationApi.submit({
                 propertyId: propertyId!,
-                caretakerId: caretaker?.id || '',
+                caretakerId: caretaker?.user_id || null,
                 fullName: applicationForm.fullName,
                 email: applicationForm.email,
                 phoneNumber: applicationForm.phone,

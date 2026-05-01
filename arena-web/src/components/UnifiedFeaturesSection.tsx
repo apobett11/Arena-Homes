@@ -7,7 +7,7 @@ import { Testimonials } from "./Testimonials";
 
 export const UnifiedFeaturesSection = () => {
     return (
-        <section className="py-12 md:py-16 bg-slate-950">
+        <section id="how-it-works" className="py-12 md:py-16 bg-slate-950">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Glassmorphic Card with White Tint */}
                 <motion.div

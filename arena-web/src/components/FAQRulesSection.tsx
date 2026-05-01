@@ -126,8 +126,27 @@ export const FAQRulesSection = () => {
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
 
     return (
-        <section id="rules" className="py-12 md:py-16 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="rules" className="relative py-12 md:py-16 overflow-hidden">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100" />
+            
+            {/* Squiggly lines SVG background */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="faq-squiggles" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+                        <path d="M10 60 Q 30 30, 50 60 T 90 60 T 130 60" stroke="#0066FF" strokeWidth="0.5" fill="none" opacity="0.3"/>
+                        <path d="M0 90 Q 20 60, 40 90 T 80 90 T 120 90" stroke="#00D084" strokeWidth="0.5" fill="none" opacity="0.3"/>
+                        <path d="M30 30 Q 50 10, 70 30 T 110 30" stroke="#8B5CF6" strokeWidth="0.5" fill="none" opacity="0.2"/>
+                        <path d="M60 0 Q 80 40, 100 0" stroke="#F59E0B" strokeWidth="0.5" fill="none" opacity="0.2"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#faq-squiggles)"/>
+            </svg>
+            
+            {/* Glassmorphism overlay */}
+            <div className="absolute inset-0 backdrop-blur-[0.5px] bg-white/20" />
+            
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Section Header */}
                 <div className="text-center mb-8">
                     <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-600">

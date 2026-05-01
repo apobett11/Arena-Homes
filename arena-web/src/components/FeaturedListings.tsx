@@ -105,7 +105,7 @@ export const FeaturedListings = () => {
         setSubmitError("");
 
         try {
-            if (!selectedProperty?.propertyId || !selectedProperty?.caretakerId) {
+            if (!selectedProperty?.propertyId) {
                 throw new Error("Property application target is unavailable. Please refresh and try again.");
             }
 
@@ -114,7 +114,7 @@ export const FeaturedListings = () => {
 
             await ApplicationApi.submit({
                 propertyId: selectedProperty.propertyId,
-                caretakerId: selectedProperty.caretakerId,
+                caretakerId: null,
                 fullName: formData.get("fullName")?.toString().trim() || "",
                 email: formData.get("email")?.toString().trim() || "",
                 phoneNumber: formData.get("phoneNumber")?.toString().trim() || "",

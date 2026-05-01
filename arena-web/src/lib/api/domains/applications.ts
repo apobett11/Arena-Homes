@@ -2,7 +2,7 @@ import { fetchClient } from '../client';
 
 export interface SubmitApplicationInput {
     propertyId: string;
-    caretakerId: string;
+    caretakerId: string | null;
     fullName: string;
     email: string;
     phoneNumber: string;
