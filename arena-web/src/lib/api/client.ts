@@ -259,5 +259,23 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
         return ([] as T);
     }
 
+    // Application onboarding endpoints
+    if (endpoint === '/applications/me/onboarding' && method === 'GET') {
+        const { data, error } = await supabase.rpc('get_tenant_onboarding_status');
+        if (error) throw new Error(error.message);
+        return (data ?? {}) as T;
+    }
+    if (endpoint === '/applications/me/onboarding/step' && method === 'POST') {
+        const { data, error } = await supabase.rpc('complete_onboarding_step', {
+            p_step: body.step,
+            p_password: body.password,
+            p_full_name: body.full_name,
+            p_phone_number: body.phone_number,
+            p_emergency_contact: body.emergency_contact
+        });
+        if (error) throw new Error(error.message);
+        return (data ?? {}) as T;
+    }
+
     notSupported(endpoint);
 }

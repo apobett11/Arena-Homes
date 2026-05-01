@@ -344,20 +344,16 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         setSubmitMessage("");
         
         try {
-            const supabase = getSupabaseClient();
-            const applicationData = {
-                unit_id: id,
-                property_id: propertyId,
-                caretaker_employee_id: caretaker?.id || null,
-                full_name: applicationForm.fullName,
-                email: applicationForm.email,
-                phone_number: applicationForm.phone,
-                message: applicationForm.message,
-                status: 'PENDING'
-            };
-            const { error } = await (supabase as any).from('tenant_applications').insert(applicationData);
+            const { ApplicationApi } = await import('@/lib/api/domains/applications');
             
-            if (error) throw error;
+            await ApplicationApi.submit({
+                propertyId: propertyId!,
+                caretakerId: caretaker?.id || '',
+                fullName: applicationForm.fullName,
+                email: applicationForm.email,
+                phoneNumber: applicationForm.phone,
+                message: applicationForm.message,
+            });
             
             setSubmitMessage("Application submitted successfully! The caretaker will contact you soon.");
             setApplicationForm({ fullName: "", email: "", phone: "", message: "" });

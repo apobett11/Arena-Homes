@@ -83,6 +83,16 @@ export default function TenantDashboard() {
 
         async function load() {
             try {
+                // FIRST: Check onboarding status
+                const { ApplicationApi } = await import('@/lib/api/domains/applications');
+                const onboardingStatus = await ApplicationApi.getMyOnboardingStatus();
+                
+                if (!onboardingStatus.canAccess) {
+                    // Redirect to onboarding if not completed
+                    router.replace('/tenant/onboarding');
+                    return;
+                }
+                
                 // PRIMARY: Get dashboard data from tenant_dashboard_view
                 const { data: dashData, error: dashError } = await getTenantDashboardData();
                 
