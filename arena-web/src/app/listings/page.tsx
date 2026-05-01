@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FilterBar, FilterState } from "@/components/listings/FilterBar";
+import { FilterBar, FilterState, SortOption } from "@/components/listings/FilterBar";
 import { HouseCard, HouseProps } from "@/components/listings/HouseCard";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -65,6 +65,7 @@ function ListingsContent() {
         priceRange: [2500, 20000],
         locations: [],
         houseTypes: [],
+        sortBy: 'price',
         sortDirection: 'asc'
     });
 
@@ -83,6 +84,7 @@ function ListingsContent() {
                 ...prev,
                 houseTypes: typeParam ? [typeParam] : prev.houseTypes,
                 locations: locParam ? [locParam] : prev.locations,
+                sortBy: (sortParam as SortOption) || 'price',
                 sortDirection: (sortParam === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
             }));
         }
@@ -145,9 +147,20 @@ function ListingsContent() {
             return matchesPrice && matchesLocation && matchesType;
         });
 
-        // Sorting
+        // Sorting based on selected option
         result.sort((a, b) => {
-            return filters.sortDirection === 'asc' ? a.price - b.price : b.price - a.price;
+            const direction = filters.sortDirection === 'asc' ? 1 : -1;
+
+            switch (filters.sortBy) {
+                case 'price':
+                    return (a.price - b.price) * direction;
+                case 'location':
+                    return a.location.localeCompare(b.location) * direction;
+                case 'type':
+                    return a.type.localeCompare(b.type) * direction;
+                default:
+                    return (a.price - b.price) * direction;
+            }
         });
 
         return result;
@@ -249,6 +262,7 @@ function ListingsContent() {
                                     priceRange: [2500, 20000],
                                     locations: [],
                                     houseTypes: [],
+                                    sortBy: 'price',
                                     sortDirection: 'asc'
                                 })}
                                 className="px-6 py-2 rounded-xl bg-[#0066FF] text-white font-bold hover:bg-[#0052cc] transition-colors"
