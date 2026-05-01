@@ -268,10 +268,10 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
     if (endpoint === '/applications/me/onboarding/step' && method === 'POST') {
         const { data, error } = await supabase.rpc('complete_onboarding_step', {
             p_step: body.step,
-            p_password: body.password,
-            p_full_name: body.full_name,
-            p_phone_number: body.phone_number,
-            p_emergency_contact: body.emergency_contact
+            p_password: body.password || null,
+            p_full_name: body.full_name || null,
+            p_phone_number: body.phone_number || null,
+            p_emergency_contact: body.emergency_contact || null
         });
         if (error) throw new Error(error.message);
         return (data ?? {}) as T;

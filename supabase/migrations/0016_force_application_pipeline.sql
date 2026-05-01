@@ -1,40 +1,99 @@
 -- ============================================================================
--- ARENA HOMES - APPLICATION PIPELINE COMPLETION MIGRATION
--- Version: 1.0.0
--- Purpose: Complete the house application to tenant conversion pipeline
--- Author: Senior Database Architect
--- Date: May 1, 2026
+-- FORCE APPLICATION PIPELINE MIGRATION
+-- Purpose: Force-create all functions and schema changes, handling existing objects
 -- ============================================================================
 
 -- ============================================================================
--- PART 1: EXTEND TENANT_APPLICATIONS TABLE
+-- PART 1: DROP EXISTING FUNCTIONS (to handle signature changes)
 -- ============================================================================
 
--- Add missing columns for visit tracking and conversion tracking
-ALTER TABLE public.tenant_applications
-  ADD COLUMN IF NOT EXISTS applicant_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS visit_status text NOT NULL DEFAULT 'NOT_SCHEDULED',
-  ADD COLUMN IF NOT EXISTS conversion_status text NOT NULL DEFAULT 'NOT_CONVERTED',
-  ADD COLUMN IF NOT EXISTS visit_confirmed_at timestamptz,
-  ADD COLUMN IF NOT EXISTS visit_notes text,
-  ADD COLUMN IF NOT EXISTS approved_at timestamptz,
-  ADD COLUMN IF NOT EXISTS approved_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS assigned_unit_id uuid REFERENCES public.units(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS converted_tenant_id uuid REFERENCES public.tenants(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS converted_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS rejected_at timestamptz,
-  ADD COLUMN IF NOT EXISTS rejected_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS rejection_reason text,
-  ADD COLUMN IF NOT EXISTS school_name text,
-  ADD COLUMN IF NOT EXISTS course_name text,
-  ADD COLUMN IF NOT EXISTS year_of_study text,
-  ADD COLUMN IF NOT EXISTS gender text,
-  ADD COLUMN IF NOT EXISTS preferred_move_in_date date,
-  ADD COLUMN IF NOT EXISTS temporary_password text,
-  ADD COLUMN IF NOT EXISTS password_changed_at timestamptz,
-  ADD COLUMN IF NOT EXISTS onboarding_completed_at timestamptz;
+DO $$
+BEGIN
+    DROP FUNCTION IF EXISTS public.get_tenant_onboarding_status(uuid);
+    DROP FUNCTION IF EXISTS public.get_tenant_onboarding_status();
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
--- Add indexes for performance
+DO $$
+BEGIN
+    DROP FUNCTION IF EXISTS public.complete_onboarding_step(uuid, text, text, text, text, text);
+    DROP FUNCTION IF EXISTS public.complete_onboarding_step(text, text, text, text, text);
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    DROP FUNCTION IF EXISTS public.approve_application_and_create_tenant(uuid, uuid, uuid, date, date);
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    DROP FUNCTION IF EXISTS public.confirm_application_visit(uuid, uuid, text);
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+-- ============================================================================
+-- PART 2: ADD COLUMNS (IF NOT EXISTS)
+-- ============================================================================
+
+DO $$
+BEGIN
+    -- Add columns one by one with separate statements
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS applicant_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS visit_status text NOT NULL DEFAULT 'NOT_SCHEDULED';
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS conversion_status text NOT NULL DEFAULT 'NOT_CONVERTED';
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS visit_confirmed_at timestamptz;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS visit_notes text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS approved_at timestamptz;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS approved_by uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS assigned_unit_id uuid REFERENCES public.units(id) ON DELETE SET NULL;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS converted_tenant_id uuid REFERENCES public.tenants(id) ON DELETE SET NULL;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS converted_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS rejected_at timestamptz;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS rejected_by uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS rejection_reason text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS school_name text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS course_name text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS year_of_study text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS gender text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS preferred_move_in_date date;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS temporary_password text;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS password_changed_at timestamptz;
+    ALTER TABLE public.tenant_applications 
+        ADD COLUMN IF NOT EXISTS onboarding_completed_at timestamptz;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Error adding columns: %', SQLERRM;
+END $$;
+
+-- ============================================================================
+-- PART 3: CREATE INDEXES
+-- ============================================================================
+
 CREATE INDEX IF NOT EXISTS idx_tenant_applications_status ON public.tenant_applications(status);
 CREATE INDEX IF NOT EXISTS idx_tenant_applications_property_id ON public.tenant_applications(property_id);
 CREATE INDEX IF NOT EXISTS idx_tenant_applications_caretaker_employee_id ON public.tenant_applications(caretaker_employee_id);
@@ -42,10 +101,9 @@ CREATE INDEX IF NOT EXISTS idx_tenant_applications_converted_tenant_id ON public
 CREATE INDEX IF NOT EXISTS idx_tenant_applications_email ON public.tenant_applications(email);
 
 -- ============================================================================
--- PART 2: UPDATE CARETAKER_DASHBOARD_VIEW
+-- PART 4: RECREATE CARETAKER DASHBOARD VIEW
 -- ============================================================================
 
--- Drop and recreate the view with pending applications count
 DROP VIEW IF EXISTS public.caretaker_dashboard_view;
 
 CREATE OR REPLACE VIEW public.caretaker_dashboard_view AS
@@ -110,7 +168,7 @@ FROM caretaker_employee ce
 LEFT JOIN property_stats ps ON ce.assigned_property_id = ps.property_id;
 
 -- ============================================================================
--- PART 3: SECURITY DEFINER FUNCTIONS FOR APPLICATION PIPELINE
+-- PART 5: CREATE FUNCTIONS (with correct signatures)
 -- ============================================================================
 
 -- Function to get onboarding status for current user
@@ -124,7 +182,6 @@ DECLARE
   v_user_id uuid := auth.uid();
   v_application public.tenant_applications%ROWTYPE;
   v_tenant public.tenants%ROWTYPE;
-  v_result jsonb;
 BEGIN
   -- Find application by converted_user_id or email match
   SELECT * INTO v_application
@@ -259,7 +316,7 @@ BEGIN
     -- Update application record
     UPDATE public.tenant_applications
     SET password_changed_at = now(),
-        temporary_password = NULL,  -- Clear temp password
+        temporary_password = NULL,
         updated_at = now()
     WHERE id = v_application.id;
     
@@ -331,12 +388,12 @@ END;
 $$;
 
 -- Function to approve application and create tenant
+-- NOTE: p_caretaker_user_id removed - function uses auth.uid() internally
 CREATE OR REPLACE FUNCTION public.approve_application_and_create_tenant(
   p_application_id uuid,
-  p_caretaker_user_id uuid DEFAULT auth.uid(),
   p_assigned_unit_id uuid DEFAULT NULL,
   p_start_date date DEFAULT CURRENT_DATE,
-  p_end_date date DEFAULT (CURRENT_DATE + INTERVAL '1 year')
+  p_end_date date DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -344,6 +401,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+  v_caretaker_user_id uuid := auth.uid();
   v_application public.tenant_applications%ROWTYPE;
   v_caretaker public.employees%ROWTYPE;
   v_property public.properties%ROWTYPE;
@@ -352,7 +410,11 @@ DECLARE
   v_new_tenant_id uuid;
   v_temp_password text;
   v_lease_id uuid;
+  v_default_end_date date;
 BEGIN
+  -- Set default end date if not provided
+  v_default_end_date := COALESCE(p_end_date, CURRENT_DATE + INTERVAL '1 year');
+  
   -- Get the application
   SELECT * INTO v_application
   FROM public.tenant_applications
@@ -369,7 +431,7 @@ BEGIN
   -- Get caretaker info
   SELECT * INTO v_caretaker
   FROM public.employees
-  WHERE user_id = p_caretaker_user_id AND role_id = 'CARETAKER'
+  WHERE user_id = v_caretaker_user_id AND role_id = 'CARETAKER'
   LIMIT 1;
   
   -- Get property info
@@ -420,8 +482,8 @@ BEGIN
     ) VALUES (
       gen_random_uuid(),
       v_application.email,
-      crypt(v_temp_password, gen_salt('bf')),  -- Set temp password
-      now(),  -- Auto-confirm email
+      crypt(v_temp_password, gen_salt('bf')),
+      now(),
       jsonb_build_object('role', 'TENANT'),
       jsonb_build_object('full_name', v_application.full_name),
       now(),
@@ -490,9 +552,9 @@ BEGIN
     COALESCE(p_assigned_unit_id, v_application.unit_id),
     v_unit.room_number,
     v_caretaker.id,
-    p_caretaker_user_id,
+    v_caretaker_user_id,
     p_start_date,
-    'PENDING',  -- Will become ACTIVE after onboarding
+    'PENDING',
     now(),
     now()
   )
@@ -517,7 +579,7 @@ BEGIN
     v_application.property_id,
     'LS-' || substr(v_new_tenant_id::text, 1, 8),
     p_start_date,
-    p_end_date,
+    v_default_end_date,
     v_unit.base_price,
     COALESCE(v_unit.deposit_amount, 0),
     'PENDING',
@@ -538,7 +600,7 @@ BEGIN
   SET status = 'APPROVED',
       conversion_status = 'CONVERTED',
       approved_at = now(),
-      approved_by = p_caretaker_user_id,
+      approved_by = v_caretaker_user_id,
       assigned_unit_id = COALESCE(p_assigned_unit_id, v_application.unit_id),
       converted_tenant_id = v_new_tenant_id,
       converted_user_id = v_new_user_id,
@@ -580,9 +642,9 @@ END;
 $$;
 
 -- Function to confirm visit
+-- NOTE: p_caretaker_user_id removed - function uses auth.uid() internally
 CREATE OR REPLACE FUNCTION public.confirm_application_visit(
   p_application_id uuid,
-  p_caretaker_user_id uuid DEFAULT auth.uid(),
   p_notes text DEFAULT NULL
 )
 RETURNS jsonb
@@ -615,21 +677,31 @@ BEGIN
 END;
 $$;
 
--- Grant execute permissions
+-- ============================================================================
+-- PART 6: GRANT PERMISSIONS
+-- ============================================================================
+
 GRANT EXECUTE ON FUNCTION public.get_tenant_onboarding_status() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.complete_onboarding_step(text, text, text, text, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.approve_application_and_create_tenant(uuid, uuid, uuid, date, date) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.confirm_application_visit(uuid, uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_application_and_create_tenant(uuid, uuid, date, date) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.confirm_application_visit(uuid, text) TO authenticated;
 
 -- ============================================================================
--- PART 4: RLS POLICIES FOR TENANT APPLICATIONS
+-- PART 7: ENABLE RLS AND CREATE POLICIES
 -- ============================================================================
 
 -- Enable RLS
 ALTER TABLE public.tenant_applications ENABLE ROW LEVEL SECURITY;
 
--- Policy: Anyone can insert applications (public application form)
+-- Drop existing policies to avoid conflicts
 DROP POLICY IF EXISTS tenant_applications_insert_public ON public.tenant_applications;
+DROP POLICY IF EXISTS tenant_applications_caretaker_select ON public.tenant_applications;
+DROP POLICY IF EXISTS tenant_applications_caretaker_update ON public.tenant_applications;
+DROP POLICY IF EXISTS tenant_applications_admin_select ON public.tenant_applications;
+DROP POLICY IF EXISTS tenant_applications_admin_update ON public.tenant_applications;
+DROP POLICY IF EXISTS tenant_applications_user_select_own ON public.tenant_applications;
+
+-- Policy: Anyone can insert applications (public application form)
 CREATE POLICY tenant_applications_insert_public
   ON public.tenant_applications
   FOR INSERT
@@ -637,7 +709,6 @@ CREATE POLICY tenant_applications_insert_public
   WITH CHECK (true);
 
 -- Policy: Caretakers can view applications for their assigned properties
-DROP POLICY IF EXISTS tenant_applications_caretaker_select ON public.tenant_applications;
 CREATE POLICY tenant_applications_caretaker_select
   ON public.tenant_applications
   FOR SELECT
@@ -652,7 +723,6 @@ CREATE POLICY tenant_applications_caretaker_select
   );
 
 -- Policy: Caretakers can update applications for their assigned properties
-DROP POLICY IF EXISTS tenant_applications_caretaker_update ON public.tenant_applications;
 CREATE POLICY tenant_applications_caretaker_update
   ON public.tenant_applications
   FOR UPDATE
@@ -675,7 +745,6 @@ CREATE POLICY tenant_applications_caretaker_update
   );
 
 -- Policy: Admins can view all applications
-DROP POLICY IF EXISTS tenant_applications_admin_select ON public.tenant_applications;
 CREATE POLICY tenant_applications_admin_select
   ON public.tenant_applications
   FOR SELECT
@@ -689,7 +758,6 @@ CREATE POLICY tenant_applications_admin_select
   );
 
 -- Policy: Admins can update all applications
-DROP POLICY IF EXISTS tenant_applications_admin_update ON public.tenant_applications;
 CREATE POLICY tenant_applications_admin_update
   ON public.tenant_applications
   FOR UPDATE
@@ -703,7 +771,6 @@ CREATE POLICY tenant_applications_admin_update
   );
 
 -- Policy: Users can view their own applications by email match
-DROP POLICY IF EXISTS tenant_applications_user_select_own ON public.tenant_applications;
 CREATE POLICY tenant_applications_user_select_own
   ON public.tenant_applications
   FOR SELECT
@@ -715,7 +782,7 @@ CREATE POLICY tenant_applications_user_select_own
   );
 
 -- ============================================================================
--- PART 5: TRIGGERS
+-- PART 8: CREATE TRIGGERS
 -- ============================================================================
 
 -- Trigger function to update timestamps
