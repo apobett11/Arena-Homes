@@ -58,6 +58,7 @@ interface PropertyReview {
 
 interface CaretakerInfo {
     id: string;
+    user_id: string;
     full_name: string;
     email?: string;
     phone_number?: string;
@@ -184,6 +185,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 // Extract caretaker info first
                 const caretakerInfo = property.caretaker ? {
                     id: property.caretaker.id,
+                    user_id: property.caretaker.user_id,
                     full_name: property.caretaker.full_name,
                     email: property.caretaker.email,
                     phone_number: property.caretaker.phone_number
