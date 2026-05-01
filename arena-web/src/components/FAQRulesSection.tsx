@@ -63,7 +63,7 @@ const RuleItem = ({ rule, index }: { rule: any; index: number }) => (
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
                 rule.type === 'alert' 
                     ? 'bg-rose-500/20 text-rose-400' 
-                    : 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-blue-500/20 text-blue-400'
             }`}>
                 {rule.type === 'alert' ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
             </div>
@@ -222,8 +222,8 @@ export const FAQRulesSection = () => {
                         className={`${activeTab !== 'rules' ? 'hidden lg:block' : ''}`}
                     >
                         <div className="flex items-center gap-3 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                            <div className="h-10 w-10 rounded-lg bg-emerald-600/20 flex items-center justify-center">
-                                <CheckCircle2 size={20} className="text-emerald-600" />
+                            <div className="h-10 w-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
+                                <CheckCircle2 size={20} className="text-blue-600" />
                             </div>
                             <h2 className="text-lg font-bold text-slate-900">House Rules</h2>
                         </div>

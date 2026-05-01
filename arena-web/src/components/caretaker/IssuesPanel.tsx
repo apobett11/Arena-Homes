@@ -21,7 +21,7 @@ const priorityColors: Record<string, string> = {
 const statusColors: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
   IN_PROGRESS: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-  RESOLVED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
+  RESOLVED: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
   ESCALATED: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
   CLOSED: "bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400",
 };
@@ -68,7 +68,7 @@ export const IssuesPanel = ({ issues, propertyId, onDataChange }: IssuesPanelPro
         <StatCard label="Total" value={stats.total} color="bg-slate-500" />
         <StatCard label="Pending" value={stats.pending} color="bg-amber-500" alert={stats.pending > 0} />
         <StatCard label="In Progress" value={stats.inProgress} color="bg-blue-500" />
-        <StatCard label="Resolved" value={stats.resolved} color="bg-emerald-500" />
+        <StatCard label="Resolved" value={stats.resolved} color="bg-blue-500" />
         <StatCard label="Escalated" value={stats.escalated} color="bg-rose-500" alert={stats.escalated > 0} />
       </div>
 
@@ -139,7 +139,7 @@ export const IssuesPanel = ({ issues, propertyId, onDataChange }: IssuesPanelPro
                         <button
                           onClick={() => handleResolve(issue.id)}
                           disabled={loading === issue.id}
-                          className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-200 disabled:opacity-50"
+                          className="px-3 py-1.5 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-200 disabled:opacity-50"
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
@@ -186,7 +186,7 @@ const FilterButton = ({
     slate: active ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
     amber: active ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     blue: active ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    emerald: active ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    emerald: active ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     rose: active ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   };
 

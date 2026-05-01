@@ -99,7 +99,7 @@ export const HouseCard = ({
         const status = availabilityStatus || (vacancy === "Available" ? 'AVAILABLE' : 'OCCUPIED');
         switch (status) {
             case 'AVAILABLE':
-                return { text: "Available", class: "bg-emerald-500 text-white" };
+                return { text: "Available", class: "bg-blue-500 text-white" };
             case 'RESERVED':
                 return { text: "Reserved", class: "bg-amber-500 text-white" };
             case 'OCCUPIED':
@@ -107,7 +107,7 @@ export const HouseCard = ({
             case 'UNDER_MAINTENANCE':
                 return { text: "Maintenance", class: "bg-rose-500 text-white" };
             default:
-                return { text: vacancy, class: "bg-emerald-500 text-white" };
+                return { text: vacancy, class: "bg-blue-500 text-white" };
         }
     };
 
@@ -175,7 +175,7 @@ export const HouseCard = ({
                     <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                         {/* Available Rooms Badge */}
                         {availableRooms !== undefined && availableRooms > 0 && (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-emerald-500 text-white shadow-lg">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-500 text-white shadow-lg">
                                 {availableRoomsText}
                             </span>
                         )}
@@ -255,7 +255,7 @@ export const HouseCard = ({
                             </div>
                         )}
                         {amenities?.security && (
-                            <div className="flex items-center gap-1 text-emerald-300 text-[10px] font-medium bg-emerald-500/20 px-1.5 py-0.5 rounded">
+                            <div className="flex items-center gap-1 text-blue-300 text-[10px] font-medium bg-blue-500/20 px-1.5 py-0.5 rounded">
                                 <Shield size={8} />
                                 <span>Secure</span>
                             </div>

@@ -113,12 +113,17 @@ export default function TenantOnboarding() {
                     password,
                 });
             } else if (currentStep === 1) {
-                await ApplicationApi.completeOnboardingStep({
+                const status = await ApplicationApi.completeOnboardingStep({
                     step: 'profile',
                     fullName,
                     phoneNumber,
                     emergencyContact,
                 });
+                // Auto-redirect to dashboard if they have password set and can access
+                if (status.canAccess && status.onboardingStatus?.hasSetPassword) {
+                    router.push('/tenant/dashboard');
+                    return;
+                }
             } else {
                 const status = await ApplicationApi.completeOnboardingStep({
                     step: 'agreement',
@@ -349,7 +354,7 @@ export default function TenantOnboarding() {
                         {currentStep > 0 && (
                             <button
                                 onClick={handleBack}
-                                className="px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+                                className="px-6 py-3 rounded-xl border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300 font-semibold hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-all flex items-center gap-2"
                             >
                                 <ArrowLeft size={18} />
                                 Back
