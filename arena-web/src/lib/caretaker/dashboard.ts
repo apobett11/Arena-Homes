@@ -804,10 +804,9 @@ export async function updateCaretakerApplication(
     updated_at: new Date().toISOString(),
   };
 
-  if (payload.caretaker_approved !== undefined) updates.caretaker_approved = payload.caretaker_approved;
   if (payload.status !== undefined) updates.status = payload.status;
   if (payload.notes !== undefined) updates.notes = payload.notes;
-  if (payload.caretaker_employee_id !== undefined) updates.caretaker_employee_id = payload.caretaker_employee_id;
+  if (payload.rejection_reason !== undefined) updates.rejection_reason = payload.rejection_reason;
 
   const { error } = await supabase
     .from('tenant_applications')
@@ -822,32 +821,47 @@ export async function updateCaretakerApplication(
   return { success: true };
 }
 
+// Simplified flow: Use accept_application RPC instead
 export async function approveApplicationCaretaker(
   applicationId: string,
+  unitId: string,
   notes?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const employee = await getCurrentCaretakerEmployee();
-
-  return updateCaretakerApplication(applicationId, {
-    caretaker_approved: true,
-    status: 'CARETAKER_APPROVED',
-    notes,
-    caretaker_employee_id: employee?.id,
+  const supabase = getClient();
+  
+  const { data, error } = await supabase.rpc('accept_application', {
+    p_application_id: applicationId,
+    p_assigned_unit_id: unitId,
+    p_start_date: new Date().toISOString().split('T')[0],
+    p_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   });
+
+  if (error) {
+    console.error('Error accepting application:', error);
+    return { success: false, error: error.message };
+  }
+
+  return data || { success: true };
 }
 
+// Simplified flow: Use reject_application RPC instead
 export async function rejectApplicationCaretaker(
   applicationId: string,
-  notes?: string
+  reason?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const employee = await getCurrentCaretakerEmployee();
-
-  return updateCaretakerApplication(applicationId, {
-    caretaker_approved: false,
-    status: 'REJECTED',
-    notes,
-    caretaker_employee_id: employee?.id,
+  const supabase = getClient();
+  
+  const { data, error } = await supabase.rpc('reject_application', {
+    p_application_id: applicationId,
+    p_reason: reason
   });
+
+  if (error) {
+    console.error('Error rejecting application:', error);
+    return { success: false, error: error.message };
+  }
+
+  return data || { success: true };
 }
 
 // ============================================================================

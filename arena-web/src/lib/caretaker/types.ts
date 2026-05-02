@@ -36,8 +36,9 @@ export interface CaretakerProperty {
   longitude: number | null;
   gate_latitude: number | null;
   gate_longitude: number | null;
-  verification_status: 'UNVERIFIED' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'SUSPENDED' | 'FLAGGED';
+  verification_status: 'UNVERIFIED' | 'VERIFIED' | 'REJECTED';
   listing_status: 'DRAFT' | 'PUBLISHED' | 'HIDDEN' | 'ARCHIVED';
+  assigned_unit_id?: string;
   price_min: number | null;
   price_max: number | null;
   gate_open_time: string | null;
@@ -343,7 +344,8 @@ export interface UpdateInventoryPayload {
 }
 
 // Tenant Applications
-export type ApplicationStatus = 'PENDING' | 'CARETAKER_APPROVED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+// Simplified application flow: WAITING → ACCEPTED/REJECTED
+export type ApplicationStatus = 'WAITING' | 'ACCEPTED' | 'REJECTED';
 
 export interface CaretakerApplication {
   id: string;
@@ -356,10 +358,10 @@ export interface CaretakerApplication {
   property_id: string | null;
   unit_id: string | null;
   status: ApplicationStatus;
-  caretaker_approved: boolean;
   caretaker_employee_id: string | null;
-  admin_reviewed_by: string | null;
   notes: string | null;
+  rejection_reason?: string;
+  assigned_unit_id?: string;
   created_at: string;
   updated_at: string;
   // Join fields
@@ -370,10 +372,9 @@ export interface CaretakerApplication {
 }
 
 export interface UpdateApplicationPayload {
-  caretaker_approved?: boolean;
   status?: ApplicationStatus;
   notes?: string;
-  caretaker_employee_id?: string;
+  rejection_reason?: string;
 }
 
 // Announcements

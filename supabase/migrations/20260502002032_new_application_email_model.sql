@@ -5,8 +5,30 @@
 -- ============================================================================
 
 -- ============================================================================
--- PART 1: Remove Old Email Trigger
+-- PART 1: Update Application Status Enum and Remove Old Email Trigger
 -- ============================================================================
+
+-- Add new enum values if they don't exist
+DO $$
+BEGIN
+  -- Add WAITING status
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum 
+    WHERE enumlabel = 'WAITING' 
+    AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'application_status')
+  ) THEN
+    ALTER TYPE public.application_status ADD VALUE 'WAITING';
+  END IF;
+
+  -- Add ACCEPTED status
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum 
+    WHERE enumlabel = 'ACCEPTED' 
+    AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'application_status')
+  ) THEN
+    ALTER TYPE public.application_status ADD VALUE 'ACCEPTED';
+  END IF;
+END $$;
 
 -- Drop the old trigger that queues emails with temp passwords
 DROP TRIGGER IF EXISTS trg_notify_application_response ON public.tenant_applications;

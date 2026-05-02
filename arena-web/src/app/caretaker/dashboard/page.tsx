@@ -273,9 +273,9 @@ export default function CaretakerDashboard() {
                     {state.issues.filter((i) => i.status === "PENDING").length}
                   </span>
                 )}
-                {tab.id === "applications" && state.applications.filter((a) => a.status === "PENDING").length > 0 && (
+                {tab.id === "applications" && state.applications.filter((a) => a.status === "WAITING").length > 0 && (
                   <span className="ml-1 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] rounded-full">
-                    {state.applications.filter((a) => a.status === "PENDING").length}
+                    {state.applications.filter((a) => a.status === "WAITING").length}
                   </span>
                 )}
               </button>

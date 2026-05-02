@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ClipboardList, CheckCircle, XCircle, User, Home, FileText, Calendar, MapPin, MessageSquare, Check } from "lucide-react";
+import { ClipboardList, CheckCircle, XCircle, User, Home, FileText } from "lucide-react";
 import type { CaretakerApplication, CaretakerUnit } from "@/lib/caretaker/types";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -12,26 +12,16 @@ interface ApplicationsPanelProps {
 }
 
 const statusColors: Record<string, string> = {
-  PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-  CARETAKER_APPROVED: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-  APPROVED: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+  WAITING: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+  ACCEPTED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
   REJECTED: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
-  CANCELLED: "bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400",
-};
-
-const visitStatusColors: Record<string, string> = {
-  NOT_SCHEDULED: "bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400",
-  SCHEDULED: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-  CONFIRMED: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-  COMPLETED: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400",
 };
 
 export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: ApplicationsPanelProps) => {
   const [loading, setLoading] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string>("PENDING");
+  const [filter, setFilter] = useState<string>("WAITING");
   const [selectedApp, setSelectedApp] = useState<CaretakerApplication | null>(null);
   const [units, setUnits] = useState<CaretakerUnit[]>([]);
-  const [showPassword, setShowPassword] = useState(false);
 
   const filteredApplications = applications.filter((app) => {
     if (filter === "all") return true;
@@ -53,24 +43,11 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
     loadUnits();
   }, [propertyId]);
 
-  const handleConfirmVisit = async (appId: string, notes?: string) => {
-    setLoading(appId);
-    const supabase = getSupabaseClient() as any;
-    const { error } = await supabase.rpc('confirm_application_visit', {
-      p_application_id: appId,
-      p_notes: notes
-    });
-    if (!error) {
-      onDataChange();
-    }
-    setLoading(null);
-  };
-
-  const handleApproveWithUnit = async (appId: string, unitId: string) => {
+  const handleAccept = async (appId: string, unitId: string) => {
     setLoading(appId);
     const supabase = getSupabaseClient() as any;
     
-    const { data, error } = await supabase.rpc('approve_application_and_create_tenant', {
+    const { data, error } = await supabase.rpc('accept_application', {
       p_application_id: appId,
       p_assigned_unit_id: unitId,
       p_start_date: new Date().toISOString().split('T')[0],
@@ -87,16 +64,12 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
   const handleReject = async (appId: string, reason?: string) => {
     setLoading(appId);
     const supabase = getSupabaseClient() as any;
-    const { error } = await supabase
-      .from('tenant_applications')
-      .update({ 
-        status: 'REJECTED', 
-        rejected_at: new Date().toISOString(),
-        rejection_reason: reason,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', appId);
-    if (!error) {
+    const { data, error } = await supabase.rpc('reject_application', {
+      p_application_id: appId,
+      p_reason: reason
+    });
+    if (!error && data?.success) {
+      setSelectedApp(null);
       onDataChange();
     }
     setLoading(null);
@@ -104,29 +77,26 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
 
   const stats = {
     total: applications.length,
-    pending: applications.filter((a) => a.status === "PENDING").length,
-    visitConfirmed: applications.filter((a) => (a as ExtendedApplication).visit_status === "CONFIRMED").length,
-    approved: applications.filter((a) => a.status === "APPROVED").length,
-    converted: applications.filter((a) => (a as ExtendedApplication).conversion_status === "CONVERTED").length,
+    waiting: applications.filter((a) => a.status === "WAITING").length,
+    accepted: applications.filter((a) => a.status === "ACCEPTED").length,
+    rejected: applications.filter((a) => a.status === "REJECTED").length,
   };
 
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total" value={stats.total} color="bg-slate-500" />
-        <StatCard label="Pending" value={stats.pending} color="bg-amber-500" alert={stats.pending > 0} />
-        <StatCard label="Visit Confirmed" value={stats.visitConfirmed} color="bg-blue-500" />
-        <StatCard label="Approved" value={stats.approved} color="bg-blue-500" />
-        <StatCard label="Converted" value={stats.converted} color="bg-purple-500" />
+        <StatCard label="Waiting" value={stats.waiting} color="bg-amber-500" alert={stats.waiting > 0} />
+        <StatCard label="Accepted" value={stats.accepted} color="bg-emerald-500" />
+        <StatCard label="Rejected" value={stats.rejected} color="bg-rose-500" />
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
         <FilterButton active={filter === "all"} onClick={() => setFilter("all")} label="All" />
-        <FilterButton active={filter === "PENDING"} onClick={() => setFilter("PENDING")} label="Pending" color="amber" />
-        <FilterButton active={filter === "CARETAKER_APPROVED"} onClick={() => setFilter("CARETAKER_APPROVED")} label="Caretaker Approved" color="blue" />
-        <FilterButton active={filter === "APPROVED"} onClick={() => setFilter("APPROVED")} label="Admin Approved" color="blue" />
+        <FilterButton active={filter === "WAITING"} onClick={() => setFilter("WAITING")} label="Waiting" color="amber" />
+        <FilterButton active={filter === "ACCEPTED"} onClick={() => setFilter("ACCEPTED")} label="Accepted" color="emerald" />
         <FilterButton active={filter === "REJECTED"} onClick={() => setFilter("REJECTED")} label="Rejected" color="rose" />
       </div>
 
@@ -135,9 +105,9 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
         {filteredApplications.map((app) => (
           <ApplicationCard
             key={app.id}
-            application={app as ExtendedApplication}
+            application={app}
             isLoading={loading === app.id}
-            onViewDetails={() => setSelectedApp(app as ExtendedApplication)}
+            onViewDetails={() => setSelectedApp(app)}
           />
         ))}
       </div>
@@ -155,8 +125,7 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
           application={selectedApp}
           units={units}
           onClose={() => setSelectedApp(null)}
-          onConfirmVisit={handleConfirmVisit}
-          onApprove={handleApproveWithUnit}
+          onAccept={handleAccept}
           onReject={handleReject}
           isLoading={loading === selectedApp.id}
         />
@@ -187,10 +156,8 @@ const FilterButton = ({
   const colorClasses: Record<string, string> = {
     slate: active ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
     amber: active ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    blue: active ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    emerald: active ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    emerald: active ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     rose: active ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
-    purple: active ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   };
 
   return (
@@ -203,34 +170,15 @@ const FilterButton = ({
   );
 };
 
-// Extended application type with pipeline fields
-interface ExtendedApplication extends CaretakerApplication {
-  visit_status?: 'NOT_SCHEDULED' | 'SCHEDULED' | 'CONFIRMED' | 'COMPLETED';
-  conversion_status?: 'NOT_CONVERTED' | 'CONVERTING' | 'CONVERTED';
-  visit_confirmed_at?: string;
-  visit_notes?: string;
-  approved_at?: string;
-  assigned_unit_id?: string;
-  converted_tenant_id?: string;
-  school_name?: string;
-  course_name?: string;
-  year_of_study?: string;
-  gender?: string;
-  preferred_move_in_date?: string;
-  rejection_reason?: string;
-}
-
 const ApplicationCard = ({
   application,
   isLoading,
   onViewDetails,
 }: {
-  application: ExtendedApplication;
+  application: CaretakerApplication;
   isLoading: boolean;
   onViewDetails: () => void;
 }) => {
-  const visitStatus = application.visit_status || 'NOT_SCHEDULED';
-  
   return (
     <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
       <div className="flex items-start justify-between mb-3">
@@ -240,14 +188,9 @@ const ApplicationCard = ({
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">{application.full_name || "Unknown"}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[application.status]}`}>
-                {application.status.replace("_", " ")}
-              </span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${visitStatusColors[visitStatus]}`}>
-                Visit: {visitStatus.replace("_", " ")}
-              </span>
-            </div>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[application.status]}`}>
+              {application.status}
+            </span>
           </div>
         </div>
         <span className="text-xs text-slate-400">
@@ -277,15 +220,7 @@ const ApplicationCard = ({
         {application.unit && (
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
             <Home className="w-4 h-4 text-slate-400" />
-            <span>
-              Requested: Room {application.unit.room_number} ({application.unit.room_type})
-            </span>
-          </div>
-        )}
-        {application.converted_tenant_id && (
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-            <CheckCircle className="w-4 h-4" />
-            <span className="font-medium">Converted to Tenant</span>
+            <span>Requested: Room {application.unit.room_number} ({application.unit.room_type})</span>
           </div>
         )}
       </div>
@@ -305,28 +240,24 @@ const ApplicationDetailModal = ({
   application,
   units,
   onClose,
-  onConfirmVisit,
-  onApprove,
+  onAccept,
   onReject,
   isLoading,
 }: {
-  application: ExtendedApplication;
+  application: CaretakerApplication;
   units: CaretakerUnit[];
   onClose: () => void;
-  onConfirmVisit: (appId: string, notes?: string) => Promise<void>;
-  onApprove: (appId: string, unitId: string) => Promise<void>;
+  onAccept: (appId: string, unitId: string) => Promise<void>;
   onReject: (appId: string, reason?: string) => Promise<void>;
   isLoading: boolean;
 }) => {
+  const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const [rejectionReason, setRejectionReason] = useState("");
   const [activeTab, setActiveTab] = useState<'overview' | 'actions'>('overview');
-  const [selectedUnitId, setSelectedUnitId] = useState<string>(application.unit_id || '');
-  const [visitNotes, setVisitNotes] = useState(application.visit_notes || '');
-  const [rejectionReason, setRejectionReason] = useState('');
 
-  const canConfirmVisit = application.status === 'PENDING' && application.visit_status !== 'CONFIRMED';
-  const canApprove = application.visit_status === 'CONFIRMED' && application.status !== 'APPROVED';
-  const canReject = application.status === 'PENDING';
-  const isConverted = !!application.converted_tenant_id;
+  const isWaiting = application.status === 'WAITING';
+  const isAccepted = application.status === 'ACCEPTED';
+  const isRejected = application.status === 'REJECTED';
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -350,32 +281,26 @@ const ApplicationDetailModal = ({
           >
             Overview
           </button>
-          <button
-            onClick={() => setActiveTab('actions')}
-            className={`flex-1 py-3 text-sm font-medium ${activeTab === 'actions' ? 'text-primary border-b-2 border-primary' : 'text-slate-500'}`}
-          >
-            Actions
-          </button>
+          {isWaiting && (
+            <button
+              onClick={() => setActiveTab('actions')}
+              className={`flex-1 py-3 text-sm font-medium ${activeTab === 'actions' ? 'text-primary border-b-2 border-primary' : 'text-slate-500'}`}
+            >
+              Actions
+            </button>
+          )}
         </div>
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           {activeTab === 'overview' ? (
             <div className="space-y-6">
-              {/* Status Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                  <p className="text-xs text-slate-500 uppercase mb-1">Application Status</p>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[application.status]}`}>
-                    {application.status}
-                  </span>
-                </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                  <p className="text-xs text-slate-500 uppercase mb-1">Visit Status</p>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${visitStatusColors[application.visit_status || 'NOT_SCHEDULED']}`}>
-                    {application.visit_status || 'NOT_SCHEDULED'}
-                  </span>
-                </div>
+              {/* Status */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <p className="text-xs text-slate-500 uppercase mb-1">Application Status</p>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[application.status]}`}>
+                  {application.status}
+                </span>
               </div>
 
               {/* Applicant Details */}
@@ -405,24 +330,6 @@ const ApplicationDetailModal = ({
                       <p className="font-medium">{application.registration_number}</p>
                     </div>
                   )}
-                  {application.school_name && (
-                    <div>
-                      <p className="text-slate-500">School</p>
-                      <p className="font-medium">{application.school_name}</p>
-                    </div>
-                  )}
-                  {application.course_name && (
-                    <div>
-                      <p className="text-slate-500">Course</p>
-                      <p className="font-medium">{application.course_name}</p>
-                    </div>
-                  )}
-                  {application.preferred_move_in_date && (
-                    <div>
-                      <p className="text-slate-500">Preferred Move-in</p>
-                      <p className="font-medium">{new Date(application.preferred_move_in_date).toLocaleDateString()}</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -440,74 +347,48 @@ const ApplicationDetailModal = ({
                 </div>
               )}
 
-              {/* Notes */}
-              {application.notes && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-slate-900 dark:text-white">Application Notes</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
-                    {application.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Tenant Status (if converted) */}
-              {isConverted && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+              {/* Status Messages */}
+              {isAccepted && (
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                  <h3 className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 mb-2">
                     <CheckCircle className="w-4 h-4" />
                     Application Accepted
                   </h3>
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    The applicant has been sent a secure setup link via email to create their password and activate their tenant dashboard.
+                  </p>
+                </div>
+              )}
+              
+              {isRejected && (
+                <div className="p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl">
+                  <h3 className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-2">
+                    <XCircle className="w-4 h-4" />
+                    Application Rejected
+                  </h3>
+                  {application.rejection_reason && (
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      The applicant has been sent a secure setup link via email to create their password and activate their tenant dashboard.
+                      Reason: {application.rejection_reason}
                     </p>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Visit Confirmation */}
-              {canConfirmVisit && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Step 1: Confirm Visit
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    After the applicant visits the property, confirm the visit here.
-                  </p>
-                  <textarea
-                    value={visitNotes}
-                    onChange={(e) => setVisitNotes(e.target.value)}
-                    placeholder="Add visit notes (optional)"
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
-                    rows={3}
-                  />
-                  <button
-                    onClick={() => onConfirmVisit(application.id, visitNotes)}
-                    disabled={isLoading}
-                    className="w-full py-2 px-4 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    {isLoading ? 'Confirming...' : 'Confirm Visit'}
-                  </button>
-                </div>
-              )}
-
-              {/* Approve & Convert */}
-              {canApprove && (
+              {/* Accept Section */}
+              {isWaiting && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     <CheckCircle className="w-4 h-4" />
-                    Step 2: Approve & Create Tenant
+                    Accept Application
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Select an available unit and approve to create the tenant account.
+                    Select an available unit and accept to create the tenant account. A congratulations email with setup link will be sent.
                   </p>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Unit to Assign</label>
+                    <label className="text-sm font-medium">Select Unit to Assign *</label>
                     <select
                       value={selectedUnitId}
                       onChange={(e) => setSelectedUnitId(e.target.value)}
@@ -523,18 +404,18 @@ const ApplicationDetailModal = ({
                   </div>
 
                   <button
-                    onClick={() => selectedUnitId && onApprove(application.id, selectedUnitId)}
+                    onClick={() => selectedUnitId && onAccept(application.id, selectedUnitId)}
                     disabled={isLoading || !selectedUnitId}
-                    className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    {isLoading ? 'Creating Tenant...' : 'Approve & Create Tenant'}
+                    {isLoading ? 'Accepting...' : 'Accept & Assign Unit'}
                   </button>
                 </div>
               )}
 
-              {/* Reject */}
-              {canReject && (
+              {/* Reject Section */}
+              {isWaiting && (
                 <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-white/10">
                   <h3 className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                     <XCircle className="w-4 h-4" />
@@ -543,7 +424,7 @@ const ApplicationDetailModal = ({
                   <textarea
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Reason for rejection (optional)"
+                    placeholder="Reason for rejection (e.g., All units occupied, Application requirements not met)"
                     className="w-full px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-600 bg-white dark:bg-slate-800 text-sm"
                     rows={2}
                   />
@@ -557,34 +438,6 @@ const ApplicationDetailModal = ({
                   </button>
                 </div>
               )}
-
-              {/* Already Processed States */}
-              {application.status === 'APPROVED' && !isConverted && (
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-                  <p className="text-sm text-amber-800 dark:text-amber-300">
-                    Application approved. Tenant account creation pending.
-                  </p>
-                </div>
-              )}
-              
-              {isConverted && (
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                  <p className="text-sm text-blue-800 dark:text-blue-300">
-                    Tenant successfully created! Check the Overview tab for login credentials.
-                  </p>
-                </div>
-              )}
-              
-              {application.status === 'REJECTED' && (
-                <div className="p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl">
-                  <p className="text-sm text-rose-800 dark:text-rose-300">
-                    Application rejected.
-                    {application.rejection_reason && (
-                      <span className="block mt-1">Reason: {application.rejection_reason}</span>
-                    )}
-                  </p>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -592,4 +445,3 @@ const ApplicationDetailModal = ({
     </div>
   );
 };
-

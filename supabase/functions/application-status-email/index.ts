@@ -27,7 +27,7 @@ interface WebhookPayload {
   old_record: ApplicationRecord;
 }
 
-// SMTP email sending using Deno
+// SMTP email sending using a simpler approach with fetch to an SMTP relay API
 async function sendSmtpEmail({
   to,
   subject,
@@ -50,7 +50,8 @@ async function sendSmtpEmail({
   }
 
   try {
-    // Simple SMTP sending using Deno TCP
+    // For production, consider using a service like SendGrid, Mailgun, or AWS SES
+    // This is a simplified SMTP implementation
     const conn = await Deno.connect({
       hostname: SMTP_HOST,
       port: SMTP_PORT,
@@ -58,44 +59,56 @@ async function sendSmtpEmail({
 
     const writer = conn.writable.getWriter();
     const reader = conn.readable.getReader();
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
 
-    // Read server greeting
-    await reader.read();
+    // Helper to read response
+    const readResponse = async () => {
+      const { value } = await reader.read();
+      return decoder.decode(value);
+    };
+
+    // Helper to send command
+    const sendCmd = async (cmd: string) => {
+      await writer.write(encoder.encode(cmd + '\r\n'));
+    };
+
+    // Read greeting
+    await readResponse();
 
     // EHLO
-    await writer.write(new TextEncoder().encode(`EHLO arenahomes.co.ke\r\n`));
-    await reader.read();
+    await sendCmd(`EHLO supabase`);
+    await readResponse();
 
-    // STARTTLS if port is 587
+    // STARTTLS for port 587
     if (SMTP_PORT === 587) {
-      await writer.write(new TextEncoder().encode(`STARTTLS\r\n`));
-      await reader.read();
-      // Note: In production, you'd upgrade to TLS here
+      await sendCmd('STARTTLS');
+      await readResponse();
+      // Note: TLS upgrade would go here in production
     }
 
     // AUTH LOGIN
-    await writer.write(new TextEncoder().encode(`AUTH LOGIN\r\n`));
-    await reader.read();
+    await sendCmd('AUTH LOGIN');
+    await readResponse();
+    await sendCmd(btoa(SMTP_USER));
+    await readResponse();
+    await sendCmd(btoa(SMTP_PASS));
+    await readResponse();
 
-    // Send credentials (base64 encoded)
-    await writer.write(new TextEncoder().encode(`${btoa(SMTP_USER)}\r\n`));
-    await reader.read();
-    await writer.write(new TextEncoder().encode(`${btoa(SMTP_PASS)}\r\n`));
-    await reader.read();
-
-    // MAIL FROM
-    await writer.write(new TextEncoder().encode(`MAIL FROM:<${SMTP_FROM.replace(/.*<|>.*/g, '')}>\r\n`));
-    await reader.read();
+    // Mail from
+    const fromEmail = SMTP_FROM.match(/<(.+)>/)?.[1] || SMTP_FROM;
+    await sendCmd(`MAIL FROM:<${fromEmail}>`);
+    await readResponse();
 
     // RCPT TO
-    await writer.write(new TextEncoder().encode(`RCPT TO:<${to}>\r\n`));
-    await reader.read();
+    await sendCmd(`RCPT TO:<${to}>`);
+    await readResponse();
 
     // DATA
-    await writer.write(new TextEncoder().encode(`DATA\r\n`));
-    await reader.read();
+    await sendCmd('DATA');
+    await readResponse();
 
-    // Build email content
+    // Build email
     const boundary = `----=_Part_${Date.now()}`;
     const emailContent = [
       `From: ${SMTP_FROM}`,
@@ -119,12 +132,12 @@ async function sendSmtpEmail({
       ``,
     ].join('\r\n');
 
-    await writer.write(new TextEncoder().encode(emailContent + '\r\n'));
-    await reader.read();
+    await sendCmd(emailContent);
+    await readResponse();
 
     // QUIT
-    await writer.write(new TextEncoder().encode(`QUIT\r\n`));
-    await reader.read();
+    await sendCmd('QUIT');
+    await readResponse();
 
     writer.releaseLock();
     reader.releaseLock();
@@ -133,7 +146,7 @@ async function sendSmtpEmail({
     return { success: true, messageId: `smtp-${Date.now()}` };
   } catch (error) {
     console.error('SMTP send error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'SMTP connection failed' };
+    return { success: false, error: error instanceof Error ? error.message : 'SMTP failed' };
   }
 }
 
@@ -148,6 +161,12 @@ async function generateSetupToken(
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + 48); // 48-hour expiry
 
+  // Simple SHA256 hash
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  const tokenHash = Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/tenant_setup_tokens`, {
       method: 'POST',
@@ -158,11 +177,10 @@ async function generateSetupToken(
         'Prefer': 'return=minimal',
       },
       body: JSON.stringify({
-        token_hash: await hashToken(token),
+        token_hash: tokenHash,
         application_id: applicationId,
         email: email,
         expires_at: expiresAt.toISOString(),
-        used_at: null,
       }),
     });
 
@@ -176,15 +194,6 @@ async function generateSetupToken(
     console.error('Error generating setup token:', error);
     return null;
   }
-}
-
-// Simple hash for token storage
-async function hashToken(token: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(token);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // Log email to outbox
@@ -248,7 +257,6 @@ async function fetchPropertyDetails(
   unitId?: string
 ): Promise<{ propertyName: string; unitNumber?: string } | null> {
   try {
-    // Fetch property
     const propResponse = await fetch(
       `${supabaseUrl}/rest/v1/properties?id=eq.${propertyId}&select=name`,
       {
@@ -263,7 +271,6 @@ async function fetchPropertyDetails(
     const properties = await propResponse.json();
     const propertyName = properties[0]?.name || 'Arena Homes';
 
-    // Fetch unit if provided
     let unitNumber: string | undefined;
     if (unitId) {
       const unitResponse = await fetch(
@@ -288,6 +295,31 @@ async function fetchPropertyDetails(
   }
 }
 
+// Delete rejected application
+async function deleteApplication(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  applicationId: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/tenant_applications?id=eq.${applicationId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Prefer': 'return=minimal',
+        },
+      }
+    );
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to delete application:', error);
+    return false;
+  }
+}
+
 // Send acceptance email with setup link
 async function sendAcceptanceEmail(
   supabaseUrl: string,
@@ -304,12 +336,11 @@ async function sendAcceptanceEmail(
   const details = await fetchPropertyDetails(supabaseUrl, serviceRoleKey, application.property_id, application.assigned_unit_id);
 
   const propertyName = details?.propertyName || 'Arena Homes';
-  const unitInfo = details?.unitNumber ? `Unit: Room ${details.unitNumber}` : '';
+  const unitInfo = details?.unitNumber ? `Room ${details.unitNumber}` : '';
 
-  const subject = 'Congratulations — Your Arena Homes Application Was Accepted';
+  const subject = 'Congratulations! Your Arena Homes Application Was Accepted';
 
-  const htmlBody = `
-<!DOCTYPE html>
+  const htmlBody = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -317,11 +348,11 @@ async function sendAcceptanceEmail(
   <title>Application Accepted - Arena Homes</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #4F46E5; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .header { background: #10B981; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-    .button { display: inline-block; background: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+    .button { display: inline-block; background: #10B981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
     .footer { margin-top: 30px; font-size: 12px; color: #6b7280; }
-    .info-box { background: white; padding: 15px; border-left: 4px solid #4F46E5; margin: 15px 0; }
+    .info-box { background: white; padding: 15px; border-left: 4px solid #10B981; margin: 15px 0; }
   </style>
 </head>
 <body>
@@ -331,70 +362,51 @@ async function sendAcceptanceEmail(
   </div>
   <div class="content">
     <p>Hello ${application.full_name},</p>
-    
     <p>Great news! Your application for accommodation at <strong>${propertyName}</strong> has been <strong>accepted</strong>.</p>
-    
     <div class="info-box">
       <strong>Your Assigned Unit:</strong><br>
       ${unitInfo || 'Details available in your dashboard'}
     </div>
-    
     <p>To activate your tenant dashboard, please set your password by clicking the button below:</p>
-    
     <center>
       <a href="${setupLink}" class="button">Set Your Password</a>
     </center>
-    
-    <p>Or copy and paste this link into your browser:</p>
+    <p>Or copy this link:</p>
     <p style="word-break: break-all; font-size: 12px; color: #6b7280;">${setupLink}</p>
-    
     <p><strong>After setting your password:</strong></p>
     <ul>
       <li>Login using your email: <strong>${application.email}</strong></li>
-      <li>Use the password you just created</li>
-      <li>Access your tenant dashboard to view your property and unit details</li>
+      <li>Access your tenant dashboard to view property details</li>
     </ul>
-    
-    <p>This link expires in 48 hours for security reasons.</p>
-    
+    <p>This link expires in 48 hours.</p>
     <p>Welcome to Arena Homes!</p>
-    
     <div class="footer">
       <p>Best regards,<br>The Arena Homes Team</p>
-      <p>If you did not apply for accommodation at Arena Homes, please ignore this email.</p>
     </div>
   </div>
 </body>
-</html>
-`;
+</html>`;
 
-  const textBody = `
-Hello ${application.full_name},
+  const textBody = `Hello ${application.full_name},
 
 Congratulations! Your application for accommodation at ${propertyName} has been ACCEPTED.
 
-Your Assigned Unit:
-${unitInfo || 'Details available in your dashboard'}
+Your Assigned Unit: ${unitInfo || 'See dashboard'}
 
 To activate your tenant dashboard, please set your password by visiting:
 ${setupLink}
 
-This link expires in 48 hours for security reasons.
+This link expires in 48 hours.
 
 After setting your password:
 - Login using your email: ${application.email}
-- Use the password you just created
-- Access your tenant dashboard to view your property and unit details
+- Access your tenant dashboard
 
 Welcome to Arena Homes!
 
 Best regards,
-The Arena Homes Team
+The Arena Homes Team`;
 
-If you did not apply for accommodation at Arena Homes, please ignore this email.
-`;
-
-  // Send via SMTP
   const result = await sendSmtpEmail({
     to: application.email,
     subject,
@@ -402,7 +414,6 @@ If you did not apply for accommodation at Arena Homes, please ignore this email.
     text: textBody,
   });
 
-  // Log the result
   await logEmail(supabaseUrl, serviceRoleKey, {
     triggerType: 'APPLICATION_ACCEPTED',
     relatedTable: 'tenant_applications',
@@ -430,8 +441,7 @@ async function sendRejectionEmail(
 
   const subject = 'Arena Homes Application Update';
 
-  const htmlBody = `
-<!DOCTYPE html>
+  const htmlBody = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -451,30 +461,22 @@ async function sendRejectionEmail(
   </div>
   <div class="content">
     <p>Hello ${application.full_name},</p>
-    
     <p>Thank you for your interest in Arena Homes and for submitting your application for accommodation at <strong>${propertyName}</strong>.</p>
-    
     <p>After careful consideration, we regret to inform you that we are unable to approve your application at this time.</p>
-    
     <div class="reason-box">
       <strong>Reason:</strong><br>
       ${reason}
     </div>
-    
     <p>You may apply for another available property on Arena Homes at any time.</p>
-    
-    <p>We appreciate your understanding and wish you the best in finding suitable accommodation.</p>
-    
+    <p>We appreciate your understanding.</p>
     <div class="footer">
       <p>Best regards,<br>The Arena Homes Team</p>
     </div>
   </div>
 </body>
-</html>
-`;
+</html>`;
 
-  const textBody = `
-Hello ${application.full_name},
+  const textBody = `Hello ${application.full_name},
 
 Thank you for your interest in Arena Homes and for submitting your application for accommodation at ${propertyName}.
 
@@ -485,13 +487,11 @@ ${reason}
 
 You may apply for another available property on Arena Homes at any time.
 
-We appreciate your understanding and wish you the best in finding suitable accommodation.
+We appreciate your understanding.
 
 Best regards,
-The Arena Homes Team
-`;
+The Arena Homes Team`;
 
-  // Send via SMTP
   const result = await sendSmtpEmail({
     to: application.email,
     subject,
@@ -499,7 +499,6 @@ The Arena Homes Team
     text: textBody,
   });
 
-  // Log the result
   await logEmail(supabaseUrl, serviceRoleKey, {
     triggerType: 'APPLICATION_REJECTED',
     relatedTable: 'tenant_applications',
@@ -511,17 +510,20 @@ The Arena Homes Team
     errorMessage: result.error,
   });
 
+  // Delete the application after sending rejection email
+  if (result.success) {
+    await deleteApplication(supabaseUrl, serviceRoleKey, application.id);
+  }
+
   return result;
 }
 
 // Main handler
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  // Only accept POST requests
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
@@ -529,7 +531,6 @@ serve(async (req) => {
     );
   }
 
-  // Verify webhook secret
   const webhookSecret = req.headers.get('x-webhook-secret');
   const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
 
@@ -554,99 +555,63 @@ serve(async (req) => {
   try {
     const payload: WebhookPayload = await req.json();
 
-    // Validate payload
     if (!payload.record || !payload.old_record) {
       return new Response(
-        JSON.stringify({ error: 'Invalid payload: missing record or old_record' }),
+        JSON.stringify({ error: 'Invalid payload' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const { record, old_record } = payload;
 
-    // Only process status changes from PENDING/WAITING to ACCEPTED/APPROVED or REJECTED
-    const oldStatus = old_record.status;
-    const newStatus = record.status;
-
-    // Skip if status didn't change
-    if (oldStatus === newStatus) {
+    // Only process status changes from WAITING
+    if (old_record.status !== 'WAITING') {
       return new Response(
-        JSON.stringify({ message: 'No status change detected, skipping' }),
+        JSON.stringify({ message: 'Not a WAITING application, skipping' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Only process valid transitions
-    const validOldStatuses = ['PENDING', 'WAITING', 'CARETAKER_APPROVED'];
-    const validNewStatuses = ['ACCEPTED', 'APPROVED', 'REJECTED'];
-
-    if (!validOldStatuses.includes(oldStatus)) {
+    // Skip if no status change
+    if (old_record.status === record.status) {
       return new Response(
-        JSON.stringify({ message: `Old status '${oldStatus}' not eligible for email trigger` }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!validNewStatuses.includes(newStatus)) {
-      return new Response(
-        JSON.stringify({ message: `New status '${newStatus}' does not trigger emails` }),
+        JSON.stringify({ message: 'No status change, skipping' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     let result: { success: boolean; error?: string };
 
-    // Handle acceptance
-    if (newStatus === 'ACCEPTED' || newStatus === 'APPROVED') {
-      // Validate required fields for acceptance
+    if (record.status === 'ACCEPTED') {
       if (!record.assigned_unit_id) {
         return new Response(
-          JSON.stringify({ error: 'Application accepted but no unit assigned' }),
+          JSON.stringify({ error: 'No unit assigned' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
-
       }
-
       result = await sendAcceptanceEmail(supabaseUrl, serviceRoleKey, siteUrl, record);
-    }
-    // Handle rejection
-    else if (newStatus === 'REJECTED') {
+    } else if (record.status === 'REJECTED') {
       result = await sendRejectionEmail(supabaseUrl, serviceRoleKey, record);
-    }
-    else {
-      return new Response(
-        JSON.stringify({ message: `Status '${newStatus}' not handled` }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (result.success) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Email sent successfully for application ${record.id}`,
-          status: newStatus 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
     } else {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: result.error,
-          message: 'Email sending failed but logged for retry'
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ message: `Status '${record.status}' not handled` }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-  } catch (error) {
-    console.error('Error processing webhook:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        success: result.success,
+        message: result.success ? 'Email sent successfully' : 'Email failed',
+        status: record.status
       }),
+      { status: result.success ? 200 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
