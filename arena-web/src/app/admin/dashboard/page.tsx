@@ -35,7 +35,7 @@ export default function AdminDashboardPage() {
         escalatedComplaints: 0,
         unresolvedComplaints: 0,
         resolvedComplaints: 0,
-        pendingApprovals: 0,
+        waitingApprovals: 0,
         vacantUnits: 0,
         occupiedUnits: 0,
     });
@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
                 const escalatedComplaints = issueRows.length;
                 const unresolvedComplaints = issueRows.filter((i) => i.status !== "RESOLVED" && i.status !== "CLOSED").length;
                 const resolvedComplaints = issueRows.filter((i) => i.status === "RESOLVED" || i.status === "CLOSED").length;
-                const pendingApprovals = applicationRows.filter((a) => a.status === "PENDING").length;
+                const waitingApprovals = applicationRows.filter((a) => a.status === "WAITING").length;
 
                 setStats({
                     totalProperties,
@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
                     escalatedComplaints,
                     unresolvedComplaints,
                     resolvedComplaints,
-                    pendingApprovals,
+                    waitingApprovals,
                     vacantUnits,
                     occupiedUnits,
                 });
@@ -270,21 +270,21 @@ export default function AdminDashboardPage() {
             <AdminModal
                 open={openModal === "approvals"}
                 onClose={() => setOpenModal(null)}
-                title="Pending Tenant Approvals"
+                title="Waiting Tenant Approvals"
                 fullScreen
             >
-                {applications.filter((app) => app.status === "PENDING").length === 0 ? (
-                    <p className="text-sm text-slate-400">No pending tenant approvals right now.</p>
+                {applications.filter((app) => app.status === "WAITING").length === 0 ? (
+                    <p className="text-sm text-slate-400">No waiting tenant approvals right now.</p>
                 ) : (
                     <div className="space-y-3">
                         {applications
-                            .filter((app) => app.status === "PENDING")
+                            .filter((app) => app.status === "WAITING")
                             .map((app) => (
                                 <div key={app.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                         <h4 className="font-semibold text-white">{app.full_name || "Unnamed applicant"}</h4>
                                         <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-300">
-                                            Pending
+                                            Waiting
                                         </span>
                                     </div>
                                     <p className="mt-1 text-sm text-slate-300">{app.email || "No email provided"}</p>

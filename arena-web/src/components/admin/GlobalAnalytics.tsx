@@ -25,7 +25,7 @@ interface GlobalAnalyticsProps {
     escalatedComplaints: number;
     unresolvedComplaints: number;
     resolvedComplaints: number;
-    pendingApprovals: number;
+    waitingApprovals: number;
     vacantUnits: number;
     occupiedUnits: number;
   };
@@ -84,9 +84,9 @@ export default function GlobalAnalytics({
       onClick: onOpenProperties,
     },
     {
-      label: "Tenants pending approval",
-      value: stats.pendingApprovals,
-      change: "Review pending applications",
+      label: "Tenants waiting approval",
+      value: stats.waitingApprovals,
+      change: "Review waiting applications",
       icon: Clock4,
       color: "#d97706",
       bg: "from-amber-50 to-white",

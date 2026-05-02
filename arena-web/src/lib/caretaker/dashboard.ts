@@ -1067,7 +1067,7 @@ export async function getCaretakerDashboardDataFallback(): Promise<CaretakerDash
     supabase.from('issues').select('*', { count: 'exact', head: true }).eq('property_id', propertyId).eq('status', 'RESOLVED'),
     supabase.from('repairs').select('*', { count: 'exact', head: true }).eq('property_id', propertyId).in('status', ['PENDING', 'IN_PROGRESS']),
     supabase.from('repairs').select('*', { count: 'exact', head: true }).eq('property_id', propertyId).eq('status', 'SOLVED'),
-    supabase.from('tenant_applications').select('*', { count: 'exact', head: true }).eq('property_id', propertyId).eq('status', 'PENDING'),
+    supabase.from('tenant_applications').select('*', { count: 'exact', head: true }).eq('property_id', propertyId).eq('status', 'WAITING'),
     supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('sender_employee_id', employee.id),
     supabase.from('announcements').select('*', { count: 'exact', head: true }).or(`target_role.eq.CARETAKER,property_id.eq.${propertyId},is_global.eq.true`).eq('is_published', true),
     supabase.from('properties').select('name, location').eq('id', propertyId).maybeSingle(),
