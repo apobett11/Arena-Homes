@@ -216,7 +216,7 @@ export default function TenantOnboarding() {
                                     <div className="flex items-start gap-2">
                                         <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 mt-0.5" />
                                         <p className="text-sm text-amber-800 dark:text-amber-300">
-                                            For security, you must change your temporary password before accessing your dashboard.
+                                            For security, please set a strong password for your account.
                                         </p>
                                     </div>
                                 </div>

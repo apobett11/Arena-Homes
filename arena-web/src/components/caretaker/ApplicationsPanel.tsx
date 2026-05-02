@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ClipboardList, CheckCircle, XCircle, User, Home, FileText, Calendar, MapPin, MessageSquare, Eye, EyeOff, Check } from "lucide-react";
+import { ClipboardList, CheckCircle, XCircle, User, Home, FileText, Calendar, MapPin, MessageSquare, Check } from "lucide-react";
 import type { CaretakerApplication, CaretakerUnit } from "@/lib/caretaker/types";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -212,7 +212,6 @@ interface ExtendedApplication extends CaretakerApplication {
   approved_at?: string;
   assigned_unit_id?: string;
   converted_tenant_id?: string;
-  temporary_password?: string;
   school_name?: string;
   course_name?: string;
   year_of_study?: string;
@@ -323,7 +322,6 @@ const ApplicationDetailModal = ({
   const [selectedUnitId, setSelectedUnitId] = useState<string>(application.unit_id || '');
   const [visitNotes, setVisitNotes] = useState(application.visit_notes || '');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showTempPassword, setShowTempPassword] = useState(false);
 
   const canConfirmVisit = application.status === 'PENDING' && application.visit_status !== 'CONFIRMED';
   const canApprove = application.visit_status === 'CONFIRMED' && application.status !== 'APPROVED';
@@ -452,30 +450,16 @@ const ApplicationDetailModal = ({
                 </div>
               )}
 
-              {/* Temporary Password (if converted) */}
-              {isConverted && application.temporary_password && (
+              {/* Tenant Status (if converted) */}
+              {isConverted && (
                 <div className="space-y-2">
                   <h3 className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4" />
-                    Tenant Created Successfully
+                    Application Accepted
                   </h3>
                   <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                      Temporary password for tenant login:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg font-mono text-sm">
-                        {showTempPassword ? application.temporary_password : '••••••••••'}
-                      </code>
-                      <button
-                        onClick={() => setShowTempPassword(!showTempPassword)}
-                        className="p-2 hover:bg-emerald-100 dark:hover:bg-emerald-800 rounded-lg"
-                      >
-                        {showTempPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                      Share this password with the tenant. They will be required to change it on first login.
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      The applicant has been sent a secure setup link via email to create their password and activate their tenant dashboard.
                     </p>
                   </div>
                 </div>
