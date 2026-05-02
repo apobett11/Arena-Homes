@@ -198,6 +198,7 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
 
         // Map frontend camelCase fields to database snake_case with correct column names
         // Only include fields that exist in the database schema
+        // NOTE: status is NOT sent - database automatically sets it to 'WAITING'
         const applicationData: Record<string, unknown> = {
             property_id: body.property_id,
             full_name: body.full_name,
@@ -207,7 +208,6 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
             registration_number: body.university_reg_no || null,
             preferred_move_in_date: body.preferred_move_in_date || null,
             notes: body.message || null,
-            status: 'WAITING',
         };
 
         // Add applicant_user_id if user is authenticated (links application to user account)
