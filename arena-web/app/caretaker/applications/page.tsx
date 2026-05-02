@@ -67,7 +67,7 @@ export default function CaretakerApplicationsPage() {
       setError(null);
       
       await ApplicationApi.respond(appId, { 
-        status: "APPROVED",
+        status: "ACCEPTED",
         notes: `Approved and assigned to unit ${unitId}` 
       });
 
@@ -113,9 +113,9 @@ export default function CaretakerApplicationsPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "PENDING":
+      case "WAITING":
         return <Clock className="w-5 h-5 text-amber-500" />;
-      case "APPROVED":
+      case "ACCEPTED":
         return <CheckCircle className="w-5 h-5 text-emerald-500" />;
       case "REJECTED":
         return <XCircle className="w-5 h-5 text-rose-500" />;
@@ -126,14 +126,14 @@ export default function CaretakerApplicationsPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-      APPROVED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
+      WAITING: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+      ACCEPTED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
       REJECTED: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
     };
     return styles[status as keyof typeof styles] || "bg-slate-100 text-slate-700";
   };
 
-  const pendingCount = applications.filter(a => a.status === "PENDING").length;
+  const waitingCount = applications.filter(a => a.status === "WAITING").length;
   // Show all units, available units are those with AVAILABLE status
   const availableUnits = units;
   const vacantUnits = units.filter(u => u.availability_status === "AVAILABLE");
@@ -161,8 +161,8 @@ export default function CaretakerApplicationsPage() {
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{pendingCount}</p>
-            <p className="text-xs text-slate-500 uppercase tracking-wider">Pending</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{waitingCount}</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider">Waiting</p>
           </div>
           <div className="h-10 w-px bg-slate-200 dark:bg-white/10" />
           <div className="text-right">
@@ -271,8 +271,8 @@ export default function CaretakerApplicationsPage() {
                     </div>
                   )}
 
-                  {/* Actions for Pending Applications */}
-                  {app.status === "PENDING" && (
+                  {/* Actions for Waiting Applications */}
+                  {app.status === "WAITING" && (
                     <div className="space-y-4">
                       <div>
                         <label className="text-xs text-slate-500 uppercase tracking-wider mb-2 block">

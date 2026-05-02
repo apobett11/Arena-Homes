@@ -207,7 +207,7 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
             registration_number: body.university_reg_no || null,
             preferred_move_in_date: body.preferred_move_in_date || null,
             notes: body.message || null,
-            status: 'PENDING',
+            status: 'WAITING',
         };
 
         // Add applicant_user_id if user is authenticated (links application to user account)

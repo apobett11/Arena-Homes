@@ -25,7 +25,7 @@ export interface CaretakerApplication {
     whatsappNumber?: string;
     universityRegNo?: string;
     message?: string;
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    status: 'WAITING' | 'ACCEPTED' | 'REJECTED';
     preferredMoveInDate?: string;
     createdAt: string;
     caretakerNotes?: string;
@@ -49,12 +49,12 @@ export const ApplicationApi = {
         });
     },
 
-    getCaretakerApplications: async (status?: 'PENDING' | 'APPROVED' | 'REJECTED') => {
+    getCaretakerApplications: async (status?: 'WAITING' | 'ACCEPTED' | 'REJECTED') => {
         const query = status ? `?status=${status}` : '';
         return fetchClient<CaretakerApplication[]>(`/applications/caretaker${query}`);
     },
 
-    respond: async (id: string, payload: { status: 'APPROVED' | 'REJECTED'; notes?: string }) => {
+    respond: async (id: string, payload: { status: 'ACCEPTED' | 'REJECTED'; notes?: string }) => {
         return fetchClient(`/applications/${id}/respond`, {
             method: 'POST',
             body: JSON.stringify(payload),
