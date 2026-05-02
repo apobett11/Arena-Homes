@@ -210,16 +210,13 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
             status: 'PENDING',
         };
 
-        // Add applicant_user_id if user is authenticated (required by RLS policy)
+        // Add applicant_user_id if user is authenticated (links application to user account)
         if (userId) {
             applicationData.applicant_user_id = userId;
         }
 
-        // Only add caretaker_id if it's a valid non-empty value
-        // caretaker_id references auth.users(id) - must be valid UUID or null
-        if (body.caretaker_id && typeof body.caretaker_id === 'string' && body.caretaker_id.trim() !== '') {
-            applicationData.caretaker_id = body.caretaker_id;
-        }
+        // Note: caretaker is determined by property_id (joined via properties table)
+        // No need to send caretaker_id - the caretaker looks up applications by property_id
         const { error } = await supabase.from('tenant_applications').insert(applicationData);
         if (error) throw new Error(error.message);
         return ({ message: 'Application submitted', applicationId: 'pending' } as T);
