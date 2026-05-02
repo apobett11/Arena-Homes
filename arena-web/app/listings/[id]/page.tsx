@@ -1020,7 +1020,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="w-full py-3 rounded-xl bg-primary text-white font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {submitting ? 'Submitting...' : 'Submit Application'}
                             </button>

@@ -192,6 +192,10 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
     }
 
     if (endpoint === '/applications' && method === 'POST') {
+        // Get current user if authenticated
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+
         // Map frontend camelCase fields to database snake_case with correct column names
         // Only include fields that exist in the database schema
         const applicationData: Record<string, unknown> = {
@@ -205,6 +209,12 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
             notes: body.message || null,
             status: 'PENDING',
         };
+
+        // Add applicant_user_id if user is authenticated (required by RLS policy)
+        if (userId) {
+            applicationData.applicant_user_id = userId;
+        }
+
         // Only add caretaker_id if it's a valid non-empty value
         // caretaker_id references auth.users(id) - must be valid UUID or null
         if (body.caretaker_id && typeof body.caretaker_id === 'string' && body.caretaker_id.trim() !== '') {

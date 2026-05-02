@@ -1454,7 +1454,7 @@ CREATE POLICY tenant_applications_select_own_or_staff ON public.tenant_applicati
 
 DROP POLICY IF EXISTS tenant_applications_insert_own ON public.tenant_applications;
 CREATE POLICY tenant_applications_insert_own ON public.tenant_applications FOR INSERT
-  WITH CHECK (applicant_user_id = auth.uid());
+  WITH CHECK (applicant_user_id = auth.uid() OR applicant_user_id IS NULL OR auth.uid() IS NULL);
 
 DROP POLICY IF EXISTS tenant_applications_manage_staff ON public.tenant_applications;
 CREATE POLICY tenant_applications_manage_staff ON public.tenant_applications FOR UPDATE
