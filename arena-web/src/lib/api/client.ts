@@ -222,9 +222,47 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
         return ({ message: 'Application submitted', applicationId: 'pending' } as T);
     }
     if (endpoint.startsWith('/applications/caretaker') && method === 'GET') {
-        const { data, error } = await supabase.from('tenant_applications').select('*').order('created_at', { ascending: false });
+        // Get current caretaker's assigned property
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        
+        // Get caretaker employee to find assigned property
+        const { data: employeeData } = await supabase
+            .from('employees')
+            .select('assigned_property_id')
+            .eq('user_id', user.id)
+            .eq('role_id', 'CARETAKER')
+            .maybeSingle();
+        
+        if (!employeeData?.assigned_property_id) {
+            return [] as T;
+        }
+        
+        // Fetch applications for caretaker's property
+        const { data, error } = await supabase
+            .from('tenant_applications')
+            .select('*')
+            .eq('property_id', employeeData.assigned_property_id)
+            .order('created_at', { ascending: false });
+        
         if (error) throw new Error(error.message);
-        return (data ?? []) as T;
+        
+        // Map snake_case to camelCase for frontend
+        const mapped = (data ?? []).map((app: Record<string, unknown>) => ({
+            id: app.id,
+            fullName: app.full_name,
+            email: app.email,
+            phoneNumber: app.phone_number,
+            whatsappNumber: app.whatsapp_number,
+            universityRegNo: app.registration_number,
+            preferredMoveInDate: app.preferred_move_in_date,
+            message: app.notes,
+            status: app.status,
+            createdAt: app.created_at,
+            caretakerNotes: app.caretaker_notes,
+        }));
+        
+        return mapped as T;
     }
     if (endpoint.startsWith('/applications/') && endpoint.endsWith('/respond') && method === 'POST') {
         const id = endpoint.split('/')[2];

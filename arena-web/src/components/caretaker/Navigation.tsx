@@ -10,12 +10,14 @@ import {
     MessageSquare,
     Settings,
     ChevronRight,
-    ShieldCheck
+    ShieldCheck,
+    FileText
 } from "lucide-react";
 import { gsap } from "gsap";
 
 const navItems = [
     { name: "Home", icon: Home, href: "/caretaker/dashboard" },
+    { name: "Applications", icon: FileText, href: "/caretaker/applications" },
     { name: "Rooms", icon: DoorOpen, href: "#rooms" },
     { name: "Tenants", icon: Users, href: "#tenants" },
     { name: "Messages", icon: MessageSquare, href: "#messages" },
