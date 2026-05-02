@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
     DoorOpen,
     Users,
@@ -10,6 +11,7 @@ import {
     Settings,
     Shield,
     HelpCircle,
+    ClipboardList,
 } from "lucide-react";
 
 type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announcements" | "rules";
@@ -17,6 +19,7 @@ type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announc
 interface ActionGridProps {
     onTabChange: (tab: TabType) => void;
     activeTab: TabType;
+    pendingApplicationsCount?: number;
 }
 
 const actions = [
@@ -28,9 +31,31 @@ const actions = [
     { id: "rules", label: "Rules & FAQ", icon: Shield, color: "text-cyan-600 dark:text-cyan-400", bgColor: "bg-cyan-50 dark:bg-cyan-500/10", desc: "Property policies" },
 ];
 
-export const ActionGrid = ({ onTabChange, activeTab }: ActionGridProps) => {
+export const ActionGrid = ({ onTabChange, activeTab, pendingApplicationsCount = 0 }: ActionGridProps) => {
+    const hasPendingApplications = pendingApplicationsCount > 0;
+    
     return (
         <div className="flex flex-wrap gap-2">
+            {/* Applications Button - Special standalone link with orange indicator */}
+            <Link
+                href="/caretaker/applications"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    hasPendingApplications
+                        ? "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 animate-pulse"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800"
+                }`}
+            >
+                <div className={`p-1 rounded ${hasPendingApplications ? "bg-orange-200 dark:bg-orange-500/30" : "bg-orange-50 dark:bg-orange-500/10"}`}>
+                    <ClipboardList className={`w-3.5 h-3.5 ${hasPendingApplications ? "text-orange-700 dark:text-orange-400" : "text-orange-600 dark:text-orange-400"}`} />
+                </div>
+                <span>Applications</span>
+                {hasPendingApplications && (
+                    <span className="bg-orange-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                        {pendingApplicationsCount}
+                    </span>
+                )}
+            </Link>
+            
             {actions.map((action) => {
                 const Icon = action.icon;
                 const isActive = activeTab === action.id;

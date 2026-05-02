@@ -13,7 +13,7 @@ interface ApplicationWithProperty extends CaretakerApplication {
 
 export default function CaretakerApplicationsPage() {
   const [applications, setApplications] = useState<ApplicationWithProperty[]>([]);
-  const [units, setUnits] = useState<{ id: string; room_number: string | null; availability_status: string }[]>([]);
+  const [units, setUnits] = useState<{ id: string; room_number: string | null; availability_status: string; status: string }[]>([]);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
@@ -134,7 +134,9 @@ export default function CaretakerApplicationsPage() {
   };
 
   const pendingCount = applications.filter(a => a.status === "PENDING").length;
-  const availableUnits = units.filter(u => u.availability_status === "AVAILABLE");
+  // Show all units, available units are those with AVAILABLE status
+  const availableUnits = units;
+  const vacantUnits = units.filter(u => u.availability_status === "AVAILABLE");
 
   if (loading) {
     return (
@@ -164,7 +166,7 @@ export default function CaretakerApplicationsPage() {
           </div>
           <div className="h-10 w-px bg-slate-200 dark:bg-white/10" />
           <div className="text-right">
-            <p className="text-2xl font-bold text-primary">{availableUnits.length}</p>
+            <p className="text-2xl font-bold text-primary">{vacantUnits.length}</p>
             <p className="text-xs text-slate-500 uppercase tracking-wider">Units Available</p>
           </div>
         </div>
@@ -287,14 +289,18 @@ export default function CaretakerApplicationsPage() {
                           }}
                           className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary"
                         >
-                          <option value="">Choose a vacant unit...</option>
+                          <option value="">Select Unit ID...</option>
                           {availableUnits.map(unit => (
-                            <option key={unit.id} value={unit.id}>
-                              Room {unit.room_number}
+                            <option 
+                              key={unit.id} 
+                              value={unit.id}
+                              disabled={unit.availability_status !== "AVAILABLE"}
+                            >
+                              {unit.id.substring(0, 8)}... {unit.room_number ? `(Room ${unit.room_number})` : ''} {unit.availability_status !== "AVAILABLE" ? "[OCCUPIED]" : "[AVAILABLE]"}
                             </option>
                           ))}
                         </select>
-                        {availableUnits.length === 0 && (
+                        {vacantUnits.length === 0 && (
                           <p className="text-xs text-rose-500 mt-1">
                             No vacant units available. Free up a unit first.
                           </p>
@@ -304,7 +310,7 @@ export default function CaretakerApplicationsPage() {
                       <div className="flex gap-3">
                         <button
                           onClick={() => handleApprove(app.id, app.selectedUnitId)}
-                          disabled={processingId === app.id || !app.selectedUnitId || availableUnits.length === 0}
+                          disabled={processingId === app.id || !app.selectedUnitId || vacantUnits.length === 0}
                           className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           <CheckCircle className="w-4 h-4" />

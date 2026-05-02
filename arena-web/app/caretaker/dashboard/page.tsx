@@ -186,6 +186,7 @@ export default function CaretakerDashboard() {
             <ActionGrid
                 onTabChange={setActiveTab}
                 activeTab={activeTab}
+                pendingApplicationsCount={dashboardData?.pending_applications_count || 0}
             />
 
             {/* Navigation Tabs */}

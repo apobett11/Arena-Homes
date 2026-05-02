@@ -48,6 +48,7 @@ export default function TenantOnboarding() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
@@ -66,14 +67,31 @@ export default function TenantOnboarding() {
                 const status = await ApplicationApi.getMyOnboardingStatus();
                 if (status.canAccess) {
                     router.replace('/tenant/dashboard');
+                    return;
                 }
+                // If not onboarded, stay on this page
             } catch (err: any) {
-                setError(err?.message || 'Failed to load onboarding status');
+                console.error('Onboarding status check failed:', err);
+                setError(err?.message || 'Failed to load onboarding status. Please refresh the page.');
+            } finally {
+                setIsLoading(false);
             }
         }
 
         checkStatus();
     }, [router]);
+
+    // Show loading spinner while checking status
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-slate-600 dark:text-slate-400">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     const handleNext = async () => {
         setError('');
@@ -113,17 +131,13 @@ export default function TenantOnboarding() {
                     password,
                 });
             } else if (currentStep === 1) {
-                const status = await ApplicationApi.completeOnboardingStep({
+                await ApplicationApi.completeOnboardingStep({
                     step: 'profile',
                     fullName,
                     phoneNumber,
                     emergencyContact,
                 });
-                // Auto-redirect to dashboard if they have password set and can access
-                if (status.canAccess && status.onboardingStatus?.hasSetPassword) {
-                    router.push('/tenant/dashboard');
-                    return;
-                }
+                // Continue to agreement step - don't redirect yet
             } else {
                 const status = await ApplicationApi.completeOnboardingStep({
                     step: 'agreement',
