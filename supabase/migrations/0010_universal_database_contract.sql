@@ -1448,17 +1448,46 @@ CREATE POLICY property_facilities_manage_staff ON public.property_facilities FOR
   WITH CHECK (public.can_manage_property(property_id) OR public.is_admin());
 
 -- TENANT_APPLICATIONS policies
-DROP POLICY IF EXISTS tenant_applications_select_own_or_staff ON public.tenant_applications;
-CREATE POLICY tenant_applications_select_own_or_staff ON public.tenant_applications FOR SELECT
-  USING (applicant_user_id = auth.uid() OR public.is_admin() OR (public.is_caretaker() AND property_id = public.current_assigned_property_id()));
+-- Anyone can submit an application (anonymous inserts allowed)
+DROP POLICY IF EXISTS tenant_applications_insert_anonymous ON public.tenant_applications;
+CREATE POLICY tenant_applications_insert_anonymous ON public.tenant_applications FOR INSERT
+  WITH CHECK (true);
 
-DROP POLICY IF EXISTS tenant_applications_insert_own ON public.tenant_applications;
-CREATE POLICY tenant_applications_insert_own ON public.tenant_applications FOR INSERT
-  WITH CHECK (applicant_user_id = auth.uid() OR applicant_user_id IS NULL OR auth.uid() IS NULL);
+-- Only caretaker of the property or admin can view applications
+DROP POLICY IF EXISTS tenant_applications_select_caretaker ON public.tenant_applications;
+CREATE POLICY tenant_applications_select_caretaker ON public.tenant_applications FOR SELECT
+  USING (
+    public.is_admin() 
+    OR EXISTS (
+      SELECT 1 FROM public.properties p 
+      WHERE p.id = tenant_applications.property_id 
+      AND p.caretaker_user_id = auth.uid()
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.employees e
+      WHERE e.user_id = auth.uid() 
+      AND e.role_id = 'CARETAKER'
+      AND e.assigned_property_id = tenant_applications.property_id
+    )
+  );
 
-DROP POLICY IF EXISTS tenant_applications_manage_staff ON public.tenant_applications;
-CREATE POLICY tenant_applications_manage_staff ON public.tenant_applications FOR UPDATE
-  USING (public.is_admin() OR (public.is_caretaker() AND property_id = public.current_assigned_property_id()));
+-- Only caretaker of the property or admin can update applications
+DROP POLICY IF EXISTS tenant_applications_update_caretaker ON public.tenant_applications;
+CREATE POLICY tenant_applications_update_caretaker ON public.tenant_applications FOR UPDATE
+  USING (
+    public.is_admin() 
+    OR EXISTS (
+      SELECT 1 FROM public.properties p 
+      WHERE p.id = tenant_applications.property_id 
+      AND p.caretaker_user_id = auth.uid()
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.employees e
+      WHERE e.user_id = auth.uid() 
+      AND e.role_id = 'CARETAKER'
+      AND e.assigned_property_id = tenant_applications.property_id
+    )
+  );
 
 -- SUSPICIOUS_REPORTS policies
 DROP POLICY IF EXISTS suspicious_reports_select_own_or_admin ON public.suspicious_reports;

@@ -220,9 +220,9 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
         if (body.caretaker_id && typeof body.caretaker_id === 'string' && body.caretaker_id.trim() !== '') {
             applicationData.caretaker_id = body.caretaker_id;
         }
-        const { data, error } = await supabase.from('tenant_applications').insert(applicationData).select('id').single();
+        const { error } = await supabase.from('tenant_applications').insert(applicationData);
         if (error) throw new Error(error.message);
-        return ({ message: 'Application submitted', applicationId: data.id } as T);
+        return ({ message: 'Application submitted', applicationId: 'pending' } as T);
     }
     if (endpoint.startsWith('/applications/caretaker') && method === 'GET') {
         const { data, error } = await supabase.from('tenant_applications').select('*').order('created_at', { ascending: false });
