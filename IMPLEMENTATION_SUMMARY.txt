@@ -1,0 +1,109 @@
+================================================================================
+UNIT ASSIGNMENT LOGIC - IMPLEMENTATION COMPLETE
+================================================================================
+
+BUILD STATUS: ✅ PASS
+Command: npm run build
+Result: Compiled successfully, all routes generated
+
+================================================================================
+FILES CHANGED
+================================================================================
+
+DATABASE (NEW MIGRATION):
+- supabase/migrations/20260503052200_unit_tenant_contract_enforcement.sql
+  * Added current_tenant_id to units table
+  * Updated accept_application RPC with atomic tenant+unit assignment
+  * Created vacate_unit RPC for move-out flow
+  * Updated all dashboard views to use current_tenant_id
+  * Added unique index to prevent duplicate active tenants per unit
+
+FRONTEND:
+- arena-web/app/caretaker/applications/page.tsx
+  * Fixed to call accept_application RPC (was using wrong API)
+  * Added current_tenant_id validation before approval
+  * Fixed field mappings to snake_case
+
+- arena-web/src/components/caretaker/ApplicationsPanel.tsx
+  * Filter units by current_tenant_id IS NULL
+  * Added error handling and unit list refresh after acceptance
+
+- arena-web/src/lib/caretaker/dashboard.ts
+  * Added safety check in updateUnitAvailability()
+
+- arena-web/app/caretaker/dashboard/page.tsx
+  * Use database view counts only (no local filtering)
+
+- arena-web/src/lib/caretaker/types.ts
+  * Added preferred_move_in_date to CaretakerApplication
+
+================================================================================
+RULES ENFORCED
+================================================================================
+
+✅ Unit with tenant cannot be available
+   - Database RPC validates current_tenant_id IS NULL before assignment
+   - Frontend updateUnitAvailability() blocks if tenant assigned
+
+✅ Available unit cannot have tenant
+   - accept_application RPC rejects if current_tenant_id exists
+   - Unique index prevents two active tenants per unit
+
+✅ Accept application assigns unit atomically
+   - Single transaction: tenant → lease → unit update
+   - Row locking prevents race conditions
+
+✅ Unit status changes to occupied immediately
+   - availability_status = 'OCCUPIED'
+   - status = 'TAKEN'
+   - current_tenant_id = new_tenant_id
+
+✅ Dashboard counts read from database
+   - Views use current_tenant_id IS NOT NULL for occupied counts
+   - No frontend-only count calculations
+
+✅ Occupied units equal active tenants
+   - occupied_rooms counts units with current_tenant_id
+   - tenants_count counts ACTIVE/PENDING_SETUP tenants
+
+================================================================================
+DEPLOYMENT INSTRUCTIONS
+================================================================================
+
+1. Apply migration:
+   supabase db push
+   OR run: 20260503052200_unit_tenant_contract_enforcement.sql
+
+2. Backfill existing data (if any tenants exist):
+   UPDATE public.units u
+   SET current_tenant_id = t.id
+   FROM public.tenants t
+   WHERE u.id = t.unit_id
+   AND t.status IN ('ACTIVE', 'PENDING_SETUP')
+   AND u.current_tenant_id IS NULL;
+
+3. Deploy frontend:
+   cd arena-web && npm run build && npm run deploy
+
+4. Test:
+   - Submit application
+   - Accept with unit assignment
+   - Verify unit shows occupied
+   - Verify dashboard counts update
+
+================================================================================
+VERIFICATION
+================================================================================
+
+Post-deployment verification queries:
+
+-- Check occupied units count matches tenant count
+SELECT 
+  p.name,
+  (SELECT COUNT(*) FROM units WHERE property_id = p.id AND current_tenant_id IS NOT NULL) as occupied,
+  (SELECT COUNT(*) FROM tenants WHERE property_id = p.id AND status IN ('ACTIVE', 'PENDING_SETUP')) as tenants
+FROM properties p;
+
+-- Should return: occupied = tenants for each property
+
+================================================================================

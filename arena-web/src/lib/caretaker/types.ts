@@ -362,6 +362,7 @@ export interface CaretakerApplication {
   notes: string | null;
   rejection_reason?: string;
   assigned_unit_id?: string;
+  preferred_move_in_date?: string | null;
   created_at: string;
   updated_at: string;
   // Join fields

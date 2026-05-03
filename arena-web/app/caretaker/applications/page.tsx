@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { FileText, User, Mail, Phone, Calendar, CheckCircle, XCircle, Clock, Home, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { getCurrentCaretakerEmployee, getCaretakerUnits } from "@/lib/caretaker/dashboard";
-import { ApplicationApi } from "@/lib/api/domains/applications";
-import type { CaretakerApplication } from "@/lib/api/domains/applications";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import type { CaretakerApplication } from "@/lib/caretaker/types";
 
 interface ApplicationWithProperty extends CaretakerApplication {
   property_name?: string;
@@ -13,7 +13,7 @@ interface ApplicationWithProperty extends CaretakerApplication {
 
 export default function CaretakerApplicationsPage() {
   const [applications, setApplications] = useState<ApplicationWithProperty[]>([]);
-  const [units, setUnits] = useState<{ id: string; room_number: string | null; availability_status: string; status: string }[]>([]);
+  const [units, setUnits] = useState<{ id: string; room_number: string | null; availability_status: string; status: string; current_tenant_id: string | null }[]>([]);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
@@ -37,12 +37,50 @@ export default function CaretakerApplicationsPage() {
       setPropertyId(employee.assigned_property_id);
 
       // Load applications and units in parallel
-      const [applicationsData, unitsData] = await Promise.all([
-        ApplicationApi.getCaretakerApplications(),
-        getCaretakerUnits(employee.assigned_property_id),
-      ]);
+      const supabase = getSupabaseClient() as any;
+      
+      // Fetch applications directly from Supabase
+      const { data: applicationsData, error: appsError } = await supabase
+        .from('tenant_applications')
+        .select('*')
+        .eq('property_id', employee.assigned_property_id)
+        .order('created_at', { ascending: false });
+      
+      if (appsError) throw appsError;
+      
+      // Fetch units with current_tenant_id for proper availability check
+      const { data: unitsData, error: unitsError } = await supabase
+        .from('units')
+        .select('id, room_number, availability_status, status, current_tenant_id')
+        .eq('property_id', employee.assigned_property_id)
+        .order('room_number', { ascending: true });
+      
+      if (unitsError) throw unitsError;
 
-      setApplications(applicationsData || []);
+      // Map applications to CaretakerApplication type (snake_case fields)
+      const mappedApps: ApplicationWithProperty[] = (applicationsData || []).map((app: Record<string, unknown>) => ({
+        id: app.id as string,
+        applicant_user_id: app.applicant_user_id as string | null,
+        full_name: app.full_name as string | null,
+        email: app.email as string | null,
+        phone_number: app.phone_number as string | null,
+        whatsapp_number: app.whatsapp_number as string | null,
+        registration_number: app.registration_number as string | null,
+        notes: app.notes as string | null,
+        property_id: app.property_id as string | null,
+        unit_id: app.unit_id as string | null,
+        status: app.status as 'WAITING' | 'ACCEPTED' | 'REJECTED',
+        caretaker_employee_id: app.caretaker_employee_id as string | null,
+        created_at: app.created_at as string,
+        updated_at: app.updated_at as string,
+        preferred_move_in_date: app.preferred_move_in_date as string | null,
+        assigned_unit_id: app.assigned_unit_id as string | undefined,
+        // For the interface with ApplicationWithProperty
+        property_name: undefined,
+        selectedUnitId: undefined,
+      }));
+      
+      setApplications(mappedApps);
       setUnits(unitsData || []);
     } catch (err) {
       console.error("Error loading applications:", err);
@@ -62,23 +100,50 @@ export default function CaretakerApplicationsPage() {
       return;
     }
 
+    // Verify unit is actually available (no tenant assigned)
+    const selectedUnit = units.find(u => u.id === unitId);
+    if (!selectedUnit) {
+      setError("Selected unit not found");
+      return;
+    }
+    if (selectedUnit.current_tenant_id !== null) {
+      setError("Selected unit is already occupied");
+      return;
+    }
+    if (selectedUnit.availability_status !== 'AVAILABLE') {
+      setError(`Selected unit is not available (status: ${selectedUnit.availability_status})`);
+      return;
+    }
+
     try {
       setProcessingId(appId);
       setError(null);
       
-      await ApplicationApi.respond(appId, { 
-        status: "ACCEPTED",
-        notes: `Approved and assigned to unit ${unitId}` 
+      // Call the proper accept_application RPC
+      const supabase = getSupabaseClient() as any;
+      const { data, error } = await supabase.rpc('accept_application', {
+        p_application_id: appId,
+        p_assigned_unit_id: unitId,
+        p_start_date: new Date().toISOString().split('T')[0],
+        p_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
 
-      setSuccessMessage("Application approved successfully");
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.error || 'Failed to accept application');
+      }
+
+      setSuccessMessage("Application accepted and unit assigned successfully");
       setTimeout(() => setSuccessMessage(null), 3000);
       
       // Refresh the list
       await loadData();
     } catch (err) {
       console.error("Error approving application:", err);
-      setError("Failed to approve application");
+      setError(err instanceof Error ? err.message : "Failed to approve application");
     } finally {
       setProcessingId(null);
     }
@@ -89,10 +154,20 @@ export default function CaretakerApplicationsPage() {
       setProcessingId(appId);
       setError(null);
       
-      await ApplicationApi.respond(appId, { 
-        status: "REJECTED",
-        notes: "Application rejected by caretaker" 
+      // Call the reject_application RPC
+      const supabase = getSupabaseClient() as any;
+      const { data, error } = await supabase.rpc('reject_application', {
+        p_application_id: appId,
+        p_reason: "Application rejected by caretaker"
       });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.error || 'Failed to reject application');
+      }
 
       setSuccessMessage("Application rejected");
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -101,7 +176,7 @@ export default function CaretakerApplicationsPage() {
       await loadData();
     } catch (err) {
       console.error("Error rejecting application:", err);
-      setError("Failed to reject application");
+      setError(err instanceof Error ? err.message : "Failed to reject application");
     } finally {
       setProcessingId(null);
     }
@@ -134,9 +209,11 @@ export default function CaretakerApplicationsPage() {
   };
 
   const waitingCount = applications.filter(a => a.status === "WAITING").length;
-  // Show all units, available units are those with AVAILABLE status
+  // Available units must have: no tenant assigned AND availability_status = 'AVAILABLE'
   const availableUnits = units;
-  const vacantUnits = units.filter(u => u.availability_status === "AVAILABLE");
+  const vacantUnits = units.filter(u => 
+    u.current_tenant_id === null && u.availability_status === "AVAILABLE"
+  );
 
   if (loading) {
     return (
@@ -210,7 +287,7 @@ export default function CaretakerApplicationsPage() {
                     <User className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white">{app.fullName}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{app.full_name}</h3>
                     <div className="flex items-center gap-3 text-sm text-slate-500">
                       <span className="flex items-center gap-1">
                         <Mail className="w-3 h-3" />
@@ -218,7 +295,7 @@ export default function CaretakerApplicationsPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Phone className="w-3 h-3" />
-                        {app.phoneNumber}
+                        {app.phone_number}
                       </span>
                     </div>
                   </div>
@@ -241,32 +318,32 @@ export default function CaretakerApplicationsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">WhatsApp</p>
-                      <p className="text-sm text-slate-900 dark:text-white">{app.whatsappNumber || "Not provided"}</p>
+                      <p className="text-sm text-slate-900 dark:text-white">{app.whatsapp_number || "Not provided"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Registration Number</p>
-                      <p className="text-sm text-slate-900 dark:text-white">{app.universityRegNo || "Not provided"}</p>
+                      <p className="text-sm text-slate-900 dark:text-white">{app.registration_number || "Not provided"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Preferred Move-in</p>
                       <p className="text-sm text-slate-900 dark:text-white flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {app.preferredMoveInDate ? new Date(app.preferredMoveInDate).toLocaleDateString() : "Not specified"}
+                        {app.preferred_move_in_date ? new Date(app.preferred_move_in_date).toLocaleDateString() : "Not specified"}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Submitted</p>
                       <p className="text-sm text-slate-900 dark:text-white">
-                        {new Date(app.createdAt).toLocaleDateString()}
+                        {new Date(app.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
 
-                  {app.message && (
+                  {app.notes && (
                     <div className="mb-4">
                       <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Message</p>
                       <p className="text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-white/10">
-                        {app.message}
+                        {app.notes}
                       </p>
                     </div>
                   )}
@@ -290,19 +367,23 @@ export default function CaretakerApplicationsPage() {
                           className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary"
                         >
                           <option value="">Select Unit ID...</option>
-                          {availableUnits.map(unit => (
-                            <option 
-                              key={unit.id} 
-                              value={unit.id}
-                              disabled={unit.availability_status !== "AVAILABLE"}
-                            >
-                              {unit.id.substring(0, 8)}... {unit.room_number ? `(Room ${unit.room_number})` : ''} {unit.availability_status !== "AVAILABLE" ? "[OCCUPIED]" : "[AVAILABLE]"}
-                            </option>
-                          ))}
+                          {availableUnits.map(unit => {
+                            const isTrulyAvailable = unit.current_tenant_id === null && unit.availability_status === "AVAILABLE";
+                            return (
+                              <option 
+                                key={unit.id} 
+                                value={unit.id}
+                                disabled={!isTrulyAvailable}
+                              >
+                                {unit.room_number ? `Room ${unit.room_number}` : unit.id.substring(0, 8)} 
+                                {isTrulyAvailable ? " [AVAILABLE]" : unit.current_tenant_id ? " [OCCUPIED]" : " [NOT AVAILABLE]"}
+                              </option>
+                            );
+                          })}
                         </select>
                         {vacantUnits.length === 0 && (
                           <p className="text-xs text-rose-500 mt-1">
-                            No vacant units available. Free up a unit first.
+                            No vacant units available. All units are occupied or under maintenance.
                           </p>
                         )}
                       </div>

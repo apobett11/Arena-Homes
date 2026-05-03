@@ -28,15 +28,16 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
     return app.status === filter;
   });
 
-  // Load available units for assignment
+  // Load available units for assignment (must have no tenant assigned)
   useEffect(() => {
     async function loadUnits() {
       const supabase = getSupabaseClient() as any;
       const { data } = await supabase
         .from('units')
-        .select('*')
+        .select('id, room_number, room_type, availability_status, status, current_tenant_id, base_price, deposit_amount')
         .eq('property_id', propertyId)
-        .in('availability_status', ['AVAILABLE', 'VACANT'])
+        .is('current_tenant_id', null)  // Only units with NO tenant assigned
+        .eq('availability_status', 'AVAILABLE')  // Must be explicitly available
         .order('room_number', { ascending: true });
       setUnits(data || []);
     }
@@ -47,18 +48,39 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
     setLoading(appId);
     const supabase = getSupabaseClient() as any;
     
-    const { data, error } = await supabase.rpc('accept_application', {
-      p_application_id: appId,
-      p_assigned_unit_id: unitId,
-      p_start_date: new Date().toISOString().split('T')[0],
-      p_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    });
-    
-    if (!error && data?.success) {
+    try {
+      const { data, error } = await supabase.rpc('accept_application', {
+        p_application_id: appId,
+        p_assigned_unit_id: unitId,
+        p_start_date: new Date().toISOString().split('T')[0],
+        p_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      });
+      
+      if (error) throw error;
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to accept application');
+      }
+      
       setSelectedApp(null);
-      onDataChange();
+      onDataChange();  // Refresh parent data
+      
+      // Refresh units list (this unit is now occupied)
+      const { data: refreshedUnits } = await supabase
+        .from('units')
+        .select('id, room_number, room_type, availability_status, status, current_tenant_id, base_price, deposit_amount')
+        .eq('property_id', propertyId)
+        .is('current_tenant_id', null)
+        .eq('availability_status', 'AVAILABLE')
+        .order('room_number', { ascending: true });
+      setUnits(refreshedUnits || []);
+      
+    } catch (err) {
+      console.error('Error accepting application:', err);
+      alert(err instanceof Error ? err.message : 'Failed to accept application');
+    } finally {
+      setLoading(null);
     }
-    setLoading(null);
   };
 
   const handleReject = async (appId: string, reason?: string) => {

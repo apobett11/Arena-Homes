@@ -169,6 +169,34 @@ export async function updateUnitAvailability(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = getClient();
 
+  // First check if unit has a tenant assigned (safety check)
+  const { data: unitData, error: fetchError } = await supabase
+    .from('units')
+    .select('current_tenant_id, availability_status')
+    .eq('id', unitId)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('Error fetching unit for update:', fetchError);
+    return { success: false, error: fetchError.message };
+  }
+
+  // Prevent marking as AVAILABLE if tenant is assigned
+  if (payload.availability_status === 'AVAILABLE' && unitData?.current_tenant_id !== null) {
+    return { 
+      success: false, 
+      error: 'Cannot mark unit as available while it has a tenant assigned. Use vacate_unit instead.' 
+    };
+  }
+
+  // Prevent marking as AVAILABLE if availability is OCCUPIED with tenant
+  if (payload.availability_status === 'AVAILABLE' && unitData?.availability_status === 'OCCUPIED') {
+    return { 
+      success: false, 
+      error: 'Unit is currently occupied. Cannot mark as available without proper move-out flow.' 
+    };
+  }
+
   const updates: Record<string, any> = {
     updated_at: new Date().toISOString(),
   };

@@ -168,17 +168,17 @@ export default function CaretakerDashboard() {
                 isRefreshing={refreshing}
             />
 
-            {/* Compact Quick Stats */}
+            {/* Compact Quick Stats - All counts from database view (source of truth) */}
             <QuickStats
-                totalRooms={dashboardData?.total_rooms || units.length}
-                occupiedRooms={dashboardData?.occupied_rooms || units.filter(u => u.availability_status === "OCCUPIED").length}
-                vacantRooms={dashboardData?.vacant_rooms || units.filter(u => u.availability_status === "AVAILABLE").length}
-                tenantsCount={dashboardData?.tenants_count || tenants.length}
-                pendingIssues={dashboardData?.pending_issues_count || issues.filter(i => i.status === "PENDING").length}
-                resolvedIssues={dashboardData?.resolved_issues_count || issues.filter(i => i.status === "RESOLVED").length}
-                pendingRepairs={dashboardData?.pending_repairs_count || 0}
-                solvedRepairs={dashboardData?.solved_repairs_count || 0}
-                pendingApplications={dashboardData?.pending_applications_count || 0}
+                totalRooms={dashboardData?.total_rooms ?? 0}
+                occupiedRooms={dashboardData?.occupied_rooms ?? 0}
+                vacantRooms={dashboardData?.vacant_rooms ?? 0}
+                tenantsCount={dashboardData?.tenants_count ?? 0}
+                pendingIssues={dashboardData?.pending_issues_count ?? 0}
+                resolvedIssues={dashboardData?.resolved_issues_count ?? 0}
+                pendingRepairs={dashboardData?.pending_repairs_count ?? 0}
+                solvedRepairs={dashboardData?.solved_repairs_count ?? 0}
+                pendingApplications={dashboardData?.pending_applications_count ?? 0}
                 incomingAnnouncements={announcements.incoming.length}
             />
 
