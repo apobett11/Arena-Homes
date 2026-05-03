@@ -114,7 +114,6 @@ export const FeaturedListings = () => {
 
             await ApplicationApi.submit({
                 propertyId: selectedProperty.propertyId,
-                caretakerId: null,
                 fullName: formData.get("fullName")?.toString().trim() || "",
                 email: formData.get("email")?.toString().trim() || "",
                 phoneNumber: formData.get("phoneNumber")?.toString().trim() || "",
