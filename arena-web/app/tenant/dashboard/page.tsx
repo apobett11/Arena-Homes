@@ -97,13 +97,20 @@ export default function TenantDashboard() {
                 const { data: dashData, error: dashError } = await getTenantDashboardData();
                 
                 if (dashError) {
+                    // Check if this is a "no tenant record" error
+                    if (dashError.code === 'NO_TENANT_ASSIGNMENT' || 
+                        dashError.message?.includes('No tenant assignment')) {
+                        setDashboardError('NOT_A_TENANT');
+                        setLoading(false);
+                        return;
+                    }
                     setDashboardError(dashError.message);
                     setLoading(false);
                     return;
                 }
                 
                 if (!dashData) {
-                    setDashboardError('No tenant assignment found for this account.');
+                    setDashboardError('NOT_A_TENANT');
                     setLoading(false);
                     return;
                 }
@@ -287,19 +294,55 @@ export default function TenantDashboard() {
         }
     };
 
-    // Error state
+    // Error state - Special handling for non-tenant users
     if (dashboardError) {
+        const isNotTenant = dashboardError === 'NOT_A_TENANT';
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-[#020617] flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-red-200 dark:border-red-800">
-                    <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Dashboard Error</h2>
-                    <p className="text-gray-700 dark:text-gray-300 mb-4">{dashboardError}</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
-                    >
-                        Retry
-                    </button>
+                <div className={`max-w-md w-full bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border ${isNotTenant ? 'border-amber-200 dark:border-amber-800' : 'border-red-200 dark:border-red-800'}`}>
+                    <h2 className={`text-xl font-bold mb-2 ${isNotTenant ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {isNotTenant ? 'Not a Tenant Yet' : 'Dashboard Error'}
+                    </h2>
+                    <p className="text-gray-700 dark:text-gray-300 mb-4">
+                        {isNotTenant 
+                            ? "Your account doesn't have an active tenant assignment. You need to apply for a property first."
+                            : dashboardError
+                        }
+                    </p>
+                    {isNotTenant ? (
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                To become a tenant:
+                            </p>
+                            <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1.5 list-decimal list-inside">
+                                <li>Browse available properties</li>
+                                <li>Click &quot;Apply / Show Interest&quot;</li>
+                                <li>Wait for caretaker approval</li>
+                                <li>Complete onboarding when approved</li>
+                            </ol>
+                            <div className="pt-3 flex gap-3">
+                                <button 
+                                    onClick={() => router.push('/listings')} 
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
+                                >
+                                    Browse Properties
+                                </button>
+                                <button 
+                                    onClick={() => router.push('/auth/login')} 
+                                    className="flex-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-700 py-2 rounded-lg"
+                                >
+                                    Back to Login
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
+                        >
+                            Retry
+                        </button>
+                    )}
                 </div>
             </div>
         );

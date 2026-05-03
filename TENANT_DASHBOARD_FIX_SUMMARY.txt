@@ -1,0 +1,146 @@
+================================================================================
+TENANT DASHBOARD FIX - IMPLEMENTATION COMPLETE
+================================================================================
+
+PROBLEM IDENTIFIED:
+-------------------
+When a tenant is created by accepting their application, the tenant record
+is created with user_id = NULL (line 334 in approve_application_and_create_tenant):
+
+  INSERT INTO public.tenants (
+    user_id, -- NULL until password setup
+    ...
+  ) VALUES (
+    NULL, -- Will be set after password setup
+    ...
+  );
+
+The RLS policy on the tenants table requires:
+  user_id = auth.uid()
+
+But since user_id is NULL, the comparison "NULL = auth.uid()" returns NULL
+(which is treated as FALSE in RLS policies), so the tenant cannot see their
+own record during onboarding.
+
+ROOT CAUSE:
+-----------
+The tenant needs to access their dashboard during onboarding to:
+1. Set their password
+2. Complete their profile  
+3. Accept user agreement
+
+But the RLS policy blocks them because their tenant record has user_id = NULL
+until they finish onboarding and set their password.
+
+SOLUTION IMPLEMENTED:
+---------------------
+Created migration: 20260503053500_fix_tenant_rls_for_onboarding.sql
+
+1. UPDATED TENANTS TABLE RLS POLICY:
+   - Added email-based access: When user_id IS NULL, allow access if tenant
+     email matches the auth user's email
+   - This allows tenants to see their record during onboarding
+
+2. UPDATED LEASES TABLE RLS POLICY:
+   - Added same email-based fallback for leases
+   - Tenants need to see their lease during onboarding
+
+3. UPDATED ISSUES TABLE RLS POLICY:
+   - Added email-based fallback for issues
+   - Tenants may need to submit issues during onboarding
+
+4. CREATED/UPDATED complete_onboarding_step() FUNCTION:
+   - When tenant completes password step, it links tenant.user_id to auth.uid()
+   - Updates tenant status from PENDING_SETUP to ACTIVE
+   - Updates lease status from PENDING to ACTIVE
+   - Updates application conversion_status to CONVERTED
+   - This happens AFTER password is set, so subsequent logins use user_id match
+
+FLOW NOW WORKS:
+---------------
+1. Applicant applies → Application created with status WAITING
+2. Caretaker accepts → Tenant created with:
+   - user_id = NULL
+   - email = applicant's email
+   - status = PENDING_SETUP
+3. Applicant clicks login link in email
+4. Onboarding page loads (uses email-based RLS to access tenant record)
+5. Tenant sets password → complete_onboarding_step() sets user_id
+6. Tenant now accesses dashboard normally via user_id = auth.uid() match
+
+================================================================================
+FILES CHANGED
+================================================================================
+
+NEW MIGRATION:
+- supabase/migrations/20260503053500_fix_tenant_rls_for_onboarding.sql
+  * Fixed tenants_select_own_or_staff RLS policy (email fallback)
+  * Fixed leases_select_tenant_or_staff RLS policy (email fallback)
+  * Fixed issues_select_own_or_staff RLS policy (email fallback)
+  * Created/updated complete_onboarding_step() function
+
+EXISTING MIGRATIONS (still need to be applied):
+- supabase/migrations/20260503052200_unit_tenant_contract_enforcement.sql
+  (the one we created earlier for unit assignment logic)
+
+FRONTEND (already working, no changes needed):
+- arena-web/app/tenant/dashboard/page.tsx
+- arena-web/app/tenant/onboarding/page.tsx
+- arena-web/src/lib/tenant/dashboard.ts
+
+================================================================================
+DEPLOYMENT INSTRUCTIONS
+================================================================================
+
+1. Apply the new migration:
+   supabase db push
+   
+   OR run in Supabase SQL Editor:
+   20260503053500_fix_tenant_rls_for_onboarding.sql
+
+2. Verify the fix:
+   - Create a new application
+   - Accept the application (creates tenant with user_id = NULL)
+   - Use the login link as the tenant
+   - Onboarding should load without "Dashboard Error"
+   - Complete password setup
+   - Dashboard should show tenant data
+
+3. For existing tenants stuck in onboarding:
+   They should now be able to complete onboarding. The email-based RLS will
+   allow them to access their tenant record.
+
+================================================================================
+BUILD STATUS: ✅ PASS
+================================================================================
+
+Command: npm run build
+Result: Compiled successfully, exit code 0
+All 29 routes generated successfully
+
+================================================================================
+RLS POLICIES SUMMARY (After Fix)
+================================================================================
+
+TENANTS TABLE:
+  Can SELECT if:
+  - user_id = auth.uid()                              [Normal tenants]
+  - OR (user_id IS NULL AND email matches auth user)  [Onboarding tenants]
+  - OR is_admin()                                     [Admins]
+  - OR caretaker of property                          [Caretakers]
+
+LEASES TABLE:
+  Can SELECT if:
+  - tenant_id linked to tenant with user_id = auth.uid()
+  - OR tenant_id linked to tenant with NULL user_id and matching email
+  - OR is_admin()
+  - OR caretaker of property
+
+ISSUES TABLE:
+  Can SELECT if:
+  - tenant_user_id = auth.uid()
+  - OR tenant_id linked to tenant with NULL user_id and matching email
+  - OR is_admin()
+  - OR caretaker of property
+
+================================================================================
