@@ -611,23 +611,27 @@ GRANT SELECT ON public.public_properties_view TO authenticated;
 ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
 
 -- Policy for admin insert
-CREATE POLICY IF NOT EXISTS "admin_properties_insert_policy" ON public.properties
+DROP POLICY IF EXISTS "admin_properties_insert_policy" ON public.properties;
+CREATE POLICY "admin_properties_insert_policy" ON public.properties
 FOR INSERT TO authenticated
 WITH CHECK (public.is_admin());
 
 -- Policy for admin update
-CREATE POLICY IF NOT EXISTS "admin_properties_update_policy" ON public.properties
+DROP POLICY IF EXISTS "admin_properties_update_policy" ON public.properties;
+CREATE POLICY "admin_properties_update_policy" ON public.properties
 FOR UPDATE TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
 -- Policy for admin delete
-CREATE POLICY IF NOT EXISTS "admin_properties_delete_policy" ON public.properties
+DROP POLICY IF EXISTS "admin_properties_delete_policy" ON public.properties;
+CREATE POLICY "admin_properties_delete_policy" ON public.properties
 FOR DELETE TO authenticated
 USING (public.is_admin());
 
 -- Policy for read (all authenticated users can read)
-CREATE POLICY IF NOT EXISTS "properties_read_policy" ON public.properties
+DROP POLICY IF EXISTS "properties_read_policy" ON public.properties;
+CREATE POLICY "properties_read_policy" ON public.properties
 FOR SELECT TO authenticated
 USING (true);
 
