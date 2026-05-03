@@ -64,16 +64,55 @@ export default function TenantOnboarding() {
     useEffect(() => {
         async function checkStatus() {
             try {
-                const status = await ApplicationApi.getMyOnboardingStatus();
-                if (status.canAccess) {
+                // Check if user has tenant record with PENDING_SETUP status
+                const supabase = (await import('@/lib/supabase/client')).getSupabaseClient();
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (!user) {
+                    router.replace('/auth/login');
+                    return;
+                }
+                
+                // Check tenants table for this user's email (user_id might be NULL during onboarding)
+                const { data: tenant, error: tenantError } = await supabase
+                    .from('tenants')
+                    .select('id, status, user_id')
+                    .eq('email', user.email || '')
+                    .order('created_at', { ascending: false })
+                    .maybeSingle();
+                
+                if (tenantError) {
+                    console.error('Error checking tenant status:', tenantError);
+                    setError('Failed to check tenant status. Please refresh.');
+                    setIsLoading(false);
+                    return;
+                }
+                
+                // If no tenant record found, redirect to listings
+                if (!tenant) {
+                    router.replace('/listings');
+                    return;
+                }
+                
+                const tenantRecord = tenant as { id: string; status: string; user_id: string | null };
+                
+                // If tenant is ACTIVE (already onboarded), go to dashboard
+                if (tenantRecord.status === 'ACTIVE') {
                     router.replace('/tenant/dashboard');
                     return;
                 }
-                // If not onboarded, stay on this page
+                
+                // If tenant is PENDING_SETUP, stay on onboarding page
+                if (tenantRecord.status === 'PENDING_SETUP') {
+                    setIsLoading(false);
+                    return;
+                }
+                
+                // Any other status, go to dashboard
+                router.replace('/tenant/dashboard');
             } catch (err: any) {
                 console.error('Onboarding status check failed:', err);
                 setError(err?.message || 'Failed to load onboarding status. Please refresh the page.');
-            } finally {
                 setIsLoading(false);
             }
         }

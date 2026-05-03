@@ -11,6 +11,7 @@ export interface TenantDashboardData {
   tenantRegistrationNumber: string | null;
   tenantEmail: string | null;
   tenantLogoUrl: string | null;
+  tenantStatus: 'ACTIVE' | 'PENDING_SETUP' | 'INACTIVE' | 'MOVED_OUT' | null;
   
   // Property info
   propertyId: string | null;

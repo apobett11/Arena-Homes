@@ -1551,6 +1551,7 @@ SELECT
   to_jsonb(t)->>'registration_number' AS tenant_registration_number,
   COALESCE(to_jsonb(t)->>'email', au.email) AS tenant_email,
   to_jsonb(t)->>'logo_url' AS tenant_logo_url,
+  t.status AS tenant_status,
   t.property_id,
   prop.name AS property_name,
   prop.property_type,

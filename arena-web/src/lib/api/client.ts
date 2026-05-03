@@ -329,11 +329,31 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
         return ([] as T);
     }
 
-    // Application onboarding endpoints
+    // Application onboarding endpoints - check tenant status directly
     if (endpoint === '/applications/me/onboarding' && method === 'GET') {
-        const { data, error } = await supabase.rpc('get_tenant_onboarding_status');
-        if (error) throw new Error(error.message);
-        return (data ?? {}) as T;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        
+        // Check tenant record by email (user_id might be NULL during onboarding)
+        const { data: tenant, error: tenantError } = await supabase
+            .from('tenants')
+            .select('id, status, user_id')
+            .eq('email', user.email)
+            .order('created_at', { ascending: false })
+            .maybeSingle();
+        
+        if (tenantError) throw new Error(tenantError.message);
+        
+        // Return onboarding status based on tenant status
+        const canAccess = tenant?.status === 'ACTIVE';
+        const needsOnboarding = tenant?.status === 'PENDING_SETUP';
+        
+        return {
+            canAccess,
+            needsOnboarding,
+            tenantId: tenant?.id,
+            status: tenant?.status || 'NO_RECORD'
+        } as T;
     }
     if (endpoint === '/applications/me/onboarding/step' && method === 'POST') {
         const { data, error } = await supabase.rpc('complete_onboarding_step', {

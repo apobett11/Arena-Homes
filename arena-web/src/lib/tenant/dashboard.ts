@@ -76,6 +76,7 @@ export async function getTenantDashboardData(): Promise<{
       tenantRegistrationNumber: viewData.tenant_registration_number,
       tenantEmail: viewData.tenant_email,
       tenantLogoUrl: viewData.tenant_logo_url,
+      tenantStatus: viewData.tenant_status,
       
       propertyId: viewData.property_id,
       propertyName: viewData.property_name,
@@ -237,6 +238,7 @@ async function getTenantDashboardFallback(userId: string): Promise<{
       tenantRegistrationNumber: tenant.registration_number,
       tenantEmail: tenant.email,
       tenantLogoUrl: tenant.logo_url,
+      tenantStatus: tenant.status,
       
       propertyId: tenant.property_id,
       propertyName: property?.name || null,
