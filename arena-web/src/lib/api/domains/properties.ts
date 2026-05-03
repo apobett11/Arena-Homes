@@ -216,19 +216,19 @@ export const PropertyApi = {
         const supabase = getSupabaseClient() as any;
         
         // Call the complete property creation RPC
+        // IMPORTANT: Parameters must be in the EXACT order the SQL function expects:
+        // 1-21: Required params (no defaults)
+        // 22-31: Optional params (with defaults)
         const { data: result, error } = await supabase.rpc('create_property_complete', {
-            // Property basic info
+            // ========== REQUIRED PARAMETERS (1-21) ==========
+            
+            // Property basic info (1-4)
             p_name: data.name,
             p_location: data.location,
             p_property_type: data.property_type,
             p_monthly_rent: data.monthly_rent,
-            p_description: data.description || null,
-            p_nearby_school_or_institution: data.nearby_school_or_institution || null,
-            p_landmark: data.landmark || null,
-            p_contact_phone: data.contact_phone || null,
-            p_available_from: data.available_from || new Date().toISOString().split('T')[0],
             
-            // Property details
+            // Property details (5-17)
             p_number_of_units: data.number_of_units,
             p_electricity_payment: data.electricity_payment,
             p_water_availability_days_per_week: data.water_availability_days_per_week,
@@ -242,18 +242,32 @@ export const PropertyApi = {
             p_parking_available: data.parking_available,
             p_latitude: data.latitude,
             p_longitude: data.longitude,
-            p_logo_url: data.logo_url || null,
-            p_cover_photo_url: data.cover_photo_url || null,
             
-            // Caretaker info
+            // Caretaker info (18-21)
             p_caretaker_first_name: data.caretaker_first_name,
             p_caretaker_last_name: data.caretaker_last_name,
             p_caretaker_email: data.caretaker_email,
             p_caretaker_phone: data.caretaker_phone,
             
-            // FAQ and Rules
+            // ========== OPTIONAL PARAMETERS (22-31) ==========
+            
+            // Property basic info optional (22-26)
+            p_description: data.description || null,
+            p_nearby_school_or_institution: data.nearby_school_or_institution || null,
+            p_landmark: data.landmark || null,
+            p_contact_phone: data.contact_phone || null,
+            p_available_from: data.available_from || new Date().toISOString().split('T')[0],
+            
+            // Media URLs optional (27-28)
+            p_logo_url: data.logo_url || null,
+            p_cover_photo_url: data.cover_photo_url || null,
+            
+            // FAQ and Rules optional (29-30)
             p_faqs: data.faqs && data.faqs.length > 0 ? data.faqs : [],
             p_rules: data.rules && data.rules.length > 0 ? data.rules.map(r => ({ rule_text: r.rule_text })) : [],
+            
+            // Admin ID optional (31)
+            p_created_by_admin_id: null,
         });
 
         if (error) {
