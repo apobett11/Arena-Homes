@@ -57,7 +57,7 @@ export default function Sidebar() {
                             await AuthApi.logout();
                             localStorage.removeItem('user_role');
                             sessionStorage.removeItem('user_role');
-                            router.replace('/auth/login');
+                            router.replace('/');
                         }}
                         className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all w-full"
                     >

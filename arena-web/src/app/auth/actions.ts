@@ -28,7 +28,7 @@ export async function loginAction(formData: FormData) {
 
 export async function logoutAction() {
     await AuthApi.logout();
-    redirect('/auth/login');
+    redirect('/');
 }
 
 export async function refreshAction() {

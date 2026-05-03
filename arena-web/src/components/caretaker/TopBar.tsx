@@ -19,7 +19,7 @@ export const TopBar = () => {
         await AuthApi.logout();
         localStorage.removeItem('user_role');
         sessionStorage.removeItem('user_role');
-        router.replace('/auth/login');
+        router.replace('/');
     };
 
     if (!mounted) return null;

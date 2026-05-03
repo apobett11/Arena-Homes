@@ -104,6 +104,7 @@ CREATE TRIGGER trg_prevent_duplicate_email_update
   EXECUTE FUNCTION public.prevent_duplicate_application_email();
 
 -- 5. Ensure any existing NULL or invalid statuses are fixed
+-- Cast to text first to handle cases where status might be the old 'PENDING' value
 UPDATE public.tenant_applications 
 SET status = 'WAITING'
-WHERE status IS NULL OR status = 'PENDING' OR status = '';
+WHERE status IS NULL OR status::text = 'PENDING' OR status::text = '';
