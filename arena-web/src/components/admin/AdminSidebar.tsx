@@ -1,16 +1,31 @@
 "use client";
 
-import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, UserCog, Key, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Wallet, Megaphone, Settings, UserCog, Key, FileText, LogOut, Plus, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { safeMaybeSingle } from "@/lib/supabase/safe";
 import { AuthApi } from "@/lib/api/auth";
 
-const navItems = [
+interface NavItem {
+    icon: React.ElementType;
+    label: string;
+    href: string;
+    children?: { label: string; href: string }[];
+}
+
+const navItems: NavItem[] = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin/dashboard" },
     { icon: Users, label: "Employees", href: "/admin/employees" },
-    { icon: Building2, label: "Properties", href: "/admin/properties" },
+    {
+        icon: Building2,
+        label: "Properties",
+        href: "/admin/properties",
+        children: [
+            { label: "View All", href: "/admin/properties" },
+            { label: "Add Property", href: "/admin/properties/add" },
+        ],
+    },
     { icon: FileText, label: "Leases", href: "/admin/leases" },
     { icon: Wallet, label: "Finance", href: "/admin/finance" },
     { icon: Megaphone, label: "Broadcast", href: "/admin/broadcast" },
@@ -21,6 +36,7 @@ export default function AdminSidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [brandName, setBrandName] = useState("ArenaHomes");
+    const [expandedItem, setExpandedItem] = useState<string | null>("Properties"); // Properties expanded by default
     
     const handleLogout = async () => {
         await AuthApi.logout();
@@ -65,22 +81,53 @@ export default function AdminSidebar() {
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                        const hasChildren = item.children && item.children.length > 0;
+                        const isExpanded = expandedItem === item.label;
 
                         return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
-                                    ? "bg-primary/10 text-primary border border-primary/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800"
-                                    }`}
-                            >
-                                <Icon className={`w-5 h-5 ${isActive ? "text-primary" : "text-slate-500 group-hover:text-white"}`} />
-                                <span className="font-medium">{item.label}</span>
-                                {isActive && (
-                                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                            <div key={item.href}>
+                                <button
+                                    onClick={() => hasChildren ? setExpandedItem(isExpanded ? null : item.label) : router.push(item.href)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
+                                        ? "bg-primary/10 text-primary border border-primary/20"
+                                        : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                        }`}
+                                >
+                                    <Icon className={`w-5 h-5 ${isActive ? "text-primary" : "text-slate-500 group-hover:text-white"}`} />
+                                    <span className="font-medium">{item.label}</span>
+                                    {hasChildren && (
+                                        <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                    )}
+                                    {!hasChildren && isActive && (
+                                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                                    )}
+                                </button>
+
+                                {/* Submenu */}
+                                {hasChildren && isExpanded && (
+                                    <div className="ml-4 mt-1 space-y-1">
+                                        {item.children?.map((child) => {
+                                            const isChildActive = pathname === child.href;
+                                            const isAddProperty = child.label === "Add Property";
+                                            return (
+                                                <Link
+                                                    key={child.href}
+                                                    href={child.href}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm ${isChildActive
+                                                        ? "bg-primary/10 text-primary border border-primary/20"
+                                                        : isAddProperty
+                                                            ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+                                                            : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                                        }`}
+                                                >
+                                                    {isAddProperty && <Plus className="w-3.5 h-3.5" />}
+                                                    <span>{child.label}</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
                                 )}
-                            </Link>
+                            </div>
                         );
                     })}
 

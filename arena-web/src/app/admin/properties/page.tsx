@@ -25,6 +25,7 @@ import {
     FileText,
     AlertTriangle,
     X,
+    Building2,
 } from "lucide-react";
 
 type SortField = "name" | "location" | "occupancy" | "caretaker";
@@ -187,8 +188,19 @@ export default function AdminPropertiesPage() {
         <div className="min-h-screen pb-24 lg:pb-8">
             <AdminTopBar />
             <div className="p-4 md:p-6 lg:p-8">
-                <h1 className="text-3xl font-bold text-white mb-4">Property Registry</h1>
-                <p className="text-slate-400">Manage properties, caretakers, and rooms.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white mb-2">Property Registry</h1>
+                        <p className="text-slate-400">Manage properties, caretakers, and rooms.</p>
+                    </div>
+                    <button
+                        onClick={() => router.push("/admin/properties/add")}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#0066FF] hover:bg-blue-600 text-white rounded-xl transition-colors font-medium"
+                    >
+                        <Building2 className="w-5 h-5" />
+                        Add Property
+                    </button>
+                </div>
 
                 {message && !modalType && (
                     <div className={`mt-4 p-3 rounded-lg ${message.type === "success" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300" : "bg-rose-500/10 border border-rose-500/30 text-rose-300"}`}>

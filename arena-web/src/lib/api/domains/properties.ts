@@ -76,11 +76,53 @@ export interface Unit {
     roomNumber?: string;
 }
 
+export interface PropertyFAQInput {
+    question: string;
+    answer: string;
+}
+
+export interface PropertyRuleInput {
+    rule_text: string;
+}
+
 export interface CreatePropertyPayload {
+    // Section A - Basic Info
     name: string;
     location: string;
-    logoUrl: string;
-    facilities: PropertyFacilities;
+    property_type: 'Bedsitter' | 'Single Room' | 'One Bedroom' | 'Two Bedroom';
+    monthly_rent: number;
+    description?: string;
+    nearby_school_or_institution?: string;
+    landmark?: string;
+    contact_phone?: string;
+    available_from?: string;
+    logo_url?: string;
+    cover_photo_url?: string;
+
+    // Section B - Details
+    number_of_units: number;
+    electricity_payment: 'PERSONAL_PAYMENT' | 'COVERED';
+    water_availability_days_per_week: number;
+    water_source: 'Tank' | 'Well' | 'Pumped Water';
+    room_space_sqm: number;
+    deposit_amount: number;
+    security_verified: boolean;
+    return_deposit: boolean;
+    gate_hours_from: string;
+    gate_hours_to: string;
+    parking_available: boolean;
+    latitude: number;
+    longitude: number;
+
+    // Section C - Caretaker Info
+    caretaker_first_name: string;
+    caretaker_last_name: string;
+    caretaker_email: string;
+    caretaker_phone: string;
+
+    // Section D - FAQ & Rules
+    faqs: PropertyFAQInput[];
+    rules: PropertyRuleInput[];
 }
 
 // Helper to transform Supabase property row to Property interface
@@ -164,35 +206,78 @@ export const PropertyApi = {
         return transformProperty(data);
     },
 
-    create: async (data: CreatePropertyPayload): Promise<{ id: string; caretakerTempPassword?: string; invitePinCode?: string }> => {
+    create: async (data: CreatePropertyPayload): Promise<{ 
+        id: string; 
+        caretakerEmployeeId?: string;
+        unitsCreated?: number;
+        caretakerTempPassword?: string;
+        message?: string;
+    }> => {
         const supabase = getSupabaseClient() as any;
         
-        // Call the database function to create property with caretaker
-        const { data: result, error } = await supabase.rpc('create_property_with_caretaker', {
+        // Call the complete property creation RPC
+        const { data: result, error } = await supabase.rpc('create_property_complete', {
+            // Property basic info
             p_name: data.name,
             p_location: data.location,
-            p_logo_url: data.logoUrl,
-            p_facilities: data.facilities,
+            p_property_type: data.property_type,
+            p_monthly_rent: data.monthly_rent,
+            p_description: data.description || null,
+            p_nearby_school_or_institution: data.nearby_school_or_institution || null,
+            p_landmark: data.landmark || null,
+            p_contact_phone: data.contact_phone || null,
+            p_available_from: data.available_from || new Date().toISOString().split('T')[0],
+            
+            // Property details
+            p_number_of_units: data.number_of_units,
+            p_electricity_payment: data.electricity_payment,
+            p_water_availability_days_per_week: data.water_availability_days_per_week,
+            p_water_source: data.water_source,
+            p_room_space_sqm: data.room_space_sqm,
+            p_deposit_amount: data.deposit_amount,
+            p_security_verified: data.security_verified,
+            p_return_deposit: data.return_deposit,
+            p_gate_hours_from: data.gate_hours_from,
+            p_gate_hours_to: data.gate_hours_to,
+            p_parking_available: data.parking_available,
+            p_latitude: data.latitude,
+            p_longitude: data.longitude,
+            p_logo_url: data.logo_url || null,
+            p_cover_photo_url: data.cover_photo_url || null,
+            
+            // Caretaker info
+            p_caretaker_first_name: data.caretaker_first_name,
+            p_caretaker_last_name: data.caretaker_last_name,
+            p_caretaker_email: data.caretaker_email,
+            p_caretaker_phone: data.caretaker_phone,
+            
+            // FAQ and Rules
+            p_faqs: data.faqs && data.faqs.length > 0 ? data.faqs : [],
+            p_rules: data.rules && data.rules.length > 0 ? data.rules.map(r => ({ rule_text: r.rule_text })) : [],
         });
 
         if (error) {
-            // Fallback: simple insert if RPC not available
-            const { data: insertData, error: insertError } = await supabase
-                .from('properties')
-                .insert({
-                    name: data.name,
-                    location: data.location,
-                    logo_url: data.logoUrl,
-                    facilities: data.facilities,
-                })
-                .select('id')
-                .single();
-
-            if (insertError) throw insertError;
-            return { id: insertData.id };
+            console.error('RPC Error:', error);
+            throw new Error(error.message || 'Failed to create property');
         }
 
-        return result;
+        // Handle the result from the RPC function
+        if (result && typeof result === 'object') {
+            if (result.success === false) {
+                throw new Error(result.error || 'Failed to create property');
+            }
+            
+            return {
+                id: result.property_id,
+                caretakerEmployeeId: result.caretaker_employee_id,
+                unitsCreated: result.units_created,
+                caretakerTempPassword: result.caretaker_temp_password,
+                message: result.message,
+            };
+        }
+
+        // Fallback for unexpected response format
+        throw new Error('Invalid response from server');
     },
 
     update: async (id: string, data: Partial<Property>): Promise<void> => {
