@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useRouter } from 'next/navigation';
 import { MobileNav, DesktopSidebar, TopBar } from '@/components/tenant/Navigation';
-import TenantIdentityCard from '@/components/tenant/TenantIdentityCard';
+import CompactTenantCard from '@/components/tenant/CompactTenantCard';
 import LiveMap from '@/components/tenant/LiveMap';
 import ActionGrid from '@/components/tenant/ActionGrid';
 import RecentActivity, { TenantActivityItem } from '@/components/tenant/RecentActivity';
@@ -363,7 +363,7 @@ export default function TenantDashboard() {
                         </div>
                     ) : dashboardData ? (
                         <>
-                            <TenantIdentityCard
+                            <CompactTenantCard
                                 tenantName={dashboardData.tenantFullName || dashboardData.tenantEmail?.split('@')[0] || "Tenant"}
                                 propertyName={dashboardData.propertyName || "Not assigned yet"}
                                 roomNumber={dashboardData.roomNumber || "Not assigned yet"}
