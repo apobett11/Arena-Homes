@@ -196,9 +196,30 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
         const { data: authData } = await supabase.auth.getUser();
         const userId = authData?.user?.id;
 
-        // Map frontend camelCase fields to database snake_case with correct column names
-        // Only include fields that exist in the database schema
-        // NOTE: status is NOT sent - database automatically sets it to 'WAITING'
+        // ============================================================
+        // APPLICATION SUBMISSION - SIMPLIFIED FLOW
+        // ============================================================
+        // Frontend sends ONLY user-provided data:
+        //   - property_id (required)
+        //   - full_name (required) - must have at least 2 words
+        //   - email (required)
+        //   - phone_number (required)
+        //   - whatsapp_number (optional)
+        //   - registration_number (optional)
+        //   - preferred_move_in_date (optional)
+        //   - notes/message (optional)
+        //   - applicant_user_id (added if user is authenticated)
+        //
+        // Frontend does NOT send:
+        //   - status (database DEFAULT 'WAITING' handles this)
+        //   - caretaker_id (determined by property via join)
+        //   - created_at/updated_at (auto-generated)
+        //
+        // Database sets:
+        //   - status = 'WAITING' automatically
+        //   - Application sits waiting for caretaker action
+        // ============================================================
+        
         const applicationData: Record<string, unknown> = {
             property_id: body.property_id,
             full_name: body.full_name,
@@ -215,11 +236,11 @@ export async function fetchClient<T>(endpoint: string, options: RequestInit = {}
             applicationData.applicant_user_id = userId;
         }
 
-        // Note: caretaker is determined by property_id (joined via properties table)
-        // No need to send caretaker_id - the caretaker looks up applications by property_id
+        // Insert application - database handles status with DEFAULT 'WAITING'
         const { error } = await supabase.from('tenant_applications').insert(applicationData);
         if (error) throw new Error(error.message);
-        return ({ message: 'Application submitted', applicationId: 'pending' } as T);
+        
+        return ({ message: 'Application submitted successfully', applicationId: 'new' } as T);
     }
     if (endpoint.startsWith('/applications/caretaker') && method === 'GET') {
         // Get current caretaker's assigned property

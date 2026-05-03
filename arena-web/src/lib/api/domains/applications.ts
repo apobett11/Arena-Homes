@@ -1,9 +1,9 @@
 import { fetchClient } from '../client';
 
+// Application Submit Input - NO status field (database sets it to WAITING)
 export interface SubmitApplicationInput {
     propertyId: string;
-    caretakerId: string | null;
-    fullName: string;
+    fullName: string;  // Must contain at least two names (first and last)
     email: string;
     phoneNumber: string;
     whatsappNumber?: string;
@@ -41,8 +41,37 @@ export interface OnboardingStatusResponse {
     };
 }
 
+// Validation helper
+function validateApplicationInput(data: SubmitApplicationInput): void {
+    // Check full name has at least two words (first and last name)
+    const nameParts = data.fullName.trim().split(/\s+/);
+    if (nameParts.length < 2) {
+        throw new Error('Please provide both first and last name');
+    }
+    
+    // Check email is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+        throw new Error('Please provide a valid email address');
+    }
+    
+    // Check phone number is provided and not empty
+    if (!data.phoneNumber || data.phoneNumber.trim().length < 8) {
+        throw new Error('Please provide a valid phone number');
+    }
+    
+    // Check propertyId is provided
+    if (!data.propertyId) {
+        throw new Error('Property ID is required');
+    }
+}
+
 export const ApplicationApi = {
     submit: async (data: SubmitApplicationInput): Promise<SubmitApplicationResponse> => {
+        // Validate input before sending
+        validateApplicationInput(data);
+        
+        // Submit to API - NO status field included (database handles it)
         return fetchClient<SubmitApplicationResponse>('/applications', {
             method: 'POST',
             body: JSON.stringify(data),

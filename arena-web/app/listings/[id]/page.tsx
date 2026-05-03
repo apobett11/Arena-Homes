@@ -340,8 +340,30 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
     const handleApply = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validation: All required fields must be filled
         if (!applicationForm.fullName || !applicationForm.email || !applicationForm.phone) {
-            setSubmitMessage("Please fill in all required fields");
+            setSubmitMessage("Please fill in all required fields: Full Name, Email, and Phone Number");
+            return;
+        }
+        
+        // Validation: Full name must have at least 2 words (first and last name)
+        const nameParts = applicationForm.fullName.trim().split(/\s+/);
+        if (nameParts.length < 2) {
+            setSubmitMessage("Please provide both first and last name (e.g., 'John Doe')");
+            return;
+        }
+        
+        // Validation: Email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(applicationForm.email)) {
+            setSubmitMessage("Please provide a valid email address");
+            return;
+        }
+        
+        // Validation: Phone number minimum length
+        if (applicationForm.phone.trim().length < 8) {
+            setSubmitMessage("Please provide a valid phone number");
             return;
         }
 
@@ -351,13 +373,14 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         try {
             const { ApplicationApi } = await import('@/lib/api/domains/applications');
 
+            // Submit application - ONLY user data, no status field
+            // Database automatically sets status to 'WAITING'
             await ApplicationApi.submit({
                 propertyId: propertyId!,
-                caretakerId: caretaker?.user_id || null,
-                fullName: applicationForm.fullName,
-                email: applicationForm.email,
-                phoneNumber: applicationForm.phone,
-                message: applicationForm.message,
+                fullName: applicationForm.fullName.trim(),
+                email: applicationForm.email.trim().toLowerCase(),
+                phoneNumber: applicationForm.phone.trim(),
+                message: applicationForm.message?.trim() || undefined,
             });
 
             // Show success modal instead of inline message
