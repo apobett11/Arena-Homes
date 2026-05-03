@@ -1,323 +1,200 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import { PropertyApi, CreatePropertyPayload, PropertyFAQInput, PropertyRuleInput } from "@/lib/api/domains/properties";
-import { ArrowLeft, Building2, Upload, CheckCircle, Plus, Trash2, Home, User, HelpCircle, FileText, MapPin } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import { ArrowLeft, CheckCircle, Plus, Trash2, Home, User, HelpCircle, ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 
-type TabType = "basic" | "details" | "caretaker" | "faq";
+type StepType = "basic" | "details" | "caretaker" | "faq";
 
-const PROPERTY_TYPES = [
-    { value: "Bedsitter", label: "Bedsitter" },
-    { value: "Single Room", label: "Single Room" },
-    { value: "One Bedroom", label: "One Bedroom" },
-    { value: "Two Bedroom", label: "Two Bedroom" },
+const STEPS: { id: StepType; label: string; number: number }[] = [
+    { id: "basic", label: "Basic Info", number: 1 },
+    { id: "details", label: "Details", number: 2 },
+    { id: "caretaker", label: "Caretaker", number: 3 },
+    { id: "faq", label: "FAQ & Rules", number: 4 },
 ];
 
-const ELECTRICITY_OPTIONS = [
-    { value: "PERSONAL_PAYMENT", label: "Personal Payment" },
-    { value: "COVERED", label: "Covered" },
-];
+const PROPERTY_TYPES = ["Bedsitter", "Single Room", "One Bedroom", "Two Bedroom"];
+const ELECTRICITY_OPTIONS = ["PERSONAL_PAYMENT", "COVERED"];
+const WATER_SOURCES = ["Tank", "Well", "Pumped Water"];
+const LOCATIONS = ["Main Gate", "Njokerio", "Milimani", "Town", "Blue Valley", "Thika Road", "Roysambu", "Kasarani"];
 
-const WATER_SOURCE_OPTIONS = [
-    { value: "Tank", label: "Tank" },
-    { value: "Well", label: "Well" },
-    { value: "Pumped Water", label: "Pumped Water" },
-];
+interface FormData {
+    name: string;
+    location: string;
+    property_type: string;
+    monthly_rent: number;
+    description: string;
+    nearby_school: string;
+    landmark: string;
+    contact_phone: string;
+    available_from: string;
+    number_of_units: number;
+    electricity_payment: string;
+    water_availability_days: number;
+    water_source: string;
+    room_space_sqm: number;
+    deposit_amount: number;
+    security_verified: boolean;
+    return_deposit: boolean;
+    gate_hours_from: string;
+    gate_hours_to: string;
+    parking_available: boolean;
+    latitude: number;
+    longitude: number;
+    caretaker_first_name: string;
+    caretaker_last_name: string;
+    caretaker_email: string;
+    caretaker_phone: string;
+    faqs: { question: string; answer: string }[];
+    rules: { text: string }[];
+}
 
-const WATER_DAYS_OPTIONS = [
-    { value: 1, label: "1 day per week" },
-    { value: 2, label: "2 days per week" },
-    { value: 3, label: "3 days per week" },
-    { value: 4, label: "4 days per week" },
-    { value: 5, label: "5 days per week" },
-    { value: 6, label: "6 days per week" },
-    { value: 7, label: "7 days per week" },
-];
-
-const PREDEFINED_LOCATIONS = [
-    "Main Gate",
-    "Njokerio",
-    "Milimani",
-    "Town",
-    "Blue Valley",
-    "Thika Road",
-    "Roysambu",
-    "Kasarani",
-];
+const DEFAULT_DATA: FormData = {
+    name: "",
+    location: "",
+    property_type: "Single Room",
+    monthly_rent: 0,
+    description: "",
+    nearby_school: "",
+    landmark: "",
+    contact_phone: "",
+    available_from: new Date().toISOString().split("T")[0],
+    number_of_units: 1,
+    electricity_payment: "PERSONAL_PAYMENT",
+    water_availability_days: 7,
+    water_source: "Tank",
+    room_space_sqm: 0,
+    deposit_amount: 0,
+    security_verified: false,
+    return_deposit: true,
+    gate_hours_from: "06:00",
+    gate_hours_to: "22:00",
+    parking_available: false,
+    latitude: 0,
+    longitude: 0,
+    caretaker_first_name: "",
+    caretaker_last_name: "",
+    caretaker_email: "",
+    caretaker_phone: "",
+    faqs: [],
+    rules: [],
+};
 
 export default function AddPropertyPage() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<TabType>("basic");
+    const [step, setStep] = useState<StepType>("basic");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [createdProperty, setCreatedProperty] = useState<{ 
-        id: string; 
-        caretakerTempPassword?: string;
-        unitsCreated?: number;
-    } | null>(null);
+    const [created, setCreated] = useState<{ id: string; tempPassword?: string; units?: number } | null>(null);
+    const [data, setData] = useState<FormData>(DEFAULT_DATA);
+    const [errors, setErrors] = useState<Set<string>>(new Set());
+    const [showCustomLoc, setShowCustomLoc] = useState(false);
 
-    // Location state
-    const [locationInput, setLocationInput] = useState("");
-    const [showAddLocation, setShowAddLocation] = useState(false);
-    const [customLocation, setCustomLocation] = useState("");
+    const setField = (field: keyof FormData, value: any) => {
+        setData(prev => ({ ...prev, [field]: value }));
+        setErrors(prev => {
+            const next = new Set(prev);
+            next.delete(field);
+            return next;
+        });
+    };
 
-    // Form state
-    const [formData, setFormData] = useState<CreatePropertyPayload>({
-        // Section A - Basic Info
-        name: "",
-        location: "",
-        property_type: "Single Room",
-        monthly_rent: 0,
-        description: "",
-        nearby_school_or_institution: "",
-        landmark: "",
-        contact_phone: "",
-        available_from: new Date().toISOString().split("T")[0],
-        logo_url: "",
-        cover_photo_url: "",
-
-        // Section B - Details
-        number_of_units: 1,
-        electricity_payment: "PERSONAL_PAYMENT",
-        water_availability_days_per_week: 7,
-        water_source: "Tank",
-        room_space_sqm: 0,
-        deposit_amount: 0,
-        security_verified: false,
-        return_deposit: true,
-        gate_hours_from: "06:00",
-        gate_hours_to: "22:00",
-        parking_available: false,
-        latitude: 0,
-        longitude: 0,
-
-        // Section C - Caretaker Info
-        caretaker_first_name: "",
-        caretaker_last_name: "",
-        caretaker_email: "",
-        caretaker_phone: "",
-
-        // Section D - FAQ & Rules
-        faqs: [],
-        rules: [],
-    });
-
-    // FAQ state
-    const [faqInputs, setFaqInputs] = useState<{ question: string; answer: string }[]>([]);
-
-    // Rules state
-    const [ruleInputs, setRuleInputs] = useState<{ rule_text: string }[]>([]);
-
-    useEffect(() => {
-        if (showAddLocation && customLocation) {
-            setFormData(prev => ({ ...prev, location: customLocation }));
-        } else {
-            setFormData(prev => ({ ...prev, location: locationInput }));
+    const validateStep = (s: StepType): string[] => {
+        const e: string[] = [];
+        if (s === "basic") {
+            if (!data.name.trim()) e.push("name");
+            if (!data.location.trim()) e.push("location");
+            if (data.monthly_rent <= 0) e.push("monthly_rent");
         }
-    }, [locationInput, customLocation, showAddLocation]);
+        if (s === "details") {
+            if (data.number_of_units <= 0) e.push("number_of_units");
+            if (data.room_space_sqm <= 0) e.push("room_space_sqm");
+        }
+        if (s === "caretaker") {
+            if (!data.caretaker_first_name.trim()) e.push("caretaker_first_name");
+            if (!data.caretaker_last_name.trim()) e.push("caretaker_last_name");
+            if (!data.caretaker_email.trim()) e.push("caretaker_email");
+            if (!data.caretaker_phone.trim()) e.push("caretaker_phone");
+        }
+        return e;
+    };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const nextStep = () => {
+        const e = validateStep(step);
+        if (e.length > 0) {
+            setErrors(new Set(e));
+            setMessage({ type: "error", text: "Please fill all required fields" });
+            setTimeout(() => setMessage(null), 3000);
+            return;
+        }
+        const order: StepType[] = ["basic", "details", "caretaker", "faq"];
+        const idx = order.indexOf(step);
+        if (idx < 3) {
+            setStep(order[idx + 1]);
+            setMessage(null);
+        }
+    };
+
+    const prevStep = () => {
+        const order: StepType[] = ["basic", "details", "caretaker", "faq"];
+        const idx = order.indexOf(step);
+        if (idx > 0) setStep(order[idx - 1]);
+    };
+
+    const isError = (f: keyof FormData) => errors.has(f);
+
+    const inputClass = (f: keyof FormData, base = "") => 
+        `w-full px-4 py-3 bg-slate-800 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 ${
+            isError(f) 
+                ? "border-red-500 focus:ring-red-500" 
+                : "border-slate-700 focus:ring-[#0066FF]"
+        } ${base}`;
+
+    const submit = async () => {
+        const allErrors = [...validateStep("basic"), ...validateStep("details"), ...validateStep("caretaker")];
+        if (allErrors.length > 0) {
+            setErrors(new Set(allErrors));
+            setMessage({ type: "error", text: "Please fill all required fields" });
+            return;
+        }
+
         setLoading(true);
-        setMessage(null);
-
-        // Validation
-        if (!formData.name.trim()) {
-            setMessage({ type: "error", text: "Property name is required" });
-            setActiveTab("basic");
-            setLoading(false);
-            return;
-        }
-
-        if (!formData.location.trim()) {
-            setMessage({ type: "error", text: "Location is required" });
-            setActiveTab("basic");
-            setLoading(false);
-            return;
-        }
-
-        if (formData.monthly_rent <= 0) {
-            setMessage({ type: "error", text: "Monthly rent must be greater than 0" });
-            setActiveTab("basic");
-            setLoading(false);
-            return;
-        }
-
-        if (formData.number_of_units <= 0) {
-            setMessage({ type: "error", text: "Number of units must be greater than 0" });
-            setActiveTab("details");
-            setLoading(false);
-            return;
-        }
-
-        if (formData.room_space_sqm <= 0) {
-            setMessage({ type: "error", text: "Room space must be greater than 0" });
-            setActiveTab("details");
-            setLoading(false);
-            return;
-        }
-
-        if (!formData.caretaker_first_name.trim()) {
-            setMessage({ type: "error", text: "Caretaker first name is required" });
-            setActiveTab("caretaker");
-            setLoading(false);
-            return;
-        }
-
-        if (!formData.caretaker_last_name.trim()) {
-            setMessage({ type: "error", text: "Caretaker last name is required" });
-            setActiveTab("caretaker");
-            setLoading(false);
-            return;
-        }
-
-        if (!formData.caretaker_email.trim()) {
-            setMessage({ type: "error", text: "Caretaker email is required" });
-            setActiveTab("caretaker");
-            setLoading(false);
-            return;
-        }
-
-        if (!formData.caretaker_phone.trim()) {
-            setMessage({ type: "error", text: "Caretaker phone is required" });
-            setActiveTab("caretaker");
-            setLoading(false);
-            return;
-        }
-
-        // Prepare payload with FAQ and Rules
-        const payload: CreatePropertyPayload = {
-            ...formData,
-            faqs: faqInputs.filter(f => f.question.trim() !== ""),
-            rules: ruleInputs.filter(r => r.rule_text.trim() !== ""),
-        };
-
         try {
-            const result = await PropertyApi.create(payload);
-            setCreatedProperty(result);
-            setMessage({ type: "success", text: "Property created successfully!" });
-        } catch (error: any) {
-            setMessage({ type: "error", text: error.message || "Failed to create property" });
+            const supabase = getSupabaseClient() as any;
+            const payload = { p_payload: data };
+            const response = await (supabase.rpc as any)("create_property_complete_json", payload);
+            if (response.error) throw response.error;
+            const res = response.data as { success: boolean; error?: string; property_id?: string; caretaker_temp_password?: string; units_created?: number };
+            if (res?.success === false) throw new Error(res.error || "Failed to create property");
+            setCreated({ id: res.property_id || "", tempPassword: res.caretaker_temp_password, units: res.units_created });
+        } catch (err: any) {
+            setMessage({ type: "error", text: err.message });
         } finally {
             setLoading(false);
         }
     };
 
-    const handleChange = <K extends keyof CreatePropertyPayload>(field: K, value: CreatePropertyPayload[K]) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const addFaq = () => {
-        setFaqInputs(prev => [...prev, { question: "", answer: "" }]);
-    };
-
-    const updateFaq = (index: number, field: "question" | "answer", value: string) => {
-        setFaqInputs(prev => prev.map((f, i) => i === index ? { ...f, [field]: value } : f));
-    };
-
-    const removeFaq = (index: number) => {
-        setFaqInputs(prev => prev.filter((_, i) => i !== index));
-    };
-
-    const addRule = () => {
-        setRuleInputs(prev => [...prev, { rule_text: "" }]);
-    };
-
-    const updateRule = (index: number, value: string) => {
-        setRuleInputs(prev => prev.map((r, i) => i === index ? { rule_text: value } : r));
-    };
-
-    const removeRule = (index: number) => {
-        setRuleInputs(prev => prev.filter((_, i) => i !== index));
-    };
-
-    const getTabIcon = (tab: TabType) => {
-        switch (tab) {
-            case "basic": return <Home className="w-4 h-4" />;
-            case "details": return <Building2 className="w-4 h-4" />;
-            case "caretaker": return <User className="w-4 h-4" />;
-            case "faq": return <HelpCircle className="w-4 h-4" />;
-        }
-    };
-
-    if (createdProperty) {
+    if (created) {
         return (
-            <div className="min-h-screen pb-24 lg:pb-8">
+            <div className="min-h-screen pb-24">
                 <AdminTopBar />
-                <div className="p-4 md:p-6 lg:p-8 max-w-2xl mx-auto">
+                <div className="p-6 max-w-2xl mx-auto">
                     <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 text-center">
                         <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
                         <h2 className="text-2xl font-bold text-white mb-2">Property Created!</h2>
-                        <p className="text-slate-400 mb-6">
-                            {createdProperty.unitsCreated 
-                                ? `${createdProperty.unitsCreated} units have been generated.` 
-                                : "The property has been added to the registry."}
-                        </p>
-
-                        {createdProperty.caretakerTempPassword && (
-                            <div className="bg-slate-900/50 rounded-xl p-4 mb-4 text-left">
+                        <p className="text-slate-400 mb-4">{created.units} units generated</p>
+                        {created.tempPassword && (
+                            <div className="bg-slate-800 rounded-xl p-4 mb-6">
                                 <p className="text-sm text-slate-400 mb-1">Caretaker Temporary Password</p>
-                                <p className="text-lg font-mono text-emerald-400">{createdProperty.caretakerTempPassword}</p>
-                                <p className="text-xs text-amber-400 mt-2">Save this password - it won&apos;t be shown again!</p>
+                                <p className="text-xl font-mono text-white">{created.tempPassword}</p>
                             </div>
                         )}
-
-                        <div className="flex gap-3 justify-center">
-                            <Link
-                                href="/admin/properties"
-                                className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-colors"
-                            >
-                                Back to Properties
-                            </Link>
-                            <button
-                                onClick={() => {
-                                    setCreatedProperty(null);
-                                    setFormData({
-                                        name: "",
-                                        location: "",
-                                        property_type: "Single Room",
-                                        monthly_rent: 0,
-                                        description: "",
-                                        nearby_school_or_institution: "",
-                                        landmark: "",
-                                        contact_phone: "",
-                                        available_from: new Date().toISOString().split("T")[0],
-                                        logo_url: "",
-                                        cover_photo_url: "",
-                                        number_of_units: 1,
-                                        electricity_payment: "PERSONAL_PAYMENT",
-                                        water_availability_days_per_week: 7,
-                                        water_source: "Tank",
-                                        room_space_sqm: 0,
-                                        deposit_amount: 0,
-                                        security_verified: false,
-                                        return_deposit: true,
-                                        gate_hours_from: "06:00",
-                                        gate_hours_to: "22:00",
-                                        parking_available: false,
-                                        latitude: 0,
-                                        longitude: 0,
-                                        caretaker_first_name: "",
-                                        caretaker_last_name: "",
-                                        caretaker_email: "",
-                                        caretaker_phone: "",
-                                        faqs: [],
-                                        rules: [],
-                                    });
-                                    setFaqInputs([]);
-                                    setRuleInputs([]);
-                                    setLocationInput("");
-                                    setCustomLocation("");
-                                    setShowAddLocation(false);
-                                    setMessage(null);
-                                }}
-                                className="px-6 py-2 bg-[#0066FF] hover:bg-blue-600 text-white rounded-xl transition-colors"
-                            >
-                                Add Another Property
-                            </button>
+                        <div className="flex gap-4 justify-center">
+                            <Link href="/admin/properties" className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl">View Properties</Link>
+                            <button onClick={() => { setCreated(null); setData(DEFAULT_DATA); setStep("basic"); }} className="px-6 py-3 bg-[#0066FF] hover:bg-blue-600 text-white rounded-xl">Add Another</button>
                         </div>
                     </div>
                 </div>
@@ -326,650 +203,248 @@ export default function AddPropertyPage() {
     }
 
     return (
-        <div className="min-h-screen pb-24 lg:pb-8">
+        <div className="min-h-screen pb-24">
             <AdminTopBar />
-            <div className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
+            <div className="p-4 md:p-6 max-w-4xl mx-auto">
                 <div className="flex items-center gap-4 mb-6">
-                    <Link
-                        href="/admin/properties"
-                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        Back
+                    <Link href="/admin/properties" className="p-2 hover:bg-slate-800 rounded-lg">
+                        <ArrowLeft className="w-5 h-5 text-white" />
                     </Link>
                     <h1 className="text-2xl font-bold text-white">Add New Property</h1>
                 </div>
 
                 {message && (
-                    <div className={`mb-6 p-4 rounded-xl ${message.type === "success" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300" : "bg-rose-500/10 border border-rose-500/30 text-rose-300"}`}>
+                    <div className={`mb-4 p-4 rounded-xl ${message.type === "error" ? "bg-red-500/20 border border-red-500/30 text-red-300" : "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300"}`}>
                         {message.text}
                     </div>
                 )}
 
-                {/* Tabs */}
-                <div className="flex flex-wrap gap-2 mb-6">
-                    {([
-                        { id: "basic", label: "Basic Info" },
-                        { id: "details", label: "Details" },
-                        { id: "caretaker", label: "Caretaker" },
-                        { id: "faq", label: "FAQ & Rules" },
-                    ] as { id: TabType; label: string }[]).map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
-                                activeTab === tab.id
-                                    ? "bg-[#0066FF] text-white"
-                                    : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
-                            }`}
-                        >
-                            {getTabIcon(tab.id)}
-                            {tab.label}
-                        </button>
+                {/* Step Indicator */}
+                <div className="flex items-center gap-2 mb-6 overflow-x-auto">
+                    {STEPS.map((s, i) => (
+                        <div key={s.id} className="flex items-center">
+                            <button onClick={() => setStep(s.id)} className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap ${step === s.id ? "bg-[#0066FF] text-white" : "bg-slate-800 text-slate-400"}`}>
+                                <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-sm font-medium">{s.number}</span>
+                                <span className="hidden sm:inline">{s.label}</span>
+                            </button>
+                            {i < 3 && <ChevronRight className="w-4 h-4 text-slate-600 mx-1" />}
+                        </div>
                     ))}
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Basic Info Tab */}
-                    {activeTab === "basic" && (
-                        <div className="space-y-6">
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                    <Home className="w-5 h-5 text-[#0066FF]" />
-                                    Section A — Basic House Information
-                                </h2>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {/* Property Name */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Property Name <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="text"
-                                            value={formData.name}
-                                            onChange={(e) => handleChange("name", e.target.value)}
-                                            placeholder="e.g., Sunset Apartments"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
+                <div className="bg-slate-900 rounded-2xl p-6">
+                    {step === "basic" && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-semibold text-white flex items-center gap-2"><Home className="w-5 h-5" /> Basic Information</h2>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-1">Property Name *</label>
+                                <input type="text" value={data.name} onChange={e => setField("name", e.target.value)} className={inputClass("name")} placeholder="Enter property name" />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-1">Location *</label>
+                                {!showCustomLoc ? (
+                                    <select value={data.location} onChange={e => { if (e.target.value === "custom") setShowCustomLoc(true); else setField("location", e.target.value); }} className={inputClass("location")}>
+                                        <option value="">Select location</option>
+                                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                                        <option value="custom">+ Add Custom Location</option>
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input type="text" value={data.location} onChange={e => setField("location", e.target.value)} className={inputClass("location")} placeholder="Enter custom location" />
+                                        <button onClick={() => setShowCustomLoc(false)} className="px-3 py-2 bg-slate-700 text-white rounded-xl text-sm">Use List</button>
                                     </div>
-
-                                    {/* Location */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Location <span className="text-rose-400">*</span>
-                                        </label>
-                                        {!showAddLocation ? (
-                                            <select
-                                                value={locationInput}
-                                                onChange={(e) => {
-                                                    if (e.target.value === "__add_new__") {
-                                                        setShowAddLocation(true);
-                                                        setLocationInput("");
-                                                    } else {
-                                                        setLocationInput(e.target.value);
-                                                    }
-                                                }}
-                                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                            >
-                                                <option value="">Select location...</option>
-                                                {PREDEFINED_LOCATIONS.map(loc => (
-                                                    <option key={loc} value={loc}>{loc}</option>
-                                                ))}
-                                                <option value="__add_new__">+ Add another location</option>
-                                            </select>
-                                        ) : (
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={customLocation}
-                                                    onChange={(e) => setCustomLocation(e.target.value)}
-                                                    placeholder="Enter new location..."
-                                                    className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setShowAddLocation(false);
-                                                        setCustomLocation("");
-                                                        setLocationInput("");
-                                                    }}
-                                                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Property Type */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Property Type <span className="text-rose-400">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.property_type}
-                                            onChange={(e) => handleChange("property_type", e.target.value as CreatePropertyPayload["property_type"])}
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                        >
-                                            {PROPERTY_TYPES.map(type => (
-                                                <option key={type.value} value={type.value}>{type.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Monthly Rent */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Monthly Rent (KES) <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="number"
-                                            min="1"
-                                            value={formData.monthly_rent || ""}
-                                            onChange={(e) => handleChange("monthly_rent", parseFloat(e.target.value) || 0)}
-                                            placeholder="e.g., 8000"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Description */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm text-slate-400 mb-1">Description</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={(e) => handleChange("description", e.target.value)}
-                                            placeholder="Describe the property..."
-                                            rows={3}
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none resize-none"
-                                        />
-                                    </div>
-
-                                    {/* Nearby School */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">Nearby School or Institution</label>
-                                        <input
-                                            type="text"
-                                            value={formData.nearby_school_or_institution}
-                                            onChange={(e) => handleChange("nearby_school_or_institution", e.target.value)}
-                                            placeholder="e.g., USIU-Africa"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Landmark */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">Landmark</label>
-                                        <input
-                                            type="text"
-                                            value={formData.landmark}
-                                            onChange={(e) => handleChange("landmark", e.target.value)}
-                                            placeholder="e.g., Near Thika Road Mall"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Contact Phone */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">Contact Phone</label>
-                                        <input
-                                            type="tel"
-                                            value={formData.contact_phone}
-                                            onChange={(e) => handleChange("contact_phone", e.target.value)}
-                                            placeholder="e.g., +254712345678"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Available From */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">Available From</label>
-                                        <input
-                                            type="date"
-                                            value={formData.available_from}
-                                            onChange={(e) => handleChange("available_from", e.target.value)}
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Logo URL */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">Logo URL</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="url"
-                                                value={formData.logo_url}
-                                                onChange={(e) => handleChange("logo_url", e.target.value)}
-                                                placeholder="https://..."
-                                                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Cover Photo URL */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">Cover Photo URL</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="url"
-                                                value={formData.cover_photo_url}
-                                                onChange={(e) => handleChange("cover_photo_url", e.target.value)}
-                                                placeholder="https://..."
-                                                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Property Type</label>
+                                    <select value={data.property_type} onChange={e => setField("property_type", e.target.value)} className={inputClass("property_type")}>
+                                        {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Monthly Rent *</label>
+                                    <input type="number" value={data.monthly_rent || ""} onChange={e => setField("monthly_rent", parseFloat(e.target.value) || 0)} className={inputClass("monthly_rent")} placeholder="0" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-1">Description</label>
+                                <textarea value={data.description} onChange={e => setField("description", e.target.value)} className={inputClass("description", "h-24 resize-none")} placeholder="Property description" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Nearby School</label>
+                                    <input type="text" value={data.nearby_school} onChange={e => setField("nearby_school", e.target.value)} className={inputClass("nearby_school")} placeholder="School name" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Landmark</label>
+                                    <input type="text" value={data.landmark} onChange={e => setField("landmark", e.target.value)} className={inputClass("landmark")} placeholder="Nearby landmark" />
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Details Tab */}
-                    {activeTab === "details" && (
-                        <div className="space-y-6">
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                    <Building2 className="w-5 h-5 text-[#0066FF]" />
-                                    Section B — Details
-                                </h2>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {/* Number of Units */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Number of Units <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="number"
-                                            min="1"
-                                            value={formData.number_of_units || ""}
-                                            onChange={(e) => handleChange("number_of_units", parseInt(e.target.value) || 0)}
-                                            placeholder="e.g., 10"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                        <p className="text-xs text-slate-500 mt-1">This many units will be auto-generated</p>
-                                    </div>
-
-                                    {/* Room Space */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Room Space (sqm) <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="number"
-                                            min="1"
-                                            step="0.1"
-                                            value={formData.room_space_sqm || ""}
-                                            onChange={(e) => handleChange("room_space_sqm", parseFloat(e.target.value) || 0)}
-                                            placeholder="e.g., 15.5"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Deposit Amount */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Deposit Amount (KES) <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="number"
-                                            min="0"
-                                            value={formData.deposit_amount || ""}
-                                            onChange={(e) => handleChange("deposit_amount", parseFloat(e.target.value) || 0)}
-                                            placeholder="e.g., 4000"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Electricity Payment */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Electricity Payment <span className="text-rose-400">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.electricity_payment}
-                                            onChange={(e) => handleChange("electricity_payment", e.target.value as CreatePropertyPayload["electricity_payment"])}
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                        >
-                                            {ELECTRICITY_OPTIONS.map(opt => (
-                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Water Availability */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Water Availability (days/week) <span className="text-rose-400">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.water_availability_days_per_week}
-                                            onChange={(e) => handleChange("water_availability_days_per_week", parseInt(e.target.value))}
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                        >
-                                            {WATER_DAYS_OPTIONS.map(opt => (
-                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Water Source */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Water Source <span className="text-rose-400">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.water_source}
-                                            onChange={(e) => handleChange("water_source", e.target.value as CreatePropertyPayload["water_source"])}
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                        >
-                                            {WATER_SOURCE_OPTIONS.map(opt => (
-                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Gate Hours */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Gate Hours <span className="text-rose-400">*</span>
-                                        </label>
-                                        <div className="flex items-center gap-4">
-                                            <input
-                                                type="time"
-                                                value={formData.gate_hours_from}
-                                                onChange={(e) => handleChange("gate_hours_from", e.target.value)}
-                                                className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                            />
-                                            <span className="text-slate-400">to</span>
-                                            <input
-                                                type="time"
-                                                value={formData.gate_hours_to}
-                                                onChange={(e) => handleChange("gate_hours_to", e.target.value)}
-                                                className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-[#0066FF] focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Toggles Row */}
-                                    <div className="md:col-span-2 flex flex-wrap gap-6">
-                                        {/* Security Verified */}
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.security_verified}
-                                                onChange={(e) => handleChange("security_verified", e.target.checked)}
-                                                className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-[#0066FF] focus:ring-[#0066FF]"
-                                            />
-                                            <span className="text-slate-300">Security Verified</span>
-                                        </label>
-
-                                        {/* Returnable Deposit */}
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.return_deposit}
-                                                onChange={(e) => handleChange("return_deposit", e.target.checked)}
-                                                className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-[#0066FF] focus:ring-[#0066FF]"
-                                            />
-                                            <span className="text-slate-300">Returnable Deposit</span>
-                                        </label>
-
-                                        {/* Parking Available */}
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.parking_available}
-                                                onChange={(e) => handleChange("parking_available", e.target.checked)}
-                                                className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-[#0066FF] focus:ring-[#0066FF]"
-                                            />
-                                            <span className="text-slate-300">Parking Available</span>
-                                        </label>
-                                    </div>
-
-                                    {/* Coordinates */}
-                                    <div className="md:col-span-2 pt-4 border-t border-slate-800">
-                                        <h3 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
-                                            <MapPin className="w-4 h-4" />
-                                            Coordinates (for map location)
-                                        </h3>
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm text-slate-400 mb-1">
-                                                    Latitude <span className="text-rose-400">*</span>
-                                                </label>
-                                                <input
-                                                    required
-                                                    type="number"
-                                                    step="0.00000001"
-                                                    min="-90"
-                                                    max="90"
-                                                    value={formData.latitude || ""}
-                                                    onChange={(e) => handleChange("latitude", parseFloat(e.target.value) || 0)}
-                                                    placeholder="e.g., -1.2189"
-                                                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm text-slate-400 mb-1">
-                                                    Longitude <span className="text-rose-400">*</span>
-                                                </label>
-                                                <input
-                                                    required
-                                                    type="number"
-                                                    step="0.00000001"
-                                                    min="-180"
-                                                    max="180"
-                                                    value={formData.longitude || ""}
-                                                    onChange={(e) => handleChange("longitude", parseFloat(e.target.value) || 0)}
-                                                    placeholder="e.g., 36.8901"
-                                                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                    {step === "details" && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-semibold text-white flex items-center gap-2"><Home className="w-5 h-5" /> Property Details</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Number of Units *</label>
+                                    <input type="number" value={data.number_of_units || ""} onChange={e => setField("number_of_units", parseInt(e.target.value) || 0)} className={inputClass("number_of_units")} placeholder="0" />
                                 </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Room Space (sqm) *</label>
+                                    <input type="number" value={data.room_space_sqm || ""} onChange={e => setField("room_space_sqm", parseFloat(e.target.value) || 0)} className={inputClass("room_space_sqm")} placeholder="0" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Deposit Amount</label>
+                                    <input type="number" value={data.deposit_amount || ""} onChange={e => setField("deposit_amount", parseFloat(e.target.value) || 0)} className={inputClass("deposit_amount")} placeholder="0" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Electricity</label>
+                                    <select value={data.electricity_payment} onChange={e => setField("electricity_payment", e.target.value)} className={inputClass("electricity_payment")}>
+                                        {ELECTRICITY_OPTIONS.map(o => <option key={o} value={o}>{o.replace("_", " ")}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Water Source</label>
+                                    <select value={data.water_source} onChange={e => setField("water_source", e.target.value)} className={inputClass("water_source")}>
+                                        {WATER_SOURCES.map(w => <option key={w} value={w}>{w}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Water Days/Week</label>
+                                    <select value={data.water_availability_days} onChange={e => setField("water_availability_days", parseInt(e.target.value))} className={inputClass("water_availability_days")}>
+                                        {[1,2,3,4,5,6,7].map(d => <option key={d} value={d}>{d} day{d>1?"s":""}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Gate Opens</label>
+                                    <input type="time" value={data.gate_hours_from} onChange={e => setField("gate_hours_from", e.target.value)} className={inputClass("gate_hours_from")} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Gate Closes</label>
+                                    <input type="time" value={data.gate_hours_to} onChange={e => setField("gate_hours_to", e.target.value)} className={inputClass("gate_hours_to")} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Latitude</label>
+                                    <input type="number" step="any" value={data.latitude || ""} onChange={e => setField("latitude", parseFloat(e.target.value) || 0)} className={inputClass("latitude")} placeholder="0" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Longitude</label>
+                                    <input type="number" step="any" value={data.longitude || ""} onChange={e => setField("longitude", parseFloat(e.target.value) || 0)} className={inputClass("longitude")} placeholder="0" />
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 text-slate-300">
+                                    <input type="checkbox" checked={data.security_verified} onChange={e => setField("security_verified", e.target.checked)} className="w-4 h-4 rounded" />
+                                    Security Verified
+                                </label>
+                                <label className="flex items-center gap-2 text-slate-300">
+                                    <input type="checkbox" checked={data.return_deposit} onChange={e => setField("return_deposit", e.target.checked)} className="w-4 h-4 rounded" />
+                                    Return Deposit
+                                </label>
+                                <label className="flex items-center gap-2 text-slate-300">
+                                    <input type="checkbox" checked={data.parking_available} onChange={e => setField("parking_available", e.target.checked)} className="w-4 h-4 rounded" />
+                                    Parking
+                                </label>
                             </div>
                         </div>
                     )}
 
-                    {/* Caretaker Tab */}
-                    {activeTab === "caretaker" && (
-                        <div className="space-y-6">
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                    <User className="w-5 h-5 text-[#0066FF]" />
-                                    Section C — Caretaker Information
-                                </h2>
-                                <p className="text-sm text-slate-500 mb-4">
-                                    A caretaker employee record will be created. If the email already exists, the registration will fail.
-                                </p>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {/* First Name */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            First Name <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="text"
-                                            value={formData.caretaker_first_name}
-                                            onChange={(e) => handleChange("caretaker_first_name", e.target.value)}
-                                            placeholder="e.g., John"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Last Name */}
-                                    <div>
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Last Name <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="text"
-                                            value={formData.caretaker_last_name}
-                                            onChange={(e) => handleChange("caretaker_last_name", e.target.value)}
-                                            placeholder="e.g., Doe"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {/* Email */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Email <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="email"
-                                            value={formData.caretaker_email}
-                                            onChange={(e) => handleChange("caretaker_email", e.target.value)}
-                                            placeholder="caretaker@example.com"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                        <p className="text-xs text-amber-400 mt-1">
-                                            Duplicate email will fail with: &quot;Caretaker with this email already exists.&quot;
-                                        </p>
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm text-slate-400 mb-1">
-                                            Phone <span className="text-rose-400">*</span>
-                                        </label>
-                                        <input
-                                            required
-                                            type="tel"
-                                            value={formData.caretaker_phone}
-                                            onChange={(e) => handleChange("caretaker_phone", e.target.value)}
-                                            placeholder="e.g., +254712345678"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
-                                    </div>
+                    {step === "caretaker" && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-semibold text-white flex items-center gap-2"><User className="w-5 h-5" /> Caretaker Information</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">First Name *</label>
+                                    <input type="text" value={data.caretaker_first_name} onChange={e => setField("caretaker_first_name", e.target.value)} className={inputClass("caretaker_first_name")} placeholder="First name" />
                                 </div>
+                                <div>
+                                    <label className="block text-sm text-slate-400 mb-1">Last Name *</label>
+                                    <input type="text" value={data.caretaker_last_name} onChange={e => setField("caretaker_last_name", e.target.value)} className={inputClass("caretaker_last_name")} placeholder="Last name" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-1">Email *</label>
+                                <input type="email" value={data.caretaker_email} onChange={e => setField("caretaker_email", e.target.value)} className={inputClass("caretaker_email")} placeholder="caretaker@email.com" />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-1">Phone *</label>
+                                <input type="tel" value={data.caretaker_phone} onChange={e => setField("caretaker_phone", e.target.value)} className={inputClass("caretaker_phone")} placeholder="Phone number" />
                             </div>
                         </div>
                     )}
 
-                    {/* FAQ & Rules Tab */}
-                    {activeTab === "faq" && (
-                        <div className="space-y-6">
-                            {/* FAQ Section */}
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                    <HelpCircle className="w-5 h-5 text-[#0066FF]" />
-                                    Section D — FAQ
-                                </h2>
-
-                                <div className="space-y-4">
-                                    {faqInputs.length === 0 && (
-                                        <p className="text-sm text-slate-500 italic">No FAQs added yet.</p>
-                                    )}
-                                    {faqInputs.map((faq, index) => (
-                                        <div key={index} className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm font-medium text-slate-300">FAQ #{index + 1}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeFaq(index)}
-                                                    className="text-rose-400 hover:text-rose-300"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={faq.question}
-                                                onChange={(e) => updateFaq(index, "question", e.target.value)}
-                                                placeholder="Question"
-                                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                            />
-                                            <textarea
-                                                value={faq.answer}
-                                                onChange={(e) => updateFaq(index, "answer", e.target.value)}
-                                                placeholder="Answer"
-                                                rows={2}
-                                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none resize-none"
-                                            />
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={addFaq}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Add FAQ
+                    {step === "faq" && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-semibold text-white flex items-center gap-2"><HelpCircle className="w-5 h-5" /> FAQ & Rules</h2>
+                            
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm text-slate-400">Frequently Asked Questions</label>
+                                    <button onClick={() => setField("faqs", [...data.faqs, { question: "", answer: "" }])} className="flex items-center gap-1 px-3 py-1 bg-[#0066FF]/20 text-[#0066FF] rounded-lg text-sm hover:bg-[#0066FF]/30">
+                                        <Plus className="w-4 h-4" /> Add FAQ
                                     </button>
                                 </div>
-                            </div>
-
-                            {/* Rules Section */}
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-[#0066FF]" />
-                                    Section D — Property Rules
-                                </h2>
-
-                                <div className="space-y-4">
-                                    {ruleInputs.length === 0 && (
-                                        <p className="text-sm text-slate-500 italic">No rules added yet.</p>
-                                    )}
-                                    {ruleInputs.map((rule, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={rule.rule_text}
-                                                onChange={(e) => updateRule(index, e.target.value)}
-                                                placeholder={`Rule #${index + 1}`}
-                                                className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeRule(index)}
-                                                className="text-rose-400 hover:text-rose-300 px-2"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
+                                <div className="space-y-2">
+                                    {data.faqs.map((faq, i) => (
+                                        <div key={i} className="bg-slate-800 p-3 rounded-xl">
+                                            <input type="text" value={faq.question} onChange={e => { const newFaqs = [...data.faqs]; newFaqs[i].question = e.target.value; setField("faqs", newFaqs); }} className="w-full mb-2 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm" placeholder="Question" />
+                                            <textarea value={faq.answer} onChange={e => { const newFaqs = [...data.faqs]; newFaqs[i].answer = e.target.value; setField("faqs", newFaqs); }} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm resize-none h-16" placeholder="Answer" />
+                                            <button onClick={() => setField("faqs", data.faqs.filter((_, idx) => idx !== i))} className="mt-2 flex items-center gap-1 text-red-400 text-sm hover:text-red-300">
+                                                <Trash2 className="w-4 h-4" /> Remove
                                             </button>
                                         </div>
                                     ))}
-                                    <button
-                                        type="button"
-                                        onClick={addRule}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Add Rule
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm text-slate-400">Property Rules</label>
+                                    <button onClick={() => setField("rules", [...data.rules, { text: "" }])} className="flex items-center gap-1 px-3 py-1 bg-[#0066FF]/20 text-[#0066FF] rounded-lg text-sm hover:bg-[#0066FF]/30">
+                                        <Plus className="w-4 h-4" /> Add Rule
                                     </button>
+                                </div>
+                                <div className="space-y-2">
+                                    {data.rules.map((rule, i) => (
+                                        <div key={i} className="flex gap-2">
+                                            <input type="text" value={rule.text} onChange={e => { const newRules = [...data.rules]; newRules[i].text = e.target.value; setField("rules", newRules); }} className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm" placeholder="Enter rule" />
+                                            <button onClick={() => setField("rules", data.rules.filter((_, idx) => idx !== i))} className="px-3 text-red-400 hover:text-red-300"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Submit Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-800">
-                        <Link
-                            href="/admin/properties"
-                            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-colors text-center"
-                        >
-                            Cancel
-                        </Link>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 px-6 py-3 bg-[#0066FF] hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl transition-colors font-medium"
-                        >
-                            {loading ? "Creating Property..." : "Create Property"}
-                        </button>
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-4 mt-8">
+                        {step !== "basic" && (
+                            <button onClick={prevStep} className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl">
+                                <ChevronLeft className="w-5 h-5" /> Back
+                            </button>
+                        )}
+                        {step !== "faq" ? (
+                            <button onClick={nextStep} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[#0066FF] hover:bg-blue-600 text-white rounded-xl font-medium">
+                                Next Step <ChevronRight className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <button onClick={submit} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white rounded-xl font-medium">
+                                {loading ? "Creating..." : "Create Property"}
+                            </button>
+                        )}
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );

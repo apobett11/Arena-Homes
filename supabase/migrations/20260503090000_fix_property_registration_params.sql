@@ -268,6 +268,7 @@ BEGIN
       property_id,
       room_number,
       room_type,
+      type,
       base_price,
       status,
       availability_status,
@@ -277,6 +278,7 @@ BEGIN
     ) VALUES (
       v_property_id,
       v_unit_number,
+      p_property_type,
       p_property_type,
       p_monthly_rent,
       'VACANT',
@@ -372,3 +374,65 @@ GRANT EXECUTE ON FUNCTION public.create_property_complete TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_property_complete TO anon;
 
 COMMENT ON FUNCTION public.create_property_complete IS 'Atomic property creation with caretaker, units, FAQ, and rules. All required params first, optional params with defaults last.';
+
+-- ============================================================================
+-- JSON WRAPPER FUNCTION - Accepts single JSON payload parameter
+-- ============================================================================
+
+DROP FUNCTION IF EXISTS public.create_property_complete_json;
+
+CREATE OR REPLACE FUNCTION public.create_property_complete_json(
+  p_payload jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_data jsonb;
+BEGIN
+  v_data := p_payload;
+  
+  RETURN public.create_property_complete(
+    -- Required params (1-21)
+    v_data->>'name',
+    v_data->>'location',
+    v_data->>'property_type',
+    (v_data->>'monthly_rent')::numeric,
+    (v_data->>'number_of_units')::integer,
+    v_data->>'electricity_payment',
+    (v_data->>'water_availability_days_per_week')::integer,
+    v_data->>'water_source',
+    (v_data->>'room_space_sqm')::numeric,
+    (v_data->>'deposit_amount')::numeric,
+    (v_data->>'security_verified')::boolean,
+    (v_data->>'return_deposit')::boolean,
+    (v_data->>'gate_hours_from')::time,
+    (v_data->>'gate_hours_to')::time,
+    (v_data->>'parking_available')::boolean,
+    (v_data->>'latitude')::numeric,
+    (v_data->>'longitude')::numeric,
+    v_data->>'caretaker_first_name',
+    v_data->>'caretaker_last_name',
+    v_data->>'caretaker_email',
+    v_data->>'caretaker_phone',
+    -- Optional params (22-31)
+    v_data->>'description',
+    v_data->>'nearby_school_or_institution',
+    v_data->>'landmark',
+    v_data->>'contact_phone',
+    COALESCE((v_data->>'available_from')::date, CURRENT_DATE),
+    v_data->>'logo_url',
+    v_data->>'cover_photo_url',
+    COALESCE(v_data->'faqs', '[]'::jsonb),
+    COALESCE(v_data->'rules', '[]'::jsonb),
+    NULL  -- created_by_admin_id
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.create_property_complete_json TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_property_complete_json TO anon;
+
+COMMENT ON FUNCTION public.create_property_complete_json IS 'JSON wrapper for property creation - accepts single JSON payload parameter';
