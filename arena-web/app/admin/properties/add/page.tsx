@@ -6,6 +6,7 @@ import AdminTopBar from "@/components/admin/AdminTopBar";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { ArrowLeft, CheckCircle, Plus, Trash2, Home, User, HelpCircle, ChevronRight, ChevronLeft, MapPin } from "lucide-react";
 import Link from "next/link";
+import { MapCoordinatePicker } from "@/components/MapCoordinatePicker";
 
 type StepType = "basic" | "details" | "caretaker" | "faq";
 
@@ -94,7 +95,7 @@ export default function AddPropertyPage() {
     const [data, setData] = useState<FormData>(DEFAULT_DATA);
     const [errors, setErrors] = useState<Set<string>>(new Set());
     const [showCustomLoc, setShowCustomLoc] = useState(false);
-    const [showMapPicker, setShowMapPicker] = useState(false);
+    const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
     const setField = (field: keyof FormData, value: any) => {
         setData(prev => ({ ...prev, [field]: value }));
@@ -191,9 +192,9 @@ export default function AddPropertyPage() {
         }
     };
 
-    const handleMapSelect = useCallback((lat: number, lng: number) => {
-        setData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-        setShowMapPicker(false);
+    const handleMapConfirm = useCallback((coords: { latitude: number; longitude: number; formattedAddress?: string }) => {
+        setData(prev => ({ ...prev, latitude: coords.latitude, longitude: coords.longitude }));
+        setIsMapPickerOpen(false);
     }, []);
 
     if (created) {
@@ -367,25 +368,10 @@ export default function AddPropertyPage() {
                             <div className="bg-slate-800 p-4 rounded-xl">
                                 <div className="flex items-center justify-between mb-3">
                                     <label className="block text-sm text-slate-400">Location Coordinates</label>
-                                    <button onClick={() => setShowMapPicker(true)} className="flex items-center gap-2 px-3 py-1.5 bg-[#0066FF]/20 text-[#0066FF] rounded-lg text-sm hover:bg-[#0066FF]/30">
-                                        <MapPin className="w-4 h-4" /> Pick on Map
+                                    <button onClick={() => setIsMapPickerOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-[#0066FF]/20 text-[#0066FF] rounded-lg text-sm hover:bg-[#0066FF]/30">
+                                        <MapPin className="w-4 h-4" /> Pick coordinates from map
                                     </button>
                                 </div>
-                                {showMapPicker && (
-                                    <div className="mb-4 p-4 bg-slate-700 rounded-xl">
-                                        <p className="text-sm text-slate-400 mb-2">Click on the map to select location (simulated):</p>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {/* Simulated map location presets */}
-                                            <button onClick={() => handleMapSelect(-1.2921, 36.8219)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Nairobi CBD</button>
-                                            <button onClick={() => handleMapSelect(-1.2654, 36.8041)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Westlands</button>
-                                            <button onClick={() => handleMapSelect(-1.3032, 36.8263)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Kilimani</button>
-                                            <button onClick={() => handleMapSelect(-1.2548, 36.8485)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Parklands</button>
-                                            <button onClick={() => handleMapSelect(-1.2845, 36.8589)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Eastleigh</button>
-                                            <button onClick={() => handleMapSelect(-1.3234, 36.8745)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">South B</button>
-                                        </div>
-                                        <button onClick={() => setShowMapPicker(false)} className="mt-2 text-sm text-slate-400 hover:text-white">Cancel</button>
-                                    </div>
-                                )}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs text-slate-500 mb-1">Latitude</label>
@@ -397,6 +383,15 @@ export default function AddPropertyPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Google Maps Coordinate Picker Modal */}
+                            <MapCoordinatePicker
+                                isOpen={isMapPickerOpen}
+                                onClose={() => setIsMapPickerOpen(false)}
+                                onConfirm={handleMapConfirm}
+                                initialLatitude={data.latitude || undefined}
+                                initialLongitude={data.longitude || undefined}
+                            />
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 text-slate-300">
                                     <input type="checkbox" checked={data.security_verified} onChange={e => setField("security_verified", e.target.checked)} className="w-4 h-4 rounded" />

@@ -1,9 +1,17 @@
 -- ============================================================================
 -- ARENA HOMES - FIX PROPERTY REGISTRATION FUNCTION PARAMETERS
--- Version: 1.0.1
+-- Version: 1.0.2
 -- Purpose: Reorder parameters so required params come first (no defaults after defaults)
--- Date: May 3, 2026
+--          Add caretaker_temp_password to properties for admin visibility
+-- Date: May 4, 2026
 -- ============================================================================
+
+-- ============================================================================
+-- ADD CARETAKER TEMP PASSWORD COLUMN TO PROPERTIES
+-- ============================================================================
+
+ALTER TABLE public.properties 
+ADD COLUMN IF NOT EXISTS caretaker_temp_password text;
 
 -- ============================================================================
 -- DROP AND RECREATE FUNCTION WITH CORRECT PARAMETER ORDER
@@ -195,6 +203,7 @@ BEGIN
     longitude,
     caretaker_employee_id,
     caretaker_user_id,
+    caretaker_temp_password,
     nearby_school_or_institution,
     landmark,
     contact_phone,
@@ -230,6 +239,7 @@ BEGIN
     p_longitude,
     v_caretaker_employee_id,
     v_caretaker_user_id,
+    v_temp_password,
     p_nearby_school_or_institution,
     p_landmark,
     p_contact_phone,
