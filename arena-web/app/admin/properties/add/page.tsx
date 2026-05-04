@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { ArrowLeft, CheckCircle, Plus, Trash2, Home, User, HelpCircle, ChevronRight, ChevronLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle, Plus, Trash2, Home, User, HelpCircle, ChevronRight, ChevronLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 
 type StepType = "basic" | "details" | "caretaker" | "faq";
@@ -27,8 +27,8 @@ interface FormData {
     property_type: string;
     monthly_rent: number;
     description: string;
-    nearby_school: string;
-    landmark: string;
+    nearby_plot_institution: string;
+    gate_color: string;
     contact_phone: string;
     available_from: string;
     number_of_units: number;
@@ -36,7 +36,8 @@ interface FormData {
     water_availability_days: number;
     water_source: string;
     room_space_sqm: number;
-    deposit_amount: number;
+    has_rent_deposit: boolean;
+    rent_deposit_amount: number;
     security_verified: boolean;
     return_deposit: boolean;
     gate_hours_from: string;
@@ -58,8 +59,8 @@ const DEFAULT_DATA: FormData = {
     property_type: "Single Room",
     monthly_rent: 0,
     description: "",
-    nearby_school: "",
-    landmark: "",
+    nearby_plot_institution: "",
+    gate_color: "",
     contact_phone: "",
     available_from: new Date().toISOString().split("T")[0],
     number_of_units: 1,
@@ -67,7 +68,8 @@ const DEFAULT_DATA: FormData = {
     water_availability_days: 7,
     water_source: "Tank",
     room_space_sqm: 0,
-    deposit_amount: 0,
+    has_rent_deposit: false,
+    rent_deposit_amount: 0,
     security_verified: false,
     return_deposit: true,
     gate_hours_from: "06:00",
@@ -92,6 +94,7 @@ export default function AddPropertyPage() {
     const [data, setData] = useState<FormData>(DEFAULT_DATA);
     const [errors, setErrors] = useState<Set<string>>(new Set());
     const [showCustomLoc, setShowCustomLoc] = useState(false);
+    const [showMapPicker, setShowMapPicker] = useState(false);
 
     const setField = (field: keyof FormData, value: any) => {
         setData(prev => ({ ...prev, [field]: value }));
@@ -164,7 +167,18 @@ export default function AddPropertyPage() {
         setLoading(true);
         try {
             const supabase = getSupabaseClient() as any;
-            const payload = { p_payload: data };
+            // Transform payload to match SQL expected field names
+            const payload = {
+                p_payload: {
+                    ...data,
+                    // Map frontend field names to SQL column names
+                    water_availability_days_per_week: data.water_availability_days,
+                    nearby_school_or_institution: data.nearby_plot_institution,
+                    landmark: data.gate_color,
+                    // Deposit logic: if no deposit, send 0
+                    deposit_amount: data.has_rent_deposit ? data.rent_deposit_amount : 0,
+                }
+            };
             const response = await (supabase.rpc as any)("create_property_complete_json", payload);
             if (response.error) throw response.error;
             const res = response.data as { success: boolean; error?: string; property_id?: string; caretaker_temp_password?: string; units_created?: number };
@@ -176,6 +190,11 @@ export default function AddPropertyPage() {
             setLoading(false);
         }
     };
+
+    const handleMapSelect = useCallback((lat: number, lng: number) => {
+        setData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+        setShowMapPicker(false);
+    }, []);
 
     if (created) {
         return (
@@ -273,12 +292,12 @@ export default function AddPropertyPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-slate-400 mb-1">Nearby School</label>
-                                    <input type="text" value={data.nearby_school} onChange={e => setField("nearby_school", e.target.value)} className={inputClass("nearby_school")} placeholder="School name" />
+                                    <label className="block text-sm text-slate-400 mb-1">Nearby Plot/Institution</label>
+                                    <input type="text" value={data.nearby_plot_institution} onChange={e => setField("nearby_plot_institution", e.target.value)} className={inputClass("nearby_plot_institution")} placeholder="Plot or institution name" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-400 mb-1">Landmark</label>
-                                    <input type="text" value={data.landmark} onChange={e => setField("landmark", e.target.value)} className={inputClass("landmark")} placeholder="Nearby landmark" />
+                                    <label className="block text-sm text-slate-400 mb-1">Gate Color</label>
+                                    <input type="text" value={data.gate_color} onChange={e => setField("gate_color", e.target.value)} className={inputClass("gate_color")} placeholder="e.g. Blue, Green" />
                                 </div>
                             </div>
                         </div>
@@ -299,8 +318,20 @@ export default function AddPropertyPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-slate-400 mb-1">Deposit Amount</label>
-                                    <input type="number" value={data.deposit_amount || ""} onChange={e => setField("deposit_amount", parseFloat(e.target.value) || 0)} className={inputClass("deposit_amount")} placeholder="0" />
+                                    <label className="block text-sm text-slate-400 mb-1">Rent Deposit Required?</label>
+                                    <div className="flex gap-4 mt-2">
+                                        <label className="flex items-center gap-2 text-slate-300">
+                                            <input type="radio" name="rent_deposit" checked={!data.has_rent_deposit} onChange={() => setField("has_rent_deposit", false)} className="w-4 h-4" />
+                                            No
+                                        </label>
+                                        <label className="flex items-center gap-2 text-slate-300">
+                                            <input type="radio" name="rent_deposit" checked={data.has_rent_deposit} onChange={() => setField("has_rent_deposit", true)} className="w-4 h-4" />
+                                            Yes
+                                        </label>
+                                    </div>
+                                    {data.has_rent_deposit && (
+                                        <input type="number" value={data.rent_deposit_amount || ""} onChange={e => setField("rent_deposit_amount", parseFloat(e.target.value) || 0)} className={inputClass("rent_deposit_amount", "mt-2")} placeholder="Deposit amount" />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm text-slate-400 mb-1">Electricity</label>
@@ -333,14 +364,37 @@ export default function AddPropertyPage() {
                                     <input type="time" value={data.gate_hours_to} onChange={e => setField("gate_hours_to", e.target.value)} className={inputClass("gate_hours_to")} />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm text-slate-400 mb-1">Latitude</label>
-                                    <input type="number" step="any" value={data.latitude || ""} onChange={e => setField("latitude", parseFloat(e.target.value) || 0)} className={inputClass("latitude")} placeholder="0" />
+                            <div className="bg-slate-800 p-4 rounded-xl">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-sm text-slate-400">Location Coordinates</label>
+                                    <button onClick={() => setShowMapPicker(true)} className="flex items-center gap-2 px-3 py-1.5 bg-[#0066FF]/20 text-[#0066FF] rounded-lg text-sm hover:bg-[#0066FF]/30">
+                                        <MapPin className="w-4 h-4" /> Pick on Map
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block text-sm text-slate-400 mb-1">Longitude</label>
-                                    <input type="number" step="any" value={data.longitude || ""} onChange={e => setField("longitude", parseFloat(e.target.value) || 0)} className={inputClass("longitude")} placeholder="0" />
+                                {showMapPicker && (
+                                    <div className="mb-4 p-4 bg-slate-700 rounded-xl">
+                                        <p className="text-sm text-slate-400 mb-2">Click on the map to select location (simulated):</p>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {/* Simulated map location presets */}
+                                            <button onClick={() => handleMapSelect(-1.2921, 36.8219)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Nairobi CBD</button>
+                                            <button onClick={() => handleMapSelect(-1.2654, 36.8041)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Westlands</button>
+                                            <button onClick={() => handleMapSelect(-1.3032, 36.8263)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Kilimani</button>
+                                            <button onClick={() => handleMapSelect(-1.2548, 36.8485)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Parklands</button>
+                                            <button onClick={() => handleMapSelect(-1.2845, 36.8589)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">Eastleigh</button>
+                                            <button onClick={() => handleMapSelect(-1.3234, 36.8745)} className="p-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs text-white">South B</button>
+                                        </div>
+                                        <button onClick={() => setShowMapPicker(false)} className="mt-2 text-sm text-slate-400 hover:text-white">Cancel</button>
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-slate-500 mb-1">Latitude</label>
+                                        <input type="number" step="any" value={data.latitude || ""} onChange={e => setField("latitude", parseFloat(e.target.value) || 0)} className={inputClass("latitude")} placeholder="0" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-slate-500 mb-1">Longitude</label>
+                                        <input type="number" step="any" value={data.longitude || ""} onChange={e => setField("longitude", parseFloat(e.target.value) || 0)} className={inputClass("longitude")} placeholder="0" />
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex gap-4">

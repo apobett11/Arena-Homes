@@ -402,7 +402,7 @@ BEGIN
     (v_data->>'monthly_rent')::numeric,
     (v_data->>'number_of_units')::integer,
     v_data->>'electricity_payment',
-    (v_data->>'water_availability_days_per_week')::integer,
+    COALESCE((v_data->>'water_availability_days_per_week')::integer, (v_data->>'water_availability_days')::integer, 7),
     v_data->>'water_source',
     (v_data->>'room_space_sqm')::numeric,
     (v_data->>'deposit_amount')::numeric,
