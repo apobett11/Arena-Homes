@@ -201,6 +201,26 @@ BEGIN
       now(),
       now()
     );
+    
+    -- Manually create profile for caretaker (bypasses trigger RLS issue)
+    INSERT INTO public.profiles (
+      user_id,
+      role_id,
+      email,
+      full_name,
+      is_active,
+      created_at,
+      updated_at
+    ) VALUES (
+      v_caretaker_user_id,
+      'CARETAKER',
+      p_caretaker_email,
+      p_caretaker_first_name || ' ' || p_caretaker_last_name,
+      true,
+      now(),
+      now()
+    )
+    ON CONFLICT (user_id) DO NOTHING;
   ELSE
     -- Auth user exists - update password to new password
     UPDATE auth.users
