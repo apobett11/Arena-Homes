@@ -179,59 +179,33 @@ BEGIN
     -- Generate new user ID
     v_caretaker_user_id := gen_random_uuid();
     
-    -- Create auth user with temp password
+    -- Create auth user with password (matching working pattern from codebase)
     INSERT INTO auth.users (
       id,
-      aud,
       email,
       encrypted_password,
       email_confirmed_at,
       raw_app_meta_data,
       raw_user_meta_data,
       created_at,
-      updated_at,
-      is_sso_user,
-      is_anonymous
+      updated_at
     ) VALUES (
       v_caretaker_user_id,
-      'authenticated',
       p_caretaker_email,
-      extensions.crypt(v_password, extensions.gen_salt('bf')),
-      NOW(),
-      jsonb_build_object('provider', 'email', 'providers', ARRAY['email']),
+      crypt(v_password, gen_salt('bf')),
+      now(),
+      jsonb_build_object('role', 'CARETAKER'),
       jsonb_build_object(
-        'full_name', p_caretaker_first_name || ' ' || p_caretaker_last_name,
-        'role', 'CARETAKER'
+        'full_name', p_caretaker_first_name || ' ' || p_caretaker_last_name
       ),
-      NOW(),
-      NOW(),
-      false,
-      false
-    );
-    
-    -- Create auth identity entry
-    INSERT INTO auth.identities (
-      id,
-      user_id,
-      identity_data,
-      provider,
-      created_at,
-      updated_at,
-      provider_id
-    ) VALUES (
-      gen_random_uuid(),
-      v_caretaker_user_id,
-      jsonb_build_object('sub', v_caretaker_user_id::text, 'email', p_caretaker_email),
-      'email',
-      NOW(),
-      NOW(),
-      p_caretaker_email
+      now(),
+      now()
     );
   ELSE
     -- Auth user exists - update password to new password
     UPDATE auth.users
-    SET encrypted_password = extensions.crypt(v_password, extensions.gen_salt('bf')),
-        updated_at = NOW()
+    SET encrypted_password = crypt(v_password, gen_salt('bf')),
+        updated_at = now()
     WHERE id = v_caretaker_user_id;
   END IF;
   
