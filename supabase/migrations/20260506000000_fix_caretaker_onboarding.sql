@@ -151,7 +151,7 @@ BEGIN
   -- Check if caretaker email already exists in employees
   SELECT id INTO v_caretaker_employee_id
   FROM public.employees
-  WHERE LOWER(email) = LOWER(p_caretaker_email)
+  WHERE email = p_caretaker_email
     AND role_id = 'CARETAKER'
   LIMIT 1;
   
@@ -162,14 +162,14 @@ BEGIN
   -- Check if auth user exists with this email (for linking)
   SELECT id INTO v_caretaker_user_id
   FROM auth.users
-  WHERE LOWER(email) = LOWER(p_caretaker_email)
+  WHERE email = p_caretaker_email
   LIMIT 1;
   
-  -- Generate password (12 character random string with dashes: XXXX-XXXX-XXXX)
-  -- Using single random() source for consistency
-  v_password := upper(substr(md5(random()::text), 1, 4)) || '-' || 
-                     substr(md5(random()::text), 1, 4) || '-' || 
-                     upper(substr(md5(random()::text), 1, 4));
+  -- Generate password ONCE (12 character random string with dashes: XXXX-XXXX-XXXX)
+  -- Single generation, used everywhere
+  v_password := upper(substr(md5(random()::text), 1, 12));
+  -- Format as XXXX-XXXX-XXXX for readability
+  v_password := substr(v_password, 1, 4) || '-' || substr(v_password, 5, 4) || '-' || substr(v_password, 9, 4);
   
   -- ==========================================================================
   -- CREATE OR UPDATE AUTH USER FOR CARETAKER
@@ -195,7 +195,7 @@ BEGIN
     ) VALUES (
       v_caretaker_user_id,
       'authenticated',
-      LOWER(p_caretaker_email),
+      p_caretaker_email,
       extensions.crypt(v_password, extensions.gen_salt('bf')),
       NOW(),
       jsonb_build_object('provider', 'email', 'providers', ARRAY['email']),
@@ -221,11 +221,11 @@ BEGIN
     ) VALUES (
       gen_random_uuid(),
       v_caretaker_user_id,
-      jsonb_build_object('sub', v_caretaker_user_id::text, 'email', LOWER(p_caretaker_email)),
+      jsonb_build_object('sub', v_caretaker_user_id::text, 'email', p_caretaker_email),
       'email',
       NOW(),
       NOW(),
-      LOWER(p_caretaker_email)
+      p_caretaker_email
     );
   ELSE
     -- Auth user exists - update password to new password
@@ -333,7 +333,7 @@ BEGIN
     v_caretaker_user_id,
     'CARETAKER',
     p_caretaker_first_name || ' ' || p_caretaker_last_name,
-    LOWER(p_caretaker_email),
+    p_caretaker_email,
     p_caretaker_phone,
     v_property_id,
     'ACTIVE',
