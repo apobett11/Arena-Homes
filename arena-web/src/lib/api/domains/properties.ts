@@ -210,7 +210,7 @@ export const PropertyApi = {
         id: string; 
         caretakerEmployeeId?: string;
         unitsCreated?: number;
-        caretakerTempPassword?: string;
+        caretaker_password?: string;
         message?: string;
     }> => {
         const supabase = getSupabaseClient() as any;
@@ -285,7 +285,7 @@ export const PropertyApi = {
                 id: result.property_id,
                 caretakerEmployeeId: result.caretaker_employee_id,
                 unitsCreated: result.units_created,
-                caretakerTempPassword: result.caretaker_temp_password,
+                caretaker_password: result.caretaker_password,
                 message: result.message,
             };
         }

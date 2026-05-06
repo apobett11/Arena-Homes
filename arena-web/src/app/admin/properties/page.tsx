@@ -590,6 +590,13 @@ export default function AdminPropertiesPage() {
                                     <p className="text-xs text-slate-500">{selectedProperty.caretaker_phone}</p>
                                 )}
                             </div>
+                            {selectedProperty.caretaker_password && (
+                                <div className="bg-amber-500/10 p-3 rounded-lg col-span-2 border border-amber-500/30">
+                                    <p className="text-xs text-amber-400 mb-1">Caretaker Password (Admin Only)</p>
+                                    <p className="text-lg font-mono text-emerald-400">{selectedProperty.caretaker_password}</p>
+                                    <p className="text-xs text-slate-500 mt-1">Visible until caretaker changes password</p>
+                                </div>
+                            )}
                         </div>
                         <button onClick={closeModal} className="w-full rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">
                             Close

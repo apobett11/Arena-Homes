@@ -55,7 +55,7 @@ export default function AddPropertyPage() {
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [createdProperty, setCreatedProperty] = useState<{ 
         id: string; 
-        caretakerTempPassword?: string;
+        caretaker_password?: string;
         unitsCreated?: number;
     } | null>(null);
 
@@ -257,10 +257,10 @@ export default function AddPropertyPage() {
                                 : "The property has been added to the registry."}
                         </p>
 
-                        {createdProperty.caretakerTempPassword && (
+                        {createdProperty.caretaker_password && (
                             <div className="bg-slate-900/50 rounded-xl p-4 mb-4 text-left">
-                                <p className="text-sm text-slate-400 mb-1">Caretaker Temporary Password</p>
-                                <p className="text-lg font-mono text-emerald-400">{createdProperty.caretakerTempPassword}</p>
+                                <p className="text-sm text-slate-400 mb-1">Caretaker Password</p>
+                                <p className="text-lg font-mono text-emerald-400">{createdProperty.caretaker_password}</p>
                                 <p className="text-xs text-amber-400 mt-2">Save this password - it won&apos;t be shown again!</p>
                             </div>
                         )}

@@ -36,6 +36,7 @@ export interface AdminProperty {
   caretaker_email: string | null;
   caretaker_phone: string | null;
   caretaker_status: EmployeeStatus | null;
+  caretaker_password?: string | null;
   total_units: number;
   occupied_units: number;
   vacant_units: number;
