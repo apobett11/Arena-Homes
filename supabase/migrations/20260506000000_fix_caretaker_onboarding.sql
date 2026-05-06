@@ -129,9 +129,12 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Number of units must be greater than 0');
   END IF;
   
-  IF p_caretaker_email IS NULL OR p_caretaker_email = '' THEN
+  IF p_caretaker_email IS NULL OR TRIM(p_caretaker_email) = '' THEN
     RETURN jsonb_build_object('success', false, 'error', 'Caretaker email is required');
   END IF;
+  
+  -- Normalize email (trim whitespace and lowercase)
+  p_caretaker_email := LOWER(TRIM(p_caretaker_email));
   
   IF p_caretaker_first_name IS NULL OR p_caretaker_first_name = '' THEN
     RETURN jsonb_build_object('success', false, 'error', 'Caretaker first name is required');
@@ -162,10 +165,11 @@ BEGIN
   WHERE LOWER(email) = LOWER(p_caretaker_email)
   LIMIT 1;
   
-  -- Generate password (12 character random string)
+  -- Generate password (12 character random string with dashes: XXXX-XXXX-XXXX)
+  -- Using single random() source for consistency
   v_password := upper(substr(md5(random()::text), 1, 4)) || '-' || 
-                     substr(md5(random()::text), 5, 4) || '-' || 
-                     upper(substr(md5(random()::text), 9, 4));
+                     substr(md5(random()::text), 1, 4) || '-' || 
+                     upper(substr(md5(random()::text), 1, 4));
   
   -- ==========================================================================
   -- CREATE OR UPDATE AUTH USER FOR CARETAKER
@@ -447,8 +451,9 @@ BEGIN
     'property_id', v_property_id,
     'caretaker_employee_id', v_caretaker_employee_id,
     'units_created', p_number_of_units,
-    'caretaker_email', LOWER(p_caretaker_email),
+    'caretaker_email', p_caretaker_email,
     'caretaker_password', v_password,
+    'caretaker_user_id', v_caretaker_user_id,
     'message', 'Property created successfully with ' || p_number_of_units || ' units'
   );
   
