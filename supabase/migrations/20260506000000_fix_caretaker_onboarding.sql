@@ -443,6 +443,24 @@ BEGIN
   END IF;
   
   -- ==========================================================================
+  -- VERIFY AUTH USER EXISTS
+  -- ==========================================================================
+  
+  -- Double-check auth user exists with correct email
+  IF NOT EXISTS (
+    SELECT 1 FROM auth.users 
+    WHERE id = v_caretaker_user_id 
+    AND email = p_caretaker_email
+  ) THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Auth user creation failed - user not found after insert',
+      'caretaker_user_id', v_caretaker_user_id,
+      'caretaker_email', p_caretaker_email
+    );
+  END IF;
+  
+  -- ==========================================================================
   -- RETURN SUCCESS RESULT
   -- ==========================================================================
   
@@ -454,6 +472,7 @@ BEGIN
     'caretaker_email', p_caretaker_email,
     'caretaker_password', v_password,
     'caretaker_user_id', v_caretaker_user_id,
+    'auth_user_verified', true,
     'message', 'Property created successfully with ' || p_number_of_units || ' units'
   );
   
