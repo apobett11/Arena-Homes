@@ -159,17 +159,22 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Caretaker with this email already exists.');
   END IF;
   
-  -- Check if auth user exists with this email (for linking)
+  -- DEBUG: Check if auth user exists with this email (for linking)
   SELECT id INTO v_caretaker_user_id
   FROM auth.users
   WHERE email = p_caretaker_email
   LIMIT 1;
+  
+  -- DEBUG: Log initial state
+  RAISE NOTICE 'DEBUG: Initial auth check - v_caretaker_user_id: %, email: %', v_caretaker_user_id, p_caretaker_email;
   
   -- Generate password ONCE (12 character random string with dashes: XXXX-XXXX-XXXX)
   -- Single generation, used everywhere
   v_password := upper(substr(md5(random()::text), 1, 12));
   -- Format as XXXX-XXXX-XXXX for readability
   v_password := substr(v_password, 1, 4) || '-' || substr(v_password, 5, 4) || '-' || substr(v_password, 9, 4);
+  
+  RAISE NOTICE 'DEBUG: Generated password: %', v_password;
   
   -- ==========================================================================
   -- CREATE OR UPDATE AUTH USER FOR CARETAKER
@@ -179,11 +184,16 @@ BEGIN
     -- Generate new user ID
     v_caretaker_user_id := gen_random_uuid();
     
+    RAISE NOTICE 'DEBUG: Creating new auth user with ID: %', v_caretaker_user_id;
+    
     -- DISABLE TRIGGER to prevent it from failing and rolling back auth.users insert
     ALTER TABLE auth.users DISABLE TRIGGER on_auth_user_created;
+    RAISE NOTICE 'DEBUG: Trigger disabled';
     
     -- Use nested block to ensure trigger is re-enabled even if insert fails
     BEGIN
+      RAISE NOTICE 'DEBUG: About to INSERT into auth.users';
+      
       -- Create auth user with password (matching working pattern from codebase)
       INSERT INTO auth.users (
         id,
@@ -206,16 +216,24 @@ BEGIN
         now(),
         now()
       );
+      
+      RAISE NOTICE 'DEBUG: auth.users INSERT completed';
+      
     EXCEPTION WHEN OTHERS THEN
+      RAISE NOTICE 'DEBUG: EXCEPTION during auth.users INSERT - SQLERRM: %, SQLSTATE: %', SQLERRM, SQLSTATE;
       -- Re-enable trigger before re-raising the error
       ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
+      RAISE NOTICE 'DEBUG: Trigger re-enabled after exception';
       RAISE;
     END;
     
     -- RE-ENABLE TRIGGER after successful auth user creation
     ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
+    RAISE NOTICE 'DEBUG: Trigger re-enabled after success';
     
     -- Manually create profile for caretaker (we disabled trigger, so we must create it)
+    RAISE NOTICE 'DEBUG: About to INSERT into public.profiles';
+    
     INSERT INTO public.profiles (
       user_id,
       role_id,
@@ -240,12 +258,19 @@ BEGIN
       full_name = EXCLUDED.full_name,
       is_active = EXCLUDED.is_active,
       updated_at = now();
+    
+    RAISE NOTICE 'DEBUG: public.profiles INSERT/UPDATE completed';
+    
   ELSE
+    RAISE NOTICE 'DEBUG: Auth user already exists: % - updating password', v_caretaker_user_id;
+    
     -- Auth user exists - update password to new password
     UPDATE auth.users
     SET encrypted_password = crypt(v_password, gen_salt('bf')),
         updated_at = now()
     WHERE id = v_caretaker_user_id;
+    
+    RAISE NOTICE 'DEBUG: auth.users UPDATE completed';
   END IF;
   
   -- ==========================================================================
@@ -465,6 +490,7 @@ BEGIN
     WHERE id = v_caretaker_user_id 
     AND email = p_caretaker_email
   ) THEN
+    RAISE NOTICE 'DEBUG: VERIFICATION FAILED - auth user not found for id: %, email: %', v_caretaker_user_id, p_caretaker_email;
     RETURN jsonb_build_object(
       'success', false,
       'error', 'Auth user creation failed - user not found after insert',
@@ -472,6 +498,8 @@ BEGIN
       'caretaker_email', p_caretaker_email
     );
   END IF;
+  
+  RAISE NOTICE 'DEBUG: VERIFICATION PASSED - auth user exists: %', v_caretaker_user_id;
   
   -- ==========================================================================
   -- RETURN SUCCESS RESULT
@@ -486,8 +514,15 @@ BEGIN
     'caretaker_password', v_password,
     'caretaker_user_id', v_caretaker_user_id,
     'auth_user_verified', true,
+    'debug_info', jsonb_build_object(
+      'function_version', '2.0_debug',
+      'trigger_disabled', true,
+      'profile_upsert', true
+    ),
     'message', 'Property created successfully with ' || p_number_of_units || ' units'
   );
+  
+  RAISE NOTICE 'DEBUG: Returning success - property_id: %, caretaker_user_id: %', v_property_id, v_caretaker_user_id;
   
   RETURN v_result;
   
