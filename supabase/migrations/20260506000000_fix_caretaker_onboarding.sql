@@ -202,7 +202,7 @@ BEGIN
       now()
     );
     
-    -- Manually create profile for caretaker (bypasses trigger RLS issue)
+    -- Manually create profile for caretaker (bypasses trigger RLS issue, updates role_id if trigger created it first)
     INSERT INTO public.profiles (
       user_id,
       role_id,
@@ -220,7 +220,13 @@ BEGIN
       now(),
       now()
     )
-    ON CONFLICT (user_id) DO NOTHING;
+    ON CONFLICT (user_id) 
+    DO UPDATE SET 
+      role_id = EXCLUDED.role_id,
+      email = EXCLUDED.email,
+      full_name = EXCLUDED.full_name,
+      is_active = EXCLUDED.is_active,
+      updated_at = now();
   ELSE
     -- Auth user exists - update password to new password
     UPDATE auth.users
