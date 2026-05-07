@@ -179,30 +179,43 @@ BEGIN
     -- Generate new user ID
     v_caretaker_user_id := gen_random_uuid();
     
-    -- Create auth user with password (matching working pattern from codebase)
-    INSERT INTO auth.users (
-      id,
-      email,
-      encrypted_password,
-      email_confirmed_at,
-      raw_app_meta_data,
-      raw_user_meta_data,
-      created_at,
-      updated_at
-    ) VALUES (
-      v_caretaker_user_id,
-      p_caretaker_email,
-      crypt(v_password, gen_salt('bf')),
-      now(),
-      jsonb_build_object('role', 'CARETAKER'),
-      jsonb_build_object(
-        'full_name', p_caretaker_first_name || ' ' || p_caretaker_last_name
-      ),
-      now(),
-      now()
-    );
+    -- DISABLE TRIGGER to prevent it from failing and rolling back auth.users insert
+    ALTER TABLE auth.users DISABLE TRIGGER on_auth_user_created;
     
-    -- Manually create profile for caretaker (bypasses trigger RLS issue, updates role_id if trigger created it first)
+    -- Use nested block to ensure trigger is re-enabled even if insert fails
+    BEGIN
+      -- Create auth user with password (matching working pattern from codebase)
+      INSERT INTO auth.users (
+        id,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at
+      ) VALUES (
+        v_caretaker_user_id,
+        p_caretaker_email,
+        crypt(v_password, gen_salt('bf')),
+        now(),
+        jsonb_build_object('role', 'CARETAKER'),
+        jsonb_build_object(
+          'full_name', p_caretaker_first_name || ' ' || p_caretaker_last_name
+        ),
+        now(),
+        now()
+      );
+    EXCEPTION WHEN OTHERS THEN
+      -- Re-enable trigger before re-raising the error
+      ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
+      RAISE;
+    END;
+    
+    -- RE-ENABLE TRIGGER after successful auth user creation
+    ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
+    
+    -- Manually create profile for caretaker (we disabled trigger, so we must create it)
     INSERT INTO public.profiles (
       user_id,
       role_id,
