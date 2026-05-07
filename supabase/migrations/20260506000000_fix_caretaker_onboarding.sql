@@ -541,6 +541,12 @@ ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies to avoid conflicts
 DROP POLICY IF EXISTS "admin_properties_all_access" ON public.properties;
 DROP POLICY IF EXISTS "admin_profiles_all_access" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_insert_all" ON public.profiles;
+
+-- Allow INSERT on profiles (needed for trigger and function-based creation)
+CREATE POLICY "profiles_insert_all" ON public.profiles
+FOR INSERT TO authenticated, anon
+WITH CHECK (true);
 
 -- Allow admin full access to properties table
 CREATE POLICY "admin_properties_all_access" ON public.properties
