@@ -536,9 +536,32 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
+-- ============================================================================
+-- GRANTS FOR AUTH SCHEMA ACCESS (Required for auth.users write)
+-- ============================================================================
+
+-- Grant usage on auth schema to authenticated and anon roles
+GRANT USAGE ON SCHEMA auth TO authenticated;
+GRANT USAGE ON SCHEMA auth TO anon;
+
+-- Grant insert and select on auth.users to authenticated and anon
+-- SECURITY DEFINER functions will use this
+GRANT INSERT, SELECT, UPDATE ON auth.users TO authenticated;
+GRANT INSERT, SELECT, UPDATE ON auth.users TO anon;
+
+-- Grant sequence usage for auth.users id generation
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO authenticated;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO anon;
+
+-- ============================================================================
+-- GRANTS FOR PUBLIC SCHEMA
+-- ============================================================================
+
 -- Grant execute permission to authenticated users (RLS will check admin role)
 GRANT EXECUTE ON FUNCTION public.create_property_complete TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_property_complete TO anon;
+GRANT EXECUTE ON FUNCTION public.create_property_complete_json TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_property_complete_json TO anon;
 
 COMMENT ON FUNCTION public.create_property_complete IS 'Atomic property creation with caretaker onboarding. Property created first, then employee with auth user. Password is real (not temp). Caretaker can login immediately.';
 
@@ -633,12 +656,42 @@ FOR ALL TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
--- Also add policy for employees table admin access
+-- ============================================================================
+-- RLS POLICIES FOR EMPLOYEES TABLE
+-- ============================================================================
+
+-- Enable RLS on employees if not already enabled
+ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
+
+-- Employees can view/update their own records
+DROP POLICY IF EXISTS "employees_select_self" ON public.employees;
+CREATE POLICY "employees_select_self" ON public.employees
+FOR SELECT TO authenticated
+USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "employees_update_self" ON public.employees;
+CREATE POLICY "employees_update_self" ON public.employees
+FOR UPDATE TO authenticated
+USING (user_id = auth.uid())
+WITH CHECK (user_id = auth.uid());
+
+-- Admin full access to employees
 DROP POLICY IF EXISTS "admin_employees_all_access" ON public.employees;
 CREATE POLICY "admin_employees_all_access" ON public.employees
 FOR ALL TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
+
+-- Caretaker can view employees at their assigned property
+DROP POLICY IF EXISTS "caretaker_employees_property" ON public.employees;
+CREATE POLICY "caretaker_employees_property" ON public.employees
+FOR SELECT TO authenticated
+USING (
+  public.is_caretaker() AND 
+  assigned_property_id IN (
+    SELECT id FROM public.properties WHERE caretaker_user_id = auth.uid()
+  )
+);
 
 -- ============================================================================
 -- FUNCTION TO CLEAR CARETAKER PASSWORD (call when caretaker changes password)
@@ -659,3 +712,40 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.clear_caretaker_password IS 'Clears caretaker initial password from properties table. Call when caretaker changes their password.';
+
+-- ============================================================================
+-- COMPREHENSIVE GRANTS FOR AUTH SCHEMA ACCESS
+-- Required for auth.users INSERT to work from SECURITY DEFINER functions
+-- ============================================================================
+
+-- Grant usage on auth schema (required to access auth tables)
+GRANT USAGE ON SCHEMA auth TO authenticated;
+GRANT USAGE ON SCHEMA auth TO anon;
+GRANT USAGE ON SCHEMA auth TO postgres;
+GRANT USAGE ON SCHEMA auth TO service_role;
+
+-- Grant CRUD operations on auth.users table
+GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO postgres;
+GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO service_role;
+
+-- Grant access to auth.identities table (Supabase Auth creates this automatically)
+GRANT SELECT, INSERT, UPDATE ON auth.identities TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON auth.identities TO anon;
+GRANT SELECT, INSERT, UPDATE ON auth.identities TO postgres;
+
+-- Grant sequence usage for ID generation
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO authenticated;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO anon;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO postgres;
+
+-- ============================================================================
+-- FUNCTION EXECUTE GRANTS
+-- ============================================================================
+
+GRANT EXECUTE ON FUNCTION public.create_property_complete TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_property_complete TO anon;
+GRANT EXECUTE ON FUNCTION public.create_property_complete_json TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_property_complete_json TO anon;
+GRANT EXECUTE ON FUNCTION public.clear_caretaker_password TO authenticated;

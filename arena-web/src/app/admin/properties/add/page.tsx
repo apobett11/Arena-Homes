@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import { PropertyApi, CreatePropertyPayload, PropertyFAQInput, PropertyRuleInput } from "@/lib/api/domains/properties";
-import { ArrowLeft, Building2, Upload, CheckCircle, Plus, Trash2, Home, User, HelpCircle, FileText, MapPin } from "lucide-react";
+import { PropertyApi, CreatePropertyPayload } from "@/lib/api/domains/properties";
+import { ArrowLeft, Building2, CheckCircle, Plus, Trash2, Home, User, HelpCircle, FileText, MapPin } from "lucide-react";
 import Link from "next/link";
 
 type TabType = "basic" | "details" | "caretaker" | "faq";
@@ -49,7 +48,6 @@ const PREDEFINED_LOCATIONS = [
 ];
 
 export default function AddPropertyPage() {
-    const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabType>("basic");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -199,8 +197,9 @@ export default function AddPropertyPage() {
             const result = await PropertyApi.create(payload);
             setCreatedProperty(result);
             setMessage({ type: "success", text: "Property created successfully!" });
-        } catch (error: any) {
-            setMessage({ type: "error", text: error.message || "Failed to create property" });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to create property";
+            setMessage({ type: "error", text: errorMessage });
         } finally {
             setLoading(false);
         }

@@ -51,11 +51,13 @@ export default function AdminSidebar() {
 
     useEffect(() => {
         const loadBrand = async () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const site = await safeMaybeSingle<any>("site_settings", (q) => q.select("*").eq("id", "default").maybeSingle());
             if (site?.site_name) {
                 setBrandName(site.site_name);
                 return;
             }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const fallback = await safeMaybeSingle<any>("app_settings", (q) => q.select("*").eq("key", "site_brand").maybeSingle());
             const value = fallback?.value || {};
             if (value.site_name) setBrandName(value.site_name);
