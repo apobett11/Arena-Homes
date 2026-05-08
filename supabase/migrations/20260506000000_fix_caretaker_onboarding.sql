@@ -730,6 +730,25 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO postgres;
 GRANT SELECT, INSERT, UPDATE, DELETE ON auth.users TO service_role;
 
+-- Force grant to function owner (required for SECURITY DEFINER)
+-- Try to change owner to postgres if possible (may fail in Supabase, that's OK)
+DO $$
+BEGIN
+  ALTER TABLE auth.users OWNER TO postgres;
+EXCEPTION WHEN insufficient_privilege THEN
+  -- Cannot change owner, grants must suffice
+  NULL;
+END $$;
+
+-- Also grant to supabase_auth_admin role if it exists
+DO $$
+BEGIN
+  GRANT ALL PRIVILEGES ON auth.users TO supabase_auth_admin;
+EXCEPTION WHEN undefined_object THEN
+  -- Role doesn't exist, skip
+  NULL;
+END $$;
+
 -- Grant access to auth.identities table (Supabase Auth creates this automatically)
 GRANT SELECT, INSERT, UPDATE ON auth.identities TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON auth.identities TO anon;
