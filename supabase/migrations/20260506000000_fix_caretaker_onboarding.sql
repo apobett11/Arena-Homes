@@ -11,7 +11,7 @@
 -- ============================================================================
 
 -- Enable extension in extensions schema (Supabase default)
-CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- Also ensure it's in search path for this function
 SET LOCAL search_path = public, extensions, auth;
