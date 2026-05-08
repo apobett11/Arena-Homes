@@ -741,6 +741,66 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO anon;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA auth TO postgres;
 
 -- ============================================================================
+-- ADMIN FULL ACCESS GRANTS
+-- Admin role needs unrestricted access to all tables for management
+-- ============================================================================
+
+-- Grant all privileges on all tables in public schema to authenticated (RLS will enforce admin checks)
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+
+-- Grant all privileges on all sequences in public schema
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+-- Grant execute on all functions in public schema
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+
+-- Grant all on auth schema for admin auth management
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO authenticated;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO authenticated;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA auth TO authenticated;
+
+-- ============================================================================
+-- RLS POLICIES FOR ADMIN AUTH SCHEMA ACCESS
+-- ============================================================================
+
+-- Note: auth schema tables don't have RLS enabled by default in Supabase
+-- But if they do, admin needs full access policies
+
+-- Admin can view all auth users (for user management dashboard)
+-- This is implemented via a security definer view or function, not direct RLS on auth.users
+
+-- ============================================================================
+-- ADMIN VIEW FOR AUTH USERS (Secure way to expose auth data to admin)
+-- ============================================================================
+
+DROP VIEW IF EXISTS public.admin_auth_users_view;
+
+CREATE VIEW public.admin_auth_users_view AS
+SELECT 
+  au.id,
+  au.email,
+  au.created_at,
+  au.last_sign_in_at,
+  au.raw_app_meta_data,
+  au.raw_user_meta_data,
+  au.email_confirmed_at,
+  au.phone,
+  au.phone_confirmed_at,
+  au.banned_until,
+  p.role_id,
+  p.is_active,
+  p.full_name as profile_full_name
+FROM auth.users au
+LEFT JOIN public.profiles p ON p.user_id = au.id;
+
+-- Only admin can access this view
+CREATE POLICY "admin_auth_users_view_all" ON public.admin_auth_users_view
+FOR SELECT TO authenticated
+USING (public.is_admin());
+
+COMMENT ON VIEW public.admin_auth_users_view IS 'Admin-only view of auth.users joined with profiles. Use for user management dashboard.';
+
+-- ============================================================================
 -- FUNCTION EXECUTE GRANTS
 -- ============================================================================
 
