@@ -53,6 +53,23 @@ export interface Property {
         phone_number?: string;
         status?: string;
     };
+    // New fields for property details display
+    depositAmount?: number | null;
+    returnDeposit?: boolean | null;
+    waterSource?: string | null;
+    waterAvailabilityDaysPerWeek?: number | null;
+    electricityPayment?: string | null;
+    roomSpaceSqm?: number | null;
+    gateOpenTime?: string | null;
+    gateCloseTime?: string | null;
+    distanceFromSchoolKm?: number | null;
+    parkingAvailable?: boolean | null;
+    securityVerified?: boolean | null;
+    propertyType?: string | null;
+    monthlyRent?: number | null;
+    description?: string | null;
+    coverPhotoUrl?: string | null;
+    listingStatus?: string | null;
 }
 
 export interface Unit {
@@ -143,6 +160,23 @@ const transformProperty = (row: any): Property => ({
     schoolGateDistanceMeters: row.school_gate_distance_meters,
     landmark: row.landmark,
     caretaker: row.caretaker,
+    // New fields mapping
+    depositAmount: row.deposit_amount,
+    returnDeposit: row.return_deposit,
+    waterSource: row.water_source,
+    waterAvailabilityDaysPerWeek: row.water_availability_days_per_week,
+    electricityPayment: row.electricity_payment,
+    roomSpaceSqm: row.room_space_sqm,
+    gateOpenTime: row.gate_open_time ?? row.gate_hours_from,
+    gateCloseTime: row.gate_close_time ?? row.gate_hours_to,
+    distanceFromSchoolKm: row.distance_from_school_km,
+    parkingAvailable: row.parking_available,
+    securityVerified: row.security_verified,
+    propertyType: row.property_type,
+    monthlyRent: row.monthly_rent,
+    description: row.description,
+    coverPhotoUrl: row.cover_photo_url,
+    listingStatus: row.listing_status,
 });
 
 // Helper to transform Supabase unit row to Unit interface
@@ -204,6 +238,39 @@ export const PropertyApi = {
         if (error) throw error;
         if (!data) throw new Error('Property not found');
         return transformProperty(data);
+    },
+
+    // Get related properties by type (same property_type, exclude current, limit 3)
+    getRelatedProperties: async (propertyId: string, propertyType: string, limit: number = 3): Promise<Property[]> => {
+        const supabase = getSupabaseClient() as any;
+
+        // Fetch published properties of same type, excluding current
+        const { data, error } = await supabase
+            .from('properties')
+            .select(`
+                *,
+                caretaker:employees!properties_caretaker_employee_id_fkey (
+                    id,
+                    user_id,
+                    full_name,
+                    email,
+                    phone_number,
+                    status
+                )
+            `)
+            .eq('property_type', propertyType)
+            .neq('id', propertyId)
+            .or('listing_status.eq.PUBLISHED,verification_status.eq.VERIFIED')
+            .limit(limit * 4); // Fetch more for randomization
+
+        if (error) {
+            console.error('Error fetching related properties:', error);
+            return [];
+        }
+
+        // Shuffle and take limit
+        const shuffled = (data || []).sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, limit).map(transformProperty);
     },
 
     create: async (data: CreatePropertyPayload): Promise<{ 

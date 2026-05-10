@@ -109,6 +109,27 @@ export default function AddPropertyPage() {
     // Rules state
     const [ruleInputs, setRuleInputs] = useState<{ rule_text: string }[]>([]);
 
+    // Room dimensions UI state (derived from room_space_sqm for editing)
+    const [roomDimensions, setRoomDimensions] = useState<{ length: string; width: string }>(() => {
+        // If editing, derive initial dimensions from room_space_sqm
+        const sqm = formData.room_space_sqm;
+        if (sqm && sqm > 0) {
+            const side = Math.sqrt(sqm);
+            return { length: side.toFixed(1), width: side.toFixed(1) };
+        }
+        return { length: "", width: "" };
+    });
+
+    // Update room_space_sqm when dimensions change
+    const updateRoomDimensions = (field: 'length' | 'width', value: string) => {
+        setRoomDimensions(prev => ({ ...prev, [field]: value }));
+        const length = parseFloat(field === 'length' ? value : roomDimensions.length);
+        const width = parseFloat(field === 'width' ? value : roomDimensions.width);
+        if (!isNaN(length) && !isNaN(width) && length > 0 && width > 0) {
+            handleChange('room_space_sqm', length * width);
+        }
+    };
+
     useEffect(() => {
         if (showAddLocation && customLocation) {
             setFormData(prev => ({ ...prev, location: customLocation }));
@@ -151,12 +172,17 @@ export default function AddPropertyPage() {
             return;
         }
 
-        if (formData.room_space_sqm <= 0) {
-            setMessage({ type: "error", text: "Room space must be greater than 0" });
+        // Validate room dimensions (calculated from length × width)
+        const length = parseFloat(roomDimensions.length);
+        const width = parseFloat(roomDimensions.width);
+        if (isNaN(length) || isNaN(width) || length <= 0 || width <= 0) {
+            setMessage({ type: "error", text: "Please enter valid room length and width (in meters)" });
             setActiveTab("details");
             setLoading(false);
             return;
         }
+        // Ensure room_space_sqm is calculated before submit
+        handleChange("room_space_sqm", length * width);
 
         if (!formData.caretaker_first_name.trim()) {
             setMessage({ type: "error", text: "Caretaker first name is required" });
@@ -311,6 +337,7 @@ export default function AddPropertyPage() {
                                     setLocationInput("");
                                     setCustomLocation("");
                                     setShowAddLocation(false);
+                                    setRoomDimensions({ length: "", width: "" }); // Reset dimensions
                                     setMessage(null);
                                 }}
                                 className="px-6 py-2 bg-[#0066FF] hover:bg-blue-600 text-white rounded-xl transition-colors"
@@ -592,21 +619,46 @@ export default function AddPropertyPage() {
                                         <p className="text-xs text-slate-500 mt-1">This many units will be auto-generated</p>
                                     </div>
 
-                                    {/* Room Space */}
-                                    <div>
+                                    {/* Room Dimensions - Length × Width */}
+                                    <div className="md:col-span-2">
                                         <label className="block text-sm text-slate-400 mb-1">
-                                            Room Space (sqm) <span className="text-rose-400">*</span>
+                                            Room Dimensions <span className="text-rose-400">*</span>
                                         </label>
-                                        <input
-                                            required
-                                            type="number"
-                                            min="1"
-                                            step="0.1"
-                                            value={formData.room_space_sqm || ""}
-                                            onChange={(e) => handleChange("room_space_sqm", parseFloat(e.target.value) || 0)}
-                                            placeholder="e.g., 15.5"
-                                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
-                                        />
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex-1">
+                                                <input
+                                                    required
+                                                    type="number"
+                                                    min="0.1"
+                                                    step="0.1"
+                                                    value={roomDimensions.length}
+                                                    onChange={(e) => updateRoomDimensions("length", e.target.value)}
+                                                    placeholder="Length (m)"
+                                                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
+                                                />
+                                                <span className="text-xs text-slate-500 mt-1 block">Length (meters)</span>
+                                            </div>
+                                            <span className="text-slate-400 text-xl">×</span>
+                                            <div className="flex-1">
+                                                <input
+                                                    required
+                                                    type="number"
+                                                    min="0.1"
+                                                    step="0.1"
+                                                    value={roomDimensions.width}
+                                                    onChange={(e) => updateRoomDimensions("width", e.target.value)}
+                                                    placeholder="Width (m)"
+                                                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-[#0066FF] focus:outline-none"
+                                                />
+                                                <span className="text-xs text-slate-500 mt-1 block">Width (meters)</span>
+                                            </div>
+                                        </div>
+                                        {/* Display calculated area */}
+                                        {formData.room_space_sqm > 0 && (
+                                            <p className="text-sm text-slate-400 mt-2">
+                                                Calculated area: <span className="text-emerald-400 font-medium">{formData.room_space_sqm.toFixed(2)} m²</span>
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Deposit Amount */}

@@ -10,11 +10,13 @@ import {
     ChevronRight, Lock, Droplets, Banknote, Sun,
     Phone, Mail, Facebook, Instagram, Twitter, Youtube,
     Send, Copy, Check, FileText, MessageCircle,
-    ArrowRightCircle, XCircle, Info, ExternalLink
+    ArrowRightCircle, XCircle, Info, ExternalLink,
+    Ruler, Car, Zap, Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HouseCard } from "@/components/listings/HouseCard";
+import { HouseCard, HouseProps } from "@/components/listings/HouseCard";
 import { PropertyApi } from "@/lib/api/domains/properties";
+import type { Property } from "@/lib/api/domains/properties";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 
@@ -91,11 +93,55 @@ const defaultHouseData = {
     reviews: []
 };
 
-const similarHouses = [
-    { id: 2, title: "Luxury Penthouse Suite", type: "Two Bedroom", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80", location: "Manhattan, NY", description: "Luxury Penthouse Suite", price: 4500, distance: "2km", vacancy: "Available" as const, water: true },
-    { id: 3, title: "Cozy Garden Cottage", type: "One Bedroom", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80", location: "Portland, OR", description: "Cozy Garden Cottage", price: 1800, distance: "1.5km", vacancy: "Available" as const, water: true },
-    { id: 4, title: "Sunset Ridge Estate", type: "Two Bedroom", image: "https://images.unsplash.com/photo-1600585154526-990dcea4db0d?auto=format&fit=crop&w=800&q=80", location: "Malibu, CA", description: "Sunset Ridge Estate", price: 3200, distance: "3km", vacancy: "Limited" as const, water: true },
-];
+// Helper functions for formatting display values
+const formatMoney = (amount: number | null | undefined): string => {
+    if (!amount || amount <= 0) return '0';
+    return `KES ${amount.toLocaleString()}`;
+};
+
+const formatElectricity = (value: string | null | undefined): string => {
+    if (!value) return 'Not specified';
+    const normalized = value.toUpperCase().replace(/[_\s-]/g, '_');
+    if (normalized.includes('PERSONAL') || normalized.includes('SELF')) return 'Personal payment';
+    if (normalized.includes('COVERED') || normalized.includes('INCLUDED')) return 'Covered';
+    return value;
+};
+
+const formatWaterDays = (days: number | null | undefined): string => {
+    if (!days || days <= 0) return 'Not specified';
+    return `${days} day${days > 1 ? 's' : ''}/week`;
+};
+
+const formatRoomDimensions = (sqm: number | null | undefined): { display: string; area: string } | null => {
+    if (!sqm || sqm <= 0) return null;
+    const side = Math.sqrt(sqm);
+    return {
+        display: `approx ${side.toFixed(1)}m × ${side.toFixed(1)}m`,
+        area: `${sqm} m²`
+    };
+};
+
+const formatGateHours = (open: string | null | undefined, close: string | null | undefined): string => {
+    if (!open || !close) return 'Not specified';
+    return `${open} - ${close}`;
+};
+
+const formatDistance = (meters: number | null | undefined, km: number | null | undefined): string => {
+    if (meters !== null && meters !== undefined && meters > 0) {
+        if (meters >= 1000) {
+            return `${(meters / 1000).toFixed(1)} km`;
+        }
+        return `${meters} meters`;
+    }
+    if (km !== null && km !== undefined && km > 0) {
+        return `${km} km`;
+    }
+    return 'Not specified';
+};
+
+const hasDeposit = (amount: number | null | undefined): boolean => {
+    return !!amount && amount > 0;
+};
 
 export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = React.use(params);
@@ -136,6 +182,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         message: ""
     });
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
+    const [relatedProperties, setRelatedProperties] = useState<Property[]>([]);
 
     useEffect(() => {
         const pin = searchParams.get("pin");
@@ -168,20 +215,20 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 // Load property by PROPERTY ID (from URL param)
                 const property = await PropertyApi.getOne(id);
                 setPropertyId(property.id);
-                
+
                 // Load units for this property to get vacancy info and pricing
                 const units = await PropertyApi.getUnits(id);
                 const vacantUnit = units.find(u => u.status === 'VACANT');
                 const firstUnit = units[0];
                 const representativeUnit = vacantUnit || firstUnit;
-                
+
                 // Get price from first available unit, or default
-                const price = representativeUnit ? Number(representativeUnit.basePrice) : 0;
-                const image = property.logoUrl || defaultHouseData.images[0];
-                const typeLabel = representativeUnit ? representativeUnit.type.replaceAll("_", " ") : 'Unit';
+                const price = representativeUnit ? Number(representativeUnit.basePrice) : (property.monthlyRent || 0);
+                const image = property.coverPhotoUrl || property.logoUrl || defaultHouseData.images[0];
+                const typeLabel = representativeUnit ? representativeUnit.type.replaceAll("_", " ") : (property.propertyType || 'Unit');
                 const policies = property.facilities?.policies || [];
                 const map = property.facilities?.map;
-                
+
                 // Extract caretaker info first
                 const caretakerInfo = property.caretaker ? {
                     id: property.caretaker.id,
@@ -190,35 +237,71 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     email: property.caretaker.email,
                     phone_number: property.caretaker.phone_number
                 } : null;
-                
+
                 if (caretakerInfo) {
                     setCaretaker(caretakerInfo);
                 }
-                
+
                 if (map) {
                     setMapData(map);
                 }
+
+                // Build amenities with new fields
+                const roomDimensions = formatRoomDimensions(property.roomSpaceSqm);
 
                 setHouseData({
                     id: property.id, // Use PROPERTY ID
                     title: `${property.name} - ${typeLabel}`,
                     location: property.location,
                     price,
-                    description: representativeUnit?.description || `A ${typeLabel} unit at ${property.name} located in ${property.location}.`,
-                    longDescription: representativeUnit?.description || `This is a ${typeLabel} unit located at ${property.name} in ${property.location}. Contact the caretaker for more details and to schedule a viewing.`,
+                    description: property.description || representativeUnit?.description || `A ${typeLabel} unit at ${property.name} located in ${property.location}.`,
+                    longDescription: property.description || representativeUnit?.description || `This is a ${typeLabel} unit located at ${property.name} in ${property.location}. Contact the caretaker for more details and to schedule a viewing.`,
                     rating: 0,
                     reviewCount: 0,
-                    images: [image, property.logoUrl || image, image, image],
+                    images: [image, property.coverPhotoUrl || property.logoUrl || image, property.logoUrl || image, image],
                     amenities: [
-                        { icon: Banknote, label: "Deposit Policy", value: policies.find((p) => p.toLowerCase().includes("deposit")) || "Set by admin" },
-                        { icon: Calendar, label: "Holiday Rent Policy", value: policies.find((p) => p.toLowerCase().includes("holiday")) || "Set by admin" },
+                        // Deposit
+                        hasDeposit(property.depositAmount)
+                            ? { icon: Banknote, label: "Deposit", value: formatMoney(property.depositAmount) }
+                            : { icon: Banknote, label: "Deposit", value: "No deposit required" },
+                        // Deposit Cashback (automated Yes if deposit exists)
+                        { icon: CheckCircle2, label: "Deposit Cashback", value: hasDeposit(property.depositAmount) ? "Yes" : "No" },
+                        // Water Source
+                        { icon: Droplets, label: "Water Source", value: property.waterSource || "Not specified" },
+                        // Water Availability
+                        { icon: Calendar, label: "Water Available", value: formatWaterDays(property.waterAvailabilityDaysPerWeek) },
+                        // Electricity
+                        { icon: Zap, label: "Electricity", value: formatElectricity(property.electricityPayment) },
+                        // Room Dimensions
+                        roomDimensions
+                            ? { icon: Ruler, label: "Room Dimensions", value: roomDimensions.display }
+                            : { icon: Ruler, label: "Room Dimensions", value: "Not specified" },
+                        // Gate Hours
+                        { icon: Clock, label: "Gate Hours", value: formatGateHours(property.gateOpenTime, property.gateCloseTime) },
+                        // Distance from school
+                        { icon: MapPin, label: "Distance from School", value: formatDistance(property.schoolGateDistanceMeters, property.distanceFromSchoolKm) },
+                        // Parking
+                        property.parkingAvailable
+                            ? { icon: Car, label: "Parking", value: "Available" }
+                            : { icon: Car, label: "Parking", value: "No Parking" },
+                        // Legacy fields (kept for compatibility)
                         { icon: Lock, label: "Gate", value: property.facilities?.map?.gateLabel || "Main gate" },
                         { icon: Home, label: "Owner", value: property.facilities?.ownerType || "Arena Homes" },
                         { icon: User, label: "Caretaker", value: caretakerInfo?.full_name || "Assigned" },
-                        { icon: Droplets, label: "House Card", value: property.facilities?.houseCardDetails || "Available" },
                     ],
                     reviews: [],
                 });
+
+                // Load related properties from database
+                if (property.propertyType) {
+                    try {
+                        const related = await PropertyApi.getRelatedProperties(property.id, property.propertyType, 3);
+                        setRelatedProperties(related);
+                    } catch (err) {
+                        console.error("Failed to load related properties:", err);
+                        setRelatedProperties([]);
+                    }
+                }
 
                 // Load property rules
                 const { data: rulesData } = await supabase
@@ -589,10 +672,19 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                 </div>
 
-                {/* 4. Fulfilled By */}
-                <div className="flex items-center justify-center gap-2 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold uppercase tracking-widest border border-blue-100 dark:border-blue-800/30">
-                    <ShieldCheck size={14} />
-                    Fulfilled by {caretaker?.full_name || "Arena Homes"}
+                {/* 4. Security Verified Badge */}
+                <div className="flex items-center justify-center gap-2 py-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-300 rounded-xl text-sm font-bold border border-emerald-100 dark:border-emerald-800/30">
+                    <ShieldCheck size={18} />
+                    Security Verified
+                </div>
+
+                {/* 5. Fulfilled by Arena Homes Banner */}
+                <div className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl text-center shadow-lg">
+                    <div className="flex items-center justify-center gap-2">
+                        <ShieldCheck size={20} />
+                        <span className="font-bold text-lg">Fulfilled by: Arena Homes</span>
+                    </div>
+                    <p className="text-blue-100 text-sm mt-1">Trusted property management and tenant services</p>
                 </div>
 
                 {/* 5. Reviews and Comments */}
@@ -717,10 +809,23 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 <div>
                     <h3 className="text-lg font-bold mb-4">Similar Homes</h3>
                     <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 scrollbar-hide">
-                        {similarHouses.length > 0 ? (
-                            similarHouses.map((house) => (
-                                <div key={house.id} className="min-w-[200px] sm:min-w-[240px]">
-                                    <HouseCard {...house} />
+                        {relatedProperties.length > 0 ? (
+                            relatedProperties.map((property) => (
+                                <div key={property.id} className="min-w-[200px] sm:min-w-[240px]">
+                                    <HouseCard
+                                        id={property.id}
+                                        image={property.coverPhotoUrl || property.logoUrl || `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80`}
+                                        location={property.location || "Near Campus"}
+                                        title={property.name}
+                                        price={property.monthlyRent || 0}
+                                        type={property.propertyType || "Unit"}
+                                        distance={property.schoolGateDistanceMeters ? `${(property.schoolGateDistanceMeters / 1000).toFixed(1)}km` : "Near Campus"}
+                                        vacancy="Available"
+                                        water={true}
+                                        isVerified={true}
+                                        verificationStatus={property.verificationStatus}
+                                        depositAmount={property.depositAmount || undefined}
+                                    />
                                 </div>
                             ))
                         ) : (
