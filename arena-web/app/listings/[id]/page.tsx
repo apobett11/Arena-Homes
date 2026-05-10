@@ -123,20 +123,21 @@ const formatRoomDimensions = (sqm: number | null | undefined): { display: string
 
 const formatGateHours = (open: string | null | undefined, close: string | null | undefined): string => {
     if (!open || !close) return 'Not specified';
-    return `${open} - ${close}`;
+
+    const to12Hour = (time: string): string => {
+        const [hours, minutes] = time.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return time;
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+    };
+
+    return `${to12Hour(open)} - ${to12Hour(close)}`;
 };
 
 const formatDistance = (meters: number | null | undefined, km: number | null | undefined): string => {
-    if (meters !== null && meters !== undefined && meters > 0) {
-        if (meters >= 1000) {
-            return `${(meters / 1000).toFixed(1)} km`;
-        }
-        return `${meters} meters`;
-    }
-    if (km !== null && km !== undefined && km > 0) {
-        return `${km} km`;
-    }
-    return 'Not specified';
+    // Temporarily showing 'Not available' - will be calculated from coordinates in future
+    return 'Not available';
 };
 
 const hasDeposit = (amount: number | null | undefined): boolean => {
@@ -654,13 +655,13 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                 </div>
 
-                {/* 3. Amenities & Policies */}
-                <div>
+                {/* 3. Amenities & Policies - Glassmorphism Card */}
+                <div className="rounded-2xl p-6 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md border border-white/20 dark:border-zinc-700/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
                     <h3 className="text-lg font-bold mb-4">Amenities & Policies</h3>
                     <div className="grid grid-cols-2 gap-3">
                         {houseData.amenities.map((amenity, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800">
-                                <div className="p-2 bg-slate-100 dark:bg-zinc-800 rounded-full text-slate-700 dark:text-slate-200">
+                            <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm border border-slate-100/50 dark:border-zinc-700/30 shadow-sm">
+                                <div className="p-2 bg-slate-100/80 dark:bg-zinc-700/50 rounded-full text-slate-700 dark:text-slate-200">
                                     <amenity.icon size={18} />
                                 </div>
                                 <div>
@@ -687,7 +688,41 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     <p className="text-blue-100 text-sm mt-1">Trusted property management and tenant services</p>
                 </div>
 
-                {/* 5. Reviews and Comments */}
+                {/* 6. Caretaker Details Card */}
+                {caretaker && (
+                    <div className="rounded-2xl p-5 bg-gradient-to-br from-slate-50 to-white dark:from-zinc-800 dark:to-zinc-900 border border-slate-200 dark:border-zinc-700 shadow-md">
+                        <h3 className="text-base font-bold mb-3 flex items-center gap-2">
+                            <User size={18} className="text-blue-500" />
+                            Caretaker Details
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="text-slate-500 min-w-[60px]">Name:</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-100">{caretaker.full_name}</span>
+                            </div>
+                            {caretaker.email && (
+                                <div className="flex items-center gap-2">
+                                    <Mail size={14} className="text-slate-400" />
+                                    <span className="text-slate-500 min-w-[50px]">Email:</span>
+                                    <a href={`mailto:${caretaker.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                                        {caretaker.email}
+                                    </a>
+                                </div>
+                            )}
+                            {caretaker.phone_number && (
+                                <div className="flex items-center gap-2">
+                                    <Phone size={14} className="text-slate-400" />
+                                    <span className="text-slate-500 min-w-[50px]">Phone:</span>
+                                    <a href={`tel:${caretaker.phone_number}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                                        {caretaker.phone_number}
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* 7. Reviews and Comments */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold">Reviews & Comments</h3>
@@ -797,7 +832,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                 </div>
 
-                {/* 7. About this home */}
+                {/* 8. About this home */}
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-100 dark:border-zinc-800">
                     <h3 className="text-lg font-bold mb-3">About this home</h3>
                     <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm text-justify">
@@ -805,7 +840,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </p>
                 </div>
 
-                {/* 8. Similar Homes - Fetched from database */}
+                {/* 9. Similar Homes - Fetched from database */}
                 <div>
                     <h3 className="text-lg font-bold mb-4">Similar Homes</h3>
                     <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 scrollbar-hide">
