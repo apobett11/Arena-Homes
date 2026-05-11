@@ -1,4 +1,42 @@
 // ============================================================================
+// PROPERTY PHOTO TYPES
+// ============================================================================
+
+export type PropertyPhotoType = 'COVER' | 'GATE' | 'GALLERY';
+
+export interface PropertyPhoto {
+  id: string;
+  property_id: string;
+  storage_bucket: string;
+  storage_path: string;
+  photo_type: PropertyPhotoType;
+  display_order: number; // 1-10, where 1=COVER, 2=GATE, 3-10=GALLERY
+  alt_text?: string | null;
+  mime_type?: string | null;
+  size_bytes?: number | null;
+  width?: number | null;
+  height?: number | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Resolved URL (not stored in DB)
+  publicUrl?: string;
+}
+
+export interface PropertyPhotoCount {
+  total_count: number;
+  has_cover: boolean;
+  has_gate: boolean;
+  gallery_count: number;
+}
+
+export interface PhotoUploadResult {
+  success: boolean;
+  photo?: PropertyPhoto;
+  error?: string;
+}
+
+// ============================================================================
 // CARETAKER DASHBOARD TYPES - Universal Database Contract
 // ============================================================================
 
@@ -53,6 +91,10 @@ export interface CaretakerProperty {
   caretaker_user_id: string | null;
   created_at: string;
   updated_at: string;
+  // Photo fields
+  cover_photo_url?: string | null;
+  gate_photo_url?: string | null;
+  property_photos?: PropertyPhoto[];
 }
 
 export interface UpdatePropertyPayload {

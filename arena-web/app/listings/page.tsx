@@ -17,6 +17,7 @@ interface PropertyWithVacancy {
     name: string;
     location: string;
     logoUrl?: string;
+    coverPhotoUrl?: string;
     verificationStatus?: 'UNVERIFIED' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'SUSPENDED' | 'FLAGGED';
     schoolGateDistanceMeters?: number;
     landmark?: string;
@@ -38,7 +39,8 @@ const mapPropertyToHouseProps = (property: PropertyWithVacancy): HouseProps => (
     location: property.location,
     price: property.rentRange.min > 0 ? property.rentRange.min : 2500,
     type: property.vacantUnits > 0 ? `${property.vacantUnits} rooms available` : 'Fully Occupied',
-    image: property.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
+    // Priority: new photo system > legacy fields > placeholder
+    image: property.coverPhotoUrl || property.logoUrl || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80`,
     distance: property.schoolGateDistanceMeters 
         ? `${(property.schoolGateDistanceMeters / 1000).toFixed(1)}km` 
         : "Near Campus",
@@ -112,6 +114,7 @@ function ListingsContent() {
                         name: p.name,
                         location: p.location,
                         logoUrl: p.logoUrl,
+                        coverPhotoUrl: p.coverPhotoUrl,
                         verificationStatus: p.verificationStatus,
                         schoolGateDistanceMeters: p.schoolGateDistanceMeters,
                         caretaker: p.caretaker,

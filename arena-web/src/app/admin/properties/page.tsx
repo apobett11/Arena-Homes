@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import AdminModal from "@/components/admin/AdminModal";
+import { cn } from "@/lib/utils";
 import {
     getAllProperties,
     getAvailableCaretakers,
@@ -13,6 +15,8 @@ import {
     getPropertyStats,
 } from "@/lib/admin/dashboard";
 import type { AdminProperty, AdminEmployee, PropertyStats } from "@/lib/admin/types";
+import type { PropertyPhoto } from "@/lib/caretaker/types";
+import { getPropertyCoverPhoto, listPropertyPhotos } from "@/lib/supabase/storage";
 import {
     MoreHorizontal,
     Home,
@@ -26,6 +30,8 @@ import {
     AlertTriangle,
     X,
     Building2,
+    Camera,
+    ImageIcon,
 } from "lucide-react";
 
 type SortField = "name" | "location" | "occupancy" | "caretaker";
@@ -53,6 +59,12 @@ export default function AdminPropertiesPage() {
 
     // Property stats
     const [propertyStats, setPropertyStats] = useState<PropertyStats | null>(null);
+
+    // Property photos for admin preview
+    const [propertyPhotos, setPropertyPhotos] = useState<PropertyPhoto[]>([]);
+    const [coverPhoto, setCoverPhoto] = useState<PropertyPhoto | null>(null);
+    const [gatePhoto, setGatePhoto] = useState<PropertyPhoto | null>(null);
+    const [photoCount, setPhotoCount] = useState(0);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +122,15 @@ export default function AdminPropertiesPage() {
         setModalType(type);
         setActiveDropdown(null);
         setMessage(null);
+
+        // Load property photos for details modal
+        if (type === "details") {
+            const photos = await listPropertyPhotos(property.id);
+            setPropertyPhotos(photos);
+            setPhotoCount(photos.length);
+            setCoverPhoto(photos.find(p => p.photo_type === 'COVER') || null);
+            setGatePhoto(photos.find(p => p.photo_type === 'GATE') || null);
+        }
         setSelectedCaretakerId("");
         setRoomNumber("");
         setRoomType("SINGLE");
@@ -561,6 +582,70 @@ export default function AdminPropertiesPage() {
             <AdminModal open={modalType === "details"} onClose={closeModal} title="Property Details" fullScreen>
                 {selectedProperty && (
                     <div className="space-y-4">
+                        {/* Photo Previews Section */}
+                        <div className="bg-slate-800/30 rounded-xl p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <Camera className="w-4 h-4" />
+                                    Photos ({photoCount}/10)
+                                </h3>
+                                <span className={cn(
+                                    "text-xs px-2 py-1 rounded-full",
+                                    photoCount === 10 
+                                        ? "bg-emerald-500/20 text-emerald-400" 
+                                        : "bg-amber-500/20 text-amber-400"
+                                )}>
+                                    {photoCount === 10 ? "Complete" : "Incomplete"}
+                                </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Cover Photo */}
+                                <div className="space-y-1">
+                                    <p className="text-xs text-slate-500">Cover Photo</p>
+                                    <div className="aspect-video rounded-lg bg-slate-800 overflow-hidden relative">
+                                        {coverPhoto ? (
+                                            <Image
+                                                src={coverPhoto.publicUrl || ''}
+                                                alt="Cover photo"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-600">
+                                                <div className="text-center">
+                                                    <ImageIcon className="w-6 h-6 mx-auto mb-1" />
+                                                    <span className="text-xs">No cover photo</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Gate Photo */}
+                                <div className="space-y-1">
+                                    <p className="text-xs text-slate-500">Gate Photo</p>
+                                    <div className="aspect-video rounded-lg bg-slate-800 overflow-hidden relative">
+                                        {gatePhoto ? (
+                                            <Image
+                                                src={gatePhoto.publicUrl || ''}
+                                                alt="Gate photo"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-600">
+                                                <div className="text-center">
+                                                    <ImageIcon className="w-6 h-6 mx-auto mb-1" />
+                                                    <span className="text-xs">No gate photo</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="bg-slate-800/50 p-3 rounded-lg">
                                 <p className="text-xs text-slate-400">Property Name</p>

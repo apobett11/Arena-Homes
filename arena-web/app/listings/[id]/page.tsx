@@ -18,6 +18,8 @@ import { HouseCard, HouseProps } from "@/components/listings/HouseCard";
 import { PropertyApi } from "@/lib/api/domains/properties";
 import type { Property } from "@/lib/api/domains/properties";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { getPropertyCarouselPhotos, getPublicUrl } from "@/lib/supabase/storage";
+import type { PropertyPhoto } from "@/lib/caretaker/types";
 import { useSearchParams } from "next/navigation";
 
 // Types for dynamic data
@@ -184,6 +186,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
     });
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
     const [relatedProperties, setRelatedProperties] = useState<Property[]>([]);
+    const [propertyPhotos, setPropertyPhotos] = useState<PropertyPhoto[]>([]);
 
     useEffect(() => {
         const pin = searchParams.get("pin");
@@ -337,6 +340,27 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     .order('created_at', { ascending: false })
                     .limit(4);
                 if (reviewsData) setReviews(reviewsData);
+
+                // Load property photos from new photo system
+                try {
+                    const photos = await getPropertyCarouselPhotos(property.id);
+                    setPropertyPhotos(photos);
+                    
+                    // Update houseData images with actual photos
+                    if (photos.length > 0) {
+                        const photoUrls = photos.map(p => p.publicUrl || getPublicUrl(p.storage_path));
+                        // Ensure we have at least 4 images for the carousel (with fallbacks)
+                        while (photoUrls.length < 4) {
+                            photoUrls.push(photoUrls[0] || defaultHouseData.images[0]);
+                        }
+                        setHouseData(prev => ({
+                            ...prev,
+                            images: photoUrls,
+                        }));
+                    }
+                } catch (photoErr) {
+                    console.error("Failed to load property photos:", photoErr);
+                }
 
             } catch (err) {
                 console.error("Failed to load listing details", err);
@@ -612,6 +636,18 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                         )} />
                     ))}
                 </div>
+
+                {/* Photo Counter Badge */}
+                <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
+                    {currentImageIndex + 1}/{propertyPhotos.length > 0 ? propertyPhotos.length : houseData.images.length}
+                </div>
+
+                {/* Scroll Hint - only show if more than 1 photo */}
+                {propertyPhotos.length > 1 && (
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-black/60 backdrop-blur-sm text-slate-700 dark:text-white px-4 py-2 rounded-full text-xs font-medium shadow-lg">
+                        Scroll to see more images
+                    </div>
+                )}
             </div>
 
             {/* --- Main Content --- */}

@@ -12,9 +12,10 @@ import {
     Shield,
     HelpCircle,
     ClipboardList,
+    ImageIcon,
 } from "lucide-react";
 
-type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announcements" | "rules";
+type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announcements" | "rules" | "photos";
 
 interface ActionGridProps {
     onTabChange: (tab: TabType) => void;
@@ -27,6 +28,7 @@ const actions = [
     { id: "tenants", label: "View Tenants", icon: Users, color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-50 dark:bg-emerald-500/10", desc: "Tenant directory" },
     { id: "issues", label: "Handle Issues", icon: Wrench, color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-50 dark:bg-rose-500/10", desc: "Maintenance requests" },
     { id: "leases", label: "View Leases", icon: FileText, color: "text-purple-600 dark:text-purple-400", bgColor: "bg-purple-50 dark:bg-purple-500/10", desc: "Lease agreements" },
+    { id: "photos", label: "Photos", icon: ImageIcon, color: "text-pink-600 dark:text-pink-400", bgColor: "bg-pink-50 dark:bg-pink-500/10", desc: "Property images" },
     { id: "announcements", label: "Announcements", icon: Bell, color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-50 dark:bg-amber-500/10", desc: "Send notices" },
     { id: "rules", label: "Rules & FAQ", icon: Shield, color: "text-cyan-600 dark:text-cyan-400", bgColor: "bg-cyan-50 dark:bg-cyan-500/10", desc: "Property policies" },
 ];

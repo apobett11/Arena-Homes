@@ -104,11 +104,39 @@ export default function TenantDashboard() {
                     setLoading(false);
                     return;
                 }
-                
-                // Check if tenant needs onboarding (PENDING_SETUP status)
-                if (dashData.tenantStatus === 'PENDING_SETUP') {
-                    router.replace('/tenant/onboarding');
-                    return;
+
+                // ENHANCED GUARD: Check if tenant is fully onboarded
+                // Must check tenant_applications flags for complete onboarding status
+                const supabaseClient = (await import('@/lib/supabase/client')).getSupabaseClient();
+                const { data: { user } } = await supabaseClient.auth.getUser();
+
+                if (user) {
+                    const { data: appData } = await supabaseClient
+                        .from('tenant_applications')
+                        .select('has_set_password, has_completed_profile, has_accepted_agreement, status')
+                        .eq('converted_user_id', user.id)
+                        .or(`converted_tenant_id.eq.${dashData.tenantId}`)
+                        .order('created_at', { ascending: false })
+                        .maybeSingle();
+
+                    const application = appData as {
+                        has_set_password: boolean;
+                        has_completed_profile: boolean;
+                        has_accepted_agreement: boolean;
+                        status: string;
+                    } | null;
+
+                    // Redirect to onboarding if any onboarding step is incomplete
+                    const needsOnboarding =
+                        dashData.tenantStatus === 'PENDING_SETUP' ||
+                        !application?.has_set_password ||
+                        !application?.has_completed_profile ||
+                        !application?.has_accepted_agreement;
+
+                    if (needsOnboarding) {
+                        router.replace('/tenant/onboarding');
+                        return;
+                    }
                 }
                 
                 setDashboardData(dashData);

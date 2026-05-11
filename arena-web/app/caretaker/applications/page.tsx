@@ -136,8 +136,18 @@ export default function CaretakerApplicationsPage() {
         throw new Error(data.error || 'Failed to accept application');
       }
 
-      setSuccessMessage("Application accepted and unit assigned successfully");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      // Build success message with email status
+      let successMsg = "Application accepted and unit assigned successfully";
+      if (data?.emailQueued) {
+        successMsg += ". Tenant setup email has been queued";
+        if (data?.emailTriggerResult?.success === false) {
+          successMsg += " (delivery pending - will retry automatically)";
+        } else {
+          successMsg += " and sent";
+        }
+      }
+      setSuccessMessage(successMsg);
+      setTimeout(() => setSuccessMessage(null), 5000);
       
       // Refresh the list
       await loadData();

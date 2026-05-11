@@ -10,6 +10,7 @@ import { IssuesPanel } from "@/components/caretaker/IssuesPanel";
 import { LeasesPanel } from "@/components/caretaker/LeasesPanel";
 import { AnnouncementsPanel } from "@/components/caretaker/AnnouncementsPanel";
 import { RulesFaqsPanel } from "@/components/caretaker/RulesFaqsPanel";
+import { PhotosPanel } from "@/components/caretaker/PhotosPanel";
 
 import {
     getCaretakerDashboardData,
@@ -37,7 +38,7 @@ import type {
     CaretakerFaq,
 } from "@/lib/caretaker/types";
 
-type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announcements" | "rules";
+type TabType = "overview" | "units" | "tenants" | "issues" | "leases" | "announcements" | "rules" | "photos";
 
 export default function CaretakerDashboard() {
     // Data states - ALL strictly scoped to caretaker's property
@@ -198,6 +199,7 @@ export default function CaretakerDashboard() {
                         { id: "tenants", label: `Tenants (${tenants.length})` },
                         { id: "issues", label: `Issues (${issues.filter(i => i.status === "PENDING").length})` },
                         { id: "leases", label: `Leases (${leases.length})` },
+                        { id: "photos", label: "Photos" },
                         { id: "announcements", label: "Announcements" },
                         { id: "rules", label: "Rules & FAQ" },
                     ].map((tab) => (
@@ -345,6 +347,13 @@ export default function CaretakerDashboard() {
                     <LeasesPanel
                         leases={leases}
                         propertyId={propertyId}
+                    />
+                )}
+
+                {activeTab === "photos" && propertyId && (
+                    <PhotosPanel
+                        propertyId={propertyId}
+                        onDataChange={handleRefresh}
                     />
                 )}
 

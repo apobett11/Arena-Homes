@@ -500,6 +500,7 @@ export const PropertyApi = {
         likes_count?: number;
         tenant_count?: number;
         created_at?: string;
+        coverPhotoUrl?: string;
     })[]> => {
         const supabase = getSupabaseClient() as any;
 
@@ -515,28 +516,58 @@ export const PropertyApi = {
             throw propError;
         }
 
-        return (properties || []).map((p: any) => ({
-            id: p.property_id,
-            name: p.property_name,
-            location: p.location,
-            propertyType: p.property_type,
-            caretakerId: p.caretaker_assigned ? p.caretaker_name : null,
-            logoUrl: p.logo_url || p.cover_photo_url,
-            verificationStatus: p.verification_status,
-            latitude: p.latitude,
-            longitude: p.longitude,
-            totalUnits: p.total_rooms,
-            vacantUnits: p.vacant_rooms,
-            occupiedUnits: p.occupied_rooms,
-            rentRange: {
-                min: p.price_min || 0,
-                max: p.price_max || 0,
-            },
-            overall_rating: p.overall_rating,
-            review_count: p.review_count,
-            likes_count: p.likes_count,
-            created_at: p.created_at,
-        }));
+        // Get property IDs to fetch cover photos in batch
+        const propertyIds = (properties || []).map((p: any) => p.property_id);
+        
+        // Fetch cover photos for all properties in one query
+        let coverPhotos: Record<string, string> = {};
+        if (propertyIds.length > 0) {
+            const { data: photos } = await supabase
+                .from('property_photos')
+                .select('property_id, storage_bucket, storage_path')
+                .eq('photo_type', 'COVER')
+                .in('property_id', propertyIds);
+            
+            // Build cover photo URL map
+            const storageBase = process.env.NEXT_PUBLIC_SUPABASE_URL 
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-photos`
+                : '';
+            
+            (photos || []).forEach((photo: any) => {
+                if (storageBase) {
+                    coverPhotos[photo.property_id] = `${storageBase}/${photo.storage_path}`;
+                }
+            });
+        }
+
+        return (properties || []).map((p: any) => {
+            // Priority: new photo system > legacy cover_photo_url > logo_url
+            const coverUrl = coverPhotos[p.property_id] || p.cover_photo_url || p.logo_url;
+            
+            return {
+                id: p.property_id,
+                name: p.property_name,
+                location: p.location,
+                propertyType: p.property_type,
+                caretakerId: p.caretaker_assigned ? p.caretaker_name : null,
+                logoUrl: coverUrl,
+                coverPhotoUrl: coverUrl,
+                verificationStatus: p.verification_status,
+                latitude: p.latitude,
+                longitude: p.longitude,
+                totalUnits: p.total_rooms,
+                vacantUnits: p.vacant_rooms,
+                occupiedUnits: p.occupied_rooms,
+                rentRange: {
+                    min: p.price_min || 0,
+                    max: p.price_max || 0,
+                },
+                overall_rating: p.overall_rating,
+                review_count: p.review_count,
+                likes_count: p.likes_count,
+                created_at: p.created_at,
+            };
+        });
     },
 
     // Get distinct locations for filter dropdowns

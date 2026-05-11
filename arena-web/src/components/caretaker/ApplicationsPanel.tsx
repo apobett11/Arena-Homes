@@ -61,7 +61,16 @@ export const ApplicationsPanel = ({ applications, propertyId, onDataChange }: Ap
       if (!data?.success) {
         throw new Error(data?.error || 'Failed to accept application');
       }
-      
+
+      // Show success with email status - approval already complete even if email fails later
+      let message = 'Application accepted. Tenant setup email has been queued';
+      if (data?.emailTriggerResult?.success === false) {
+        message += ' (delivery will retry automatically)';
+      } else if (data?.emailQueued) {
+        message += '/sent';
+      }
+      alert(message);
+
       setSelectedApp(null);
       onDataChange();  // Refresh parent data
       
