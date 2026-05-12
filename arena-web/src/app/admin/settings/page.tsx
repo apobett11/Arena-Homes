@@ -7,7 +7,8 @@ import { safeMaybeSingle, safeSelect } from "@/lib/supabase/safe";
 
 export default function AdminSettingsPage() {
     const [tab, setTab] = useState<"brand" | "content" | "profile">("brand");
-    const [message, setMessage] = useState("");
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [showPopup, setShowPopup] = useState(false);
 
     const [siteName, setSiteName] = useState("Arena Homes");
     const [logoUrl, setLogoUrl] = useState("");
@@ -24,6 +25,8 @@ export default function AdminSettingsPage() {
     const [telegramUrl, setTelegramUrl] = useState("");
     const [officeAddress, setOfficeAddress] = useState("");
     const [businessHours, setBusinessHours] = useState("");
+    const [locationDescription, setLocationDescription] = useState("");
+    const [locationCoordinates, setLocationCoordinates] = useState({ lat: "", lng: "" });
 
     const [rules, setRules] = useState<any[]>([]);
     const [faqs, setFaqs] = useState<any[]>([]);
@@ -58,6 +61,11 @@ export default function AdminSettingsPage() {
                 setTelegramUrl(brand.telegram_url || "");
                 setOfficeAddress(brand.office_address || "");
                 setBusinessHours(brand.business_hours || "");
+                setLocationDescription(brand.location_description || "");
+                setLocationCoordinates({
+                    lat: brand.location_lat || "",
+                    lng: brand.location_lng || ""
+                });
             } else {
                 const fallbackBrand = await safeMaybeSingle<any>("app_settings", (q) =>
                     q.select("*").eq("key", "site_brand").maybeSingle()
@@ -86,8 +94,16 @@ export default function AdminSettingsPage() {
         void load();
     }, []);
 
+    const showMessage = (type: "success" | "error", text: string) => {
+        setMessage({ type, text });
+        setShowPopup(true);
+        setTimeout(() => {
+            setShowPopup(false);
+            setMessage(null);
+        }, 3000);
+    };
+
     const saveBrand = async () => {
-        setMessage("");
         const supabase = getSupabaseClient() as any;
         const { data: authData } = await supabase.auth.getUser();
         const userId = authData?.user?.id || null;
@@ -108,6 +124,9 @@ export default function AdminSettingsPage() {
             telegram_url: telegramUrl,
             office_address: officeAddress,
             business_hours: businessHours,
+            location_description: locationDescription,
+            location_lat: locationCoordinates.lat,
+            location_lng: locationCoordinates.lng,
             updated_by: userId,
         };
         const result = await supabase.from("site_settings").upsert(payload, { onConflict: "id" });
@@ -124,7 +143,7 @@ export default function AdminSettingsPage() {
                 is_public: true,
             }, { onConflict: "key" });
         }
-        setMessage("Brand settings saved.");
+        showMessage("success", "Brand settings saved.");
     };
 
     const addRule = async () => {
@@ -160,7 +179,7 @@ export default function AdminSettingsPage() {
             },
             { onConflict: "slug" }
         );
-        setMessage("Terms saved.");
+        showMessage("success", "Terms saved.");
     };
 
     const saveProfile = async () => {
@@ -173,7 +192,7 @@ export default function AdminSettingsPage() {
                 avatar_url: profileAvatar || null,
             })
             .eq("user_id", profile.user_id);
-        setMessage("Profile updated.");
+        showMessage("success", "Profile updated.");
     };
 
     return (
@@ -182,7 +201,7 @@ export default function AdminSettingsPage() {
             <div className="p-4 md:p-6 lg:p-8">
                 <h1 className="text-3xl font-bold text-white mb-4">System Settings</h1>
                 <p className="text-slate-400">Manage brand, public content, and admin profile controls.</p>
-                {message && <p className="mt-3 text-sm text-emerald-300">{message}</p>}
+                {message && <p className={`mt-3 text-sm ${message.type === "success" ? "text-emerald-300" : "text-red-400"}`}>{message.text}</p>}
                 <div className="mt-6 flex flex-wrap gap-2">
                     {[
                         ["brand", "Brand settings"],
@@ -222,28 +241,32 @@ export default function AdminSettingsPage() {
                         </div>
 
                         <div className="border-t border-slate-800 pt-4 mt-4">
-                            <h3 className="text-sm font-semibold text-slate-300 mb-3">Contact Information</h3>
+                            <h3 className="text-sm font-semibold text-slate-300 mb-3">Our Location</h3>
                             <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Contact Email</label>
-                                    <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="Contact email" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Contact Phone</label>
-                                    <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="Contact phone" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1">WhatsApp Number</label>
-                                    <input value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="e.g., +254700000000" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
-                                </div>
-                                <div>
+                                <div className="md:col-span-2">
                                     <label className="block text-xs text-slate-400 mb-1">Office Address</label>
                                     <input value={officeAddress} onChange={(e) => setOfficeAddress(e.target.value)} placeholder="Office address" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-xs text-slate-400 mb-1">Business Hours</label>
-                                    <input value={businessHours} onChange={(e) => setBusinessHours(e.target.value)} placeholder="e.g., Mon-Fri 9AM-6PM, Sat 10AM-4PM" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                    <label className="block text-xs text-slate-400 mb-1">Location Description</label>
+                                    <textarea value={locationDescription} onChange={(e) => setLocationDescription(e.target.value)} placeholder="Describe your office location..." rows={3} className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
                                 </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Latitude</label>
+                                    <input value={locationCoordinates.lat} onChange={(e) => setLocationCoordinates(prev => ({ ...prev, lat: e.target.value }))} placeholder="e.g., -1.2921" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Longitude</label>
+                                    <input value={locationCoordinates.lng} onChange={(e) => setLocationCoordinates(prev => ({ ...prev, lng: e.target.value }))} placeholder="e.g., 36.8219" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-slate-800 pt-4 mt-4">
+                            <h3 className="text-sm font-semibold text-slate-300 mb-3">Business Hours</h3>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs text-slate-400 mb-1">Business Hours</label>
+                                <input value={businessHours} onChange={(e) => setBusinessHours(e.target.value)} placeholder="e.g., Mon-Fri 9AM-6PM, Sat 10AM-4PM" className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" />
                             </div>
                         </div>
 
@@ -344,6 +367,21 @@ export default function AdminSettingsPage() {
                     </div>
                 )}
             </div>
+            
+            {/* Popup Notification */}
+            {showPopup && message && (
+                <div className="fixed top-4 right-4 z-50 max-w-sm animate-pulse">
+                    <div className={`rounded-lg p-4 shadow-lg border ${
+                        message.type === "success" 
+                            ? "bg-emerald-600 border-emerald-500 text-white" 
+                            : "bg-rose-600 border-rose-500 text-white"
+                    }`}>
+                        <div className="flex items-center gap-2">
+                            <span className="font-medium">{message.text}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -14,6 +14,11 @@ import type {
   EmployeeStatus,
   IssueStatus,
   IssuePriority,
+  Message,
+  SendMessagePayload,
+  SendBroadcastPayload,
+  SuspendUserPayload,
+  Suspension,
 } from './types';
 
 const getClient = (): any => getSupabaseClient() as any;
@@ -673,4 +678,222 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
     vacantUnits,
     occupiedUnits,
   };
+}
+
+// ============================================================================
+// MESSAGING FUNCTIONS
+// ============================================================================
+
+export async function sendMessage(payload: SendMessagePayload): Promise<{ success: boolean; error?: string; data?: any }> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase.rpc('send_private_message', {
+      p_to_user_id: payload.to_user_id,
+      p_message_head: payload.message_head,
+      p_message_body: payload.message_body
+    });
+
+    if (error) {
+      console.error('Error sending message:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Error sending message:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function sendBroadcastMessage(payload: SendBroadcastPayload): Promise<{ success: boolean; error?: string; data?: any }> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase.rpc('send_broadcast_message', {
+      p_target_role: payload.target_role,
+      p_message_head: payload.message_head,
+      p_message_body: payload.message_body
+    });
+
+    if (error) {
+      console.error('Error sending broadcast:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Error sending broadcast:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function markMessageAsRead(messageId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = getClient();
+  
+  try {
+    const { error } = await supabase.rpc('mark_message_read', {
+      p_message_id: messageId
+    });
+
+    if (error) {
+      console.error('Error marking message as read:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error marking message as read:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function getUserMessages(): Promise<Message[]> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_inbox')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching messages:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err: any) {
+    console.error('Error fetching messages:', err);
+    return [];
+  }
+}
+
+export async function getSentMessages(): Promise<Message[]> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_sent_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching sent messages:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err: any) {
+    console.error('Error fetching sent messages:', err);
+    return [];
+  }
+}
+
+// ============================================================================
+// SUSPENSION FUNCTIONS
+// ============================================================================
+
+export async function suspendUser(payload: SuspendUserPayload): Promise<{ success: boolean; error?: string; data?: any }> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase.rpc('suspend_user', {
+      p_user_id: payload.user_id,
+      p_reason: payload.reason,
+      p_duration_days: payload.duration_days,
+      p_notes: payload.notes
+    });
+
+    if (error) {
+      console.error('Error suspending user:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Error suspending user:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function revokeUserAccess(userId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = getClient();
+  
+  try {
+    const { error } = await supabase.rpc('revoke_user_access', {
+      p_user_id: userId
+    });
+
+    if (error) {
+      console.error('Error revoking user access:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error revoking user access:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function restoreUserAccess(userId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = getClient();
+  
+  try {
+    const { error } = await supabase.rpc('restore_user_access', {
+      p_user_id: userId
+    });
+
+    if (error) {
+      console.error('Error restoring user access:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error restoring user access:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function getActiveSuspensions(): Promise<Suspension[]> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase
+      .from('active_suspensions')
+      .select('*')
+      .order('suspended_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching suspensions:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err: any) {
+    console.error('Error fetching suspensions:', err);
+    return [];
+  }
+}
+
+export async function isUserSuspended(userId: string): Promise<boolean> {
+  const supabase = getClient();
+  
+  try {
+    const { data, error } = await supabase.rpc('is_user_suspended', {
+      p_user_id: userId
+    });
+
+    if (error) {
+      console.error('Error checking suspension status:', error);
+      return false;
+    }
+
+    return data || false;
+  } catch (err: any) {
+    console.error('Error checking suspension status:', err);
+    return false;
+  }
 }

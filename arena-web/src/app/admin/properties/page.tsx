@@ -251,8 +251,9 @@ export default function AdminPropertiesPage() {
                 </div>
 
                 <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/50">
-                    <table className="min-w-[1000px] w-full text-sm">
-                        <thead className="bg-slate-900/90 text-slate-300">
+                    <div className="max-h-[600px] overflow-y-auto">
+                        <table className="min-w-[1000px] w-full text-sm sticky top-0">
+                            <thead className="bg-slate-900/90 text-slate-300 sticky top-0 z-10">
                             <tr>
                                 <th className="px-4 py-3 text-left">Property name</th>
                                 <th className="px-4 py-3 text-left">Location</th>
@@ -374,6 +375,7 @@ export default function AdminPropertiesPage() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
             </div>

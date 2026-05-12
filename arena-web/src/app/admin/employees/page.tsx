@@ -10,6 +10,11 @@ import {
     revokeEmployeeAccess,
     sendWarningToEmployee,
     requestPasswordReset,
+    sendMessage,
+    sendBroadcastMessage,
+    suspendUser,
+    revokeUserAccess,
+    restoreUserAccess,
 } from "@/lib/admin/dashboard";
 import type { AdminEmployee } from "@/lib/admin/types";
 import {
@@ -19,6 +24,7 @@ import {
     ShieldAlert,
     ShieldCheck,
     MessageSquareWarning,
+    MessageSquare,
     Key,
     Eye,
     Home,
@@ -26,7 +32,7 @@ import {
 } from "lucide-react";
 
 type SortField = "name" | "role" | "status" | "last_online" | "complaints";
-type ModalType = "suspend" | "restore" | "revoke" | "warning" | "password" | "details" | null;
+type ModalType = "suspend" | "restore" | "revoke" | "warning" | "password" | "details" | "message" | null;
 
 export default function AdminEmployeesPage() {
     const [employees, setEmployees] = useState<AdminEmployee[]>([]);
@@ -43,6 +49,18 @@ export default function AdminEmployeesPage() {
     const [warningMessage, setWarningMessage] = useState("");
     const [warningSeverity, setWarningSeverity] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
 
+    // Message form state
+    const [messageTitle, setMessageTitle] = useState("");
+    const [messageBody, setMessageBody] = useState("");
+
+    // Suspension form state
+    const [suspensionReason, setSuspensionReason] = useState("");
+    const [suspensionDuration, setSuspensionDuration] = useState<number | null>(null);
+    const [suspensionNotes, setSuspensionNotes] = useState("");
+
+    // Current user state
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     async function loadEmployees() {
@@ -57,6 +75,13 @@ export default function AdminEmployeesPage() {
 
     useEffect(() => {
         loadEmployees();
+        // Load current user
+        const loadCurrentUser = async () => {
+            const supabase = (await import("@/lib/supabase/client")).getSupabaseClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            setCurrentUserId(user?.id || null);
+        };
+        loadCurrentUser();
     }, []);
 
     // Close dropdown when clicking outside
@@ -109,12 +134,40 @@ export default function AdminEmployeesPage() {
         setWarningTitle("");
         setWarningMessage("");
         setWarningSeverity("MEDIUM");
+        setMessageTitle("");
+        setMessageBody("");
+        setSuspensionReason("");
+        setSuspensionDuration(null);
+        setSuspensionNotes("");
+    };
+
+    const handleSendMessage = async () => {
+        if (!selectedEmployee || !messageTitle.trim() || !messageBody.trim()) return;
+        setModalLoading(true);
+        const result = await sendMessage({
+            to_user_id: selectedEmployee.user_id,
+            message_head: { title: messageTitle, type: "PRIVATE" },
+            message_body: { content: messageBody, timestamp: new Date().toISOString() }
+        });
+        setModalLoading(false);
+
+        if (result.success) {
+            setMessage({ type: "success", text: `Message sent to ${selectedEmployee.full_name}.` });
+            setTimeout(closeModal, 1500);
+        } else {
+            setMessage({ type: "error", text: result.error || "Failed to send message" });
+        }
     };
 
     const handleSuspend = async () => {
-        if (!selectedEmployee) return;
+        if (!selectedEmployee || !suspensionReason.trim()) return;
         setModalLoading(true);
-        const result = await suspendEmployee(selectedEmployee.id);
+        const result = await suspendUser({
+            user_id: selectedEmployee.user_id,
+            reason: suspensionReason,
+            duration_days: suspensionDuration,
+            notes: suspensionNotes
+        });
         setModalLoading(false);
 
         if (result.success) {
@@ -129,7 +182,7 @@ export default function AdminEmployeesPage() {
     const handleRestore = async () => {
         if (!selectedEmployee) return;
         setModalLoading(true);
-        const result = await restoreEmployee(selectedEmployee.id);
+        const result = await restoreUserAccess(selectedEmployee.user_id);
         setModalLoading(false);
 
         if (result.success) {
@@ -144,7 +197,7 @@ export default function AdminEmployeesPage() {
     const handleRevoke = async () => {
         if (!selectedEmployee) return;
         setModalLoading(true);
-        const result = await revokeEmployeeAccess(selectedEmployee.id);
+        const result = await revokeUserAccess(selectedEmployee.user_id);
         setModalLoading(false);
 
         if (result.success) {
@@ -226,8 +279,9 @@ export default function AdminEmployeesPage() {
                 </div>
 
                 <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/50">
-                    <table className="min-w-[1000px] w-full text-sm">
-                        <thead className="bg-slate-900/90 text-slate-300">
+                    <div className="max-h-[600px] overflow-y-auto">
+                        <table className="min-w-[1000px] w-full text-sm sticky top-0">
+                            <thead className="bg-slate-900/90 text-slate-300 sticky top-0 z-10">
                             <tr>
                                 <th className="px-4 py-3 text-left">Full name</th>
                                 <th className="px-4 py-3 text-left">Role</th>
@@ -304,33 +358,13 @@ export default function AdminEmployeesPage() {
 
                                                             <div className="border-t border-slate-700 my-1" />
 
-                                                            {employee.status === "ACTIVE" ? (
-                                                                <button
-                                                                    onClick={() => openModal("suspend", employee)}
-                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 transition-colors"
-                                                                >
-                                                                    <ShieldAlert className="w-4 h-4" />
-                                                                    Suspend
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => openModal("restore", employee)}
-                                                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 transition-colors"
-                                                                >
-                                                                    <ShieldCheck className="w-4 h-4" />
-                                                                    Restore/Activate
-                                                                </button>
-                                                            )}
-
                                                             <button
-                                                                onClick={() => openModal("revoke", employee)}
-                                                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-amber-300 hover:bg-amber-500/10 hover:text-amber-200 transition-colors"
+                                                                onClick={() => openModal("message", employee)}
+                                                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                                                             >
-                                                                <Shield className="w-4 h-4" />
-                                                                Revoke dashboard access
+                                                                <MessageSquare className="w-4 h-4" />
+                                                                Send message
                                                             </button>
-
-                                                            <div className="border-t border-slate-700 my-1" />
 
                                                             <button
                                                                 onClick={() => openModal("warning", employee)}
@@ -347,6 +381,38 @@ export default function AdminEmployeesPage() {
                                                                 <Key className="w-4 h-4" />
                                                                 Request password reset
                                                             </button>
+
+                                                            {/* Only show suspend/revoke for non-self users */}
+                                                            {currentUserId !== employee.user_id && (
+                                                                <>
+                                                                    <div className="border-t border-slate-700 my-1" />
+                                                                    {employee.status === "ACTIVE" ? (
+                                                                        <button
+                                                                            onClick={() => openModal("suspend", employee)}
+                                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 transition-colors"
+                                                                        >
+                                                                            <ShieldAlert className="w-4 h-4" />
+                                                                            Suspend
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            onClick={() => openModal("restore", employee)}
+                                                                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 transition-colors"
+                                                                        >
+                                                                            <ShieldCheck className="w-4 h-4" />
+                                                                            Restore/Activate
+                                                                        </button>
+                                                                    )}
+
+                                                                    <button
+                                                                        onClick={() => openModal("revoke", employee)}
+                                                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-amber-300 hover:bg-amber-500/10 hover:text-amber-200 transition-colors"
+                                                                    >
+                                                                        <Shield className="w-4 h-4" />
+                                                                        Revoke dashboard access
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
@@ -357,6 +423,7 @@ export default function AdminEmployeesPage() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 
@@ -610,6 +677,81 @@ export default function AdminEmployeesPage() {
                     </div>
                 )}
             </AdminModal>
+
+            <AdminModal open={modalType === "suspend"} onClose={closeModal} title="Suspend Employee">
+                {selectedEmployee && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 text-rose-400">
+                            <AlertTriangle className="w-6 h-6" />
+                            <p className="font-semibold">Confirm Suspension</p>
+                        </div>
+                        <p className="text-slate-300">
+                            Are you sure you want to suspend <strong>{selectedEmployee.full_name}</strong>?
+                        </p>
+
+                        <div>
+                            <label className="block text-sm text-slate-400 mb-1">Suspension Reason</label>
+                            <textarea
+                                value={suspensionReason}
+                                onChange={(e) => setSuspensionReason(e.target.value)}
+                                rows={3}
+                                placeholder="Reason for suspension..."
+                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-slate-400 mb-1">Suspension Duration</label>
+                            <select
+                                value={suspensionDuration || ""}
+                                onChange={(e) => setSuspensionDuration(e.target.value ? Number(e.target.value) : null)}
+                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                            >
+                                <option value="">Select duration</option>
+                                <option value="7">1 week</option>
+                                <option value="14">2 weeks</option>
+                                <option value="30">1 month</option>
+                                <option value="">Until further notice</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-slate-400 mb-1">Additional Notes (Optional)</label>
+                            <textarea
+                                value={suspensionNotes}
+                                onChange={(e) => setSuspensionNotes(e.target.value)}
+                                rows={2}
+                                placeholder="Additional notes..."
+                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                            />
+                        </div>
+
+                        <p className="text-sm text-slate-400">
+                            This will block their dashboard access and show a suspended status to tenants.
+                        </p>
+
+                        {message && (
+                            <div className={`p-3 rounded-lg ${message.type === "success" ? "bg-emerald-500/10 text-emerald-300" : "bg-rose-500/10 text-rose-300"}`}>
+                                {message.text}
+                            </div>
+                        )}
+
+                        <div className="flex gap-2">
+                            <button onClick={closeModal} className="flex-1 rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSuspend}
+                                disabled={modalLoading || !suspensionReason.trim()}
+                                className="flex-1 rounded-lg bg-rose-600 px-4 py-2 text-sm text-white hover:bg-rose-500 disabled:opacity-50"
+                            >
+                                {modalLoading ? "Suspending..." : "Suspend"}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </AdminModal>
+
         </div>
     );
 }

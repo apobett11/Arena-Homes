@@ -128,7 +128,7 @@ export const TopBar = () => {
                 </button>
                 <button
                     onClick={handleLogout}
-                    className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
                 >
                     <LogOut size={18} />
                     <span className="text-sm font-medium">Logout</span>

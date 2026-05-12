@@ -5,6 +5,8 @@ export type TenantStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'MO
 export type IssueStatus = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'ESCALATED';
 export type IssuePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 export type AnnouncementTargetRole = 'TENANT' | 'CARETAKER' | 'EMPLOYEE' | 'ALL' | 'PUBLIC';
+export type MessageType = 'PRIVATE' | 'BROADCAST' | 'SYSTEM' | 'WARNING';
+export type BroadcastTargetRole = 'TENANT' | 'EMPLOYEE' | 'ALL';
 
 export interface AdminEmployee {
   id: string;
@@ -135,4 +137,63 @@ export interface PropertyStats {
   leases_count: number;
   average_rating: number | null;
   review_count: number;
+}
+
+// Message Types
+export interface Message {
+  id: string;
+  from_user_id: string;
+  to_user_id: string | null;
+  message_type: MessageType;
+  message_head: Record<string, any>;
+  message_body: Record<string, any>;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MessageRecipient {
+  id: string;
+  message_id: string;
+  user_id: string;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface Suspension {
+  id: string;
+  user_id: string;
+  suspended_by: string;
+  suspension_reason: string;
+  suspension_duration_days: number | null;
+  suspended_at: string;
+  ends_at: string | null;
+  is_active: boolean;
+  ended_at: string | null;
+  ended_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Message Payloads
+export interface SendMessagePayload {
+  to_user_id: string;
+  message_head: Record<string, any>;
+  message_body: Record<string, any>;
+}
+
+export interface SendBroadcastPayload {
+  target_role: BroadcastTargetRole;
+  message_head: Record<string, any>;
+  message_body: Record<string, any>;
+}
+
+export interface SuspendUserPayload {
+  user_id: string;
+  reason: string;
+  duration_days?: number | null;
+  notes?: string | null;
 }
