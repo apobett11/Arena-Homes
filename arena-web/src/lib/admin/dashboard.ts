@@ -228,7 +228,6 @@ export async function getAllProperties(): Promise<AdminProperty[]> {
       caretaker_email: p.caretaker?.email || null,
       caretaker_phone: p.caretaker?.phone_number || null,
       caretaker_status: p.caretaker?.status || null,
-      caretaker_password: p.caretaker_password || null,
       total_units: counts.total,
       occupied_units: counts.occupied,
       vacant_units: counts.vacant,

@@ -1,15 +1,6 @@
--- ============================================================
--- FIX: create_property_complete
--- Purpose:
--- 1. Admin creates property
--- 2. Function creates/updates caretaker in auth.users
--- 3. Function creates/repairs auth.identities for email login
--- 4. Function creates/updates public.profiles
--- 5. Function creates property
--- 6. Function creates caretaker employee
--- 7. Function creates units, FAQs, rules
--- ============================================================
-
+﻿-- Property registration pipeline fixes (audit follow-up)
+-- Applies: atomic verification, rules text/rule_text, no password reset on existing auth,
+-- no plaintext caretaker_password on properties row, clearer duplicate-email errors.
 CREATE OR REPLACE FUNCTION public.create_property_complete(
   p_name text,
   p_location text,
@@ -630,80 +621,3 @@ BEGIN
   );
 END;
 $function$;
-
-
--- ============================================================
--- EXECUTE PERMISSIONS
--- ============================================================
-
-REVOKE ALL ON FUNCTION public.create_property_complete(
-  text,
-  text,
-  text,
-  numeric,
-  integer,
-  text,
-  integer,
-  text,
-  numeric,
-  numeric,
-  boolean,
-  boolean,
-  time without time zone,
-  time without time zone,
-  boolean,
-  numeric,
-  numeric,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  date,
-  text,
-  text,
-  jsonb,
-  jsonb,
-  uuid
-) FROM PUBLIC;
-
-REVOKE ALL ON FUNCTION public.create_property_complete_json(jsonb) FROM PUBLIC;
-
-GRANT EXECUTE ON FUNCTION public.create_property_complete(
-  text,
-  text,
-  text,
-  numeric,
-  integer,
-  text,
-  integer,
-  text,
-  numeric,
-  numeric,
-  boolean,
-  boolean,
-  time without time zone,
-  time without time zone,
-  boolean,
-  numeric,
-  numeric,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  date,
-  text,
-  text,
-  jsonb,
-  jsonb,
-  uuid
-) TO authenticated;
-
-GRANT EXECUTE ON FUNCTION public.create_property_complete_json(jsonb) TO authenticated;

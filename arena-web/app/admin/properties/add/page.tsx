@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { ArrowLeft, CheckCircle, Plus, Trash2, Home, User, HelpCircle, ChevronRight, ChevronLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { MapCoordinatePicker } from "@/components/MapCoordinatePicker";
+import RoleGate from "@/components/auth/RoleGate";
 
 type StepType = "basic" | "details" | "caretaker" | "faq";
 
@@ -87,7 +87,6 @@ const DEFAULT_DATA: FormData = {
 };
 
 export default function AddPropertyPage() {
-    const router = useRouter();
     const [step, setStep] = useState<StepType>("basic");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -116,6 +115,13 @@ export default function AddPropertyPage() {
         if (s === "details") {
             if (data.number_of_units <= 0) e.push("number_of_units");
             if (data.room_space_sqm <= 0) e.push("room_space_sqm");
+            if (!data.latitude || !data.longitude || data.latitude === 0 || data.longitude === 0) {
+                e.push("latitude");
+                e.push("longitude");
+            } else {
+                if (data.latitude < -90 || data.latitude > 90) e.push("latitude");
+                if (data.longitude < -180 || data.longitude > 180) e.push("longitude");
+            }
         }
         if (s === "caretaker") {
             if (!data.caretaker_first_name.trim()) e.push("caretaker_first_name");
@@ -161,13 +167,22 @@ export default function AddPropertyPage() {
         const allErrors = [...validateStep("basic"), ...validateStep("details"), ...validateStep("caretaker")];
         if (allErrors.length > 0) {
             setErrors(new Set(allErrors));
-            setMessage({ type: "error", text: "Please fill all required fields" });
+            const needsCoords = allErrors.includes("latitude") || allErrors.includes("longitude");
+            setMessage({
+                type: "error",
+                text: needsCoords
+                    ? "Please set valid property coordinates (use the map picker or enter latitude/longitude; 0,0 is not allowed)."
+                    : "Please fill all required fields",
+            });
             return;
         }
 
         setLoading(true);
         try {
             const supabase = getSupabaseClient() as any;
+            const rulesForRpc = data.rules
+                .filter((r) => r.text.trim() !== "")
+                .map((r) => ({ rule_text: r.text.trim() }));
             // Transform payload to match SQL expected field names
             const payload = {
                 p_payload: {
@@ -178,13 +193,24 @@ export default function AddPropertyPage() {
                     landmark: data.gate_color,
                     // Deposit logic: if no deposit, send 0
                     deposit_amount: data.has_rent_deposit ? data.rent_deposit_amount : 0,
+                    contact_phone: data.contact_phone.trim() || null,
+                    available_from: data.available_from || null,
+                    rules: rulesForRpc,
                 }
             };
             const response = await (supabase.rpc as any)("create_property_complete_json", payload);
             if (response.error) throw response.error;
-            const res = response.data as { success: boolean; error?: string; property_id?: string; caretaker_temp_password?: string; units_created?: number };
+            const res = response.data as {
+                success: boolean;
+                error?: string;
+                property_id?: string;
+                caretaker_password?: string;
+                caretaker_temp_password?: string;
+                units_created?: number;
+            };
             if (res?.success === false) throw new Error(res.error || "Failed to create property");
-            setCreated({ id: res.property_id || "", tempPassword: res.caretaker_temp_password, units: res.units_created });
+            const caretakerPassword = res.caretaker_password ?? res.caretaker_temp_password ?? undefined;
+            setCreated({ id: res.property_id || "", tempPassword: caretakerPassword, units: res.units_created });
         } catch (err: any) {
             setMessage({ type: "error", text: err.message });
         } finally {
@@ -197,8 +223,9 @@ export default function AddPropertyPage() {
         setIsMapPickerOpen(false);
     }, []);
 
-    if (created) {
-        return (
+    return (
+        <RoleGate allowedRoles={["ADMIN"]}>
+    {created ? (
             <div className="min-h-screen pb-24">
                 <AdminTopBar />
                 <div className="p-6 max-w-2xl mx-auto">
@@ -219,10 +246,7 @@ export default function AddPropertyPage() {
                     </div>
                 </div>
             </div>
-        );
-    }
-
-    return (
+    ) : (
         <div className="min-h-screen pb-24">
             <AdminTopBar />
             <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -496,5 +520,7 @@ export default function AddPropertyPage() {
                 </div>
             </div>
         </div>
+    )}
+        </RoleGate>
     );
 }
