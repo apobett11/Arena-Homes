@@ -914,53 +914,43 @@ export async function getCaretakerAnnouncements(propertyId: string, caretakerEmp
     console.error('Error fetching incoming announcements:', incomingError);
   }
 
-  // Outgoing: sent by this caretaker
-  const { data: outgoing, error: outgoingError } = await supabase
-    .from('announcements')
-    .select('*')
-    .eq('sender_employee_id', caretakerEmployeeId)
-    .order('created_at', { ascending: false });
-
-  if (outgoingError) {
-    console.error('Error fetching outgoing announcements:', outgoingError);
-  }
+  const { getMyMessages } = await import('@/lib/communication/api');
+  const commRows = await getMyMessages();
+  const commOutgoing: CaretakerAnnouncement[] = commRows
+    .filter((m) => m.direction === 'SENT' && m.message_type === 'BROADCAST')
+    .map((m) => ({
+      id: m.message_id,
+      title: m.title,
+      body: m.body,
+      target_role: 'TENANT',
+      property_id: m.related_property_id,
+      is_global: false,
+      is_published: true,
+      sender_user_id: m.sender_user_id,
+      sender_employee_id: caretakerEmployeeId,
+      created_at: m.created_at,
+      updated_at: m.created_at,
+    }));
 
   return {
     incoming: (incoming || []) as CaretakerAnnouncement[],
-    outgoing: (outgoing || []) as CaretakerAnnouncement[],
+    outgoing: commOutgoing,
   };
 }
 
 export async function createCaretakerAnnouncement(
   payload: CreateAnnouncementPayload
-): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = getClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const employee = await getCurrentCaretakerEmployee();
-
-  if (!user) {
-    return { success: false, error: 'Not authenticated' };
+): Promise<{ success: boolean; id?: string; error?: string; recipientCount?: number }> {
+  const { createCaretakerBroadcast } = await import('@/lib/communication/api');
+  const result = await createCaretakerBroadcast(payload.title, payload.body);
+  if (!result.success) {
+    return { success: false, error: result.error };
   }
-
-  const { data, error } = await supabase
-    .from('announcements')
-    .insert({
-      ...payload,
-      sender_user_id: user.id,
-      sender_employee_id: employee?.id,
-      is_published: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('Error creating announcement:', error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, id: data.id };
+  return {
+    success: true,
+    id: result.messageId,
+    recipientCount: result.recipientCount,
+  };
 }
 
 // ============================================================================
@@ -1030,19 +1020,9 @@ export async function sendCaretakerMessage(
 }
 
 export async function markMessageAsRead(messageId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = getClient();
-
-  const { error } = await supabase
-    .from('messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('id', messageId);
-
-  if (error) {
-    console.error('Error marking message as read:', error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true };
+  const { markCommunicationRead } = await import('@/lib/communication/api');
+  const result = await markCommunicationRead(messageId);
+  return { success: result.success, error: result.error };
 }
 
 // ============================================================================

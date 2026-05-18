@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bell, Plus, Send, Inbox, User } from "lucide-react";
+import { Bell, Plus, Send } from "lucide-react";
 import type { CaretakerAnnouncement } from "@/lib/caretaker/types";
 import { createCaretakerAnnouncement } from "@/lib/caretaker/dashboard";
+import { getCaretakerBroadcastStats } from "@/lib/communication/api";
 
 interface AnnouncementsPanelProps {
   incoming: CaretakerAnnouncement[];
@@ -16,33 +17,52 @@ interface AnnouncementsPanelProps {
 export const AnnouncementsPanel = ({
   incoming,
   outgoing,
-  propertyId,
-  caretakerEmployeeId,
   onDataChange,
 }: AnnouncementsPanelProps) => {
   const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">("incoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [statsFor, setStatsFor] = useState<string | null>(null);
+  const [stats, setStats] = useState<Record<string, unknown> | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const handleCreate = async (data: { title: string; body: string }) => {
     setLoading(true);
+    setFeedback(null);
     const result = await createCaretakerAnnouncement({
-      ...data,
-      property_id: propertyId,
+      title: data.title,
+      body: data.body,
+      property_id: "",
       target_role: "TENANT",
     });
+    setLoading(false);
     if (result.success) {
+      setFeedback(`Broadcast sent to ${result.recipientCount ?? 0} tenant(s).`);
       setShowCreateModal(false);
       onDataChange();
+    } else {
+      setFeedback(result.error || "Failed to send broadcast");
     }
-    setLoading(false);
+  };
+
+  const loadStats = async (messageId: string) => {
+    setStatsFor(messageId);
+    setStatsLoading(true);
+    setStats(null);
+    const result = await getCaretakerBroadcastStats(messageId);
+    setStatsLoading(false);
+    if (result.success) {
+      setStats(result.stats);
+    } else {
+      setFeedback(result.error || "Failed to load stats");
+    }
   };
 
   const announcements = activeTab === "incoming" ? incoming : outgoing;
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
       <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
         <button
           onClick={() => setActiveTab("incoming")}
@@ -52,7 +72,7 @@ export const AnnouncementsPanel = ({
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
-          <Inbox className="w-4 h-4" />
+          <Bell className="w-4 h-4" />
           Incoming ({incoming.length})
         </button>
         <button
@@ -64,25 +84,34 @@ export const AnnouncementsPanel = ({
           }`}
         >
           <Send className="w-4 h-4" />
-          Outgoing ({outgoing.length})
+          My broadcasts ({outgoing.length})
         </button>
       </div>
 
-      {/* Create Button (only for outgoing) */}
+      {feedback && (
+        <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2">
+          {feedback}
+        </p>
+      )}
+
       {activeTab === "outgoing" && (
         <button
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Send Announcement
+          Send broadcast to my tenants
         </button>
       )}
 
-      {/* Announcements List */}
       <div className="space-y-4">
         {announcements.map((announcement) => (
-          <AnnouncementCard key={announcement.id} announcement={announcement} type={activeTab} />
+          <AnnouncementCard
+            key={announcement.id}
+            announcement={announcement}
+            type={activeTab}
+            onViewStats={activeTab === "outgoing" ? () => void loadStats(announcement.id) : undefined}
+          />
         ))}
       </div>
 
@@ -90,12 +119,32 @@ export const AnnouncementsPanel = ({
         <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/10">
           <Bell className="w-12 h-12 text-slate-400 mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-400">
-            No {activeTab} announcements.
+            No {activeTab === "incoming" ? "incoming" : "outgoing"} items.
           </p>
         </div>
       )}
 
-      {/* Create Modal */}
+      {statsFor && activeTab === "outgoing" && (
+        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm">
+          {statsLoading ? (
+            <p className="text-slate-500">Loading read stats...</p>
+          ) : stats ? (
+            <div className="space-y-2 text-slate-700 dark:text-slate-300">
+              <p>
+                Read: {String(stats.read_count)} / {String(stats.total_tenants)} (
+                {String(stats.read_percentage)}%)
+              </p>
+              <p className="text-xs text-slate-500">
+                Unread tenants:{" "}
+                {Array.isArray(stats.unread_tenants)
+                  ? (stats.unread_tenants as { name?: string }[]).map((t) => t.name).join(", ") || "None"
+                  : "—"}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      )}
+
       {showCreateModal && (
         <CreateModal
           onClose={() => setShowCreateModal(false)}
@@ -110,9 +159,11 @@ export const AnnouncementsPanel = ({
 const AnnouncementCard = ({
   announcement,
   type,
+  onViewStats,
 }: {
   announcement: CaretakerAnnouncement;
   type: "incoming" | "outgoing";
+  onViewStats?: () => void;
 }) => {
   return (
     <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
@@ -127,15 +178,12 @@ const AnnouncementCard = ({
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-slate-900 dark:text-white">{announcement.title}</h3>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{announcement.body}</p>
-          <div className="mt-3 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500">
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500">
             <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
-            {announcement.is_global && (
-              <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full">Global</span>
-            )}
-            {announcement.target_role && (
-              <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full">
-                To: {announcement.target_role}
-              </span>
+            {onViewStats && (
+              <button type="button" onClick={onViewStats} className="text-primary font-semibold hover:underline">
+                View read stats
+              </button>
             )}
           </div>
         </div>
@@ -164,7 +212,12 @@ const CreateModal = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Send Announcement</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+          Broadcast to my tenants
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          Only tenants assigned to your properties will receive this message.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -175,7 +228,6 @@ const CreateModal = ({
               onChange={(e) => setTitle(e.target.value)}
               required
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="e.g., Water Maintenance Notice"
             />
           </div>
 
@@ -187,7 +239,6 @@ const CreateModal = ({
               rows={4}
               required
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Write your announcement..."
             />
           </div>
 

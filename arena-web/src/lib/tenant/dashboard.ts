@@ -301,41 +301,36 @@ async function getTenantDashboardFallback(userId: string): Promise<{
 // Notifications
 // ============================================================================
 export async function getTenantNotifications(): Promise<TenantNotification[]> {
-  const supabase = getSupabaseClient() as any;
-  
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData.user) return [];
-  
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('id, user_id, title, body, read_at, created_at')
-    .eq('user_id', authData.user.id)
-    .order('created_at', { ascending: false })
-    .limit(50);
-  
-  if (error) {
-    console.error('getTenantNotifications error:', error);
-    return [];
-  }
-  
-  return (data || []).map((n: any) => ({
+  const { getMyNotificationsRpc } = await import('@/lib/communication/api');
+  const rows = await getMyNotificationsRpc();
+  return rows.map((n) => ({
     id: n.id,
-    userId: n.user_id,
+    userId: '',
     title: n.title,
     body: n.body,
     readAt: n.read_at,
     createdAt: n.created_at,
+    messageId:
+      (n.data?.communication_message_id as string) ||
+      (n.data?.message_id as string) ||
+      undefined,
   }));
 }
 
-export async function markNotificationRead(notificationId: string): Promise<void> {
+export async function markNotificationRead(
+  notificationId: string,
+  messageId?: string
+): Promise<void> {
+  if (messageId) {
+    const { markCommunicationRead } = await import('@/lib/communication/api');
+    await markCommunicationRead(messageId);
+    return;
+  }
   const supabase = getSupabaseClient() as any;
-  
   const { error } = await supabase
     .from('notifications')
-    .update({ read_at: new Date().toISOString() })
+    .update({ read_at: new Date().toISOString(), is_read: true })
     .eq('id', notificationId);
-  
   if (error) {
     console.error('markNotificationRead error:', error);
     throw error;

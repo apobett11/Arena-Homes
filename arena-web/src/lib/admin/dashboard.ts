@@ -684,109 +684,70 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
 // ============================================================================
 
 export async function sendMessage(payload: SendMessagePayload): Promise<{ success: boolean; error?: string; data?: any }> {
-  const supabase = getClient();
-  
-  try {
-    const { data, error } = await supabase.rpc('send_private_message', {
-      p_to_user_id: payload.to_user_id,
-      p_message_head: payload.message_head,
-      p_message_body: payload.message_body
-    });
-
-    if (error) {
-      console.error('Error sending message:', error);
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data };
-  } catch (err: any) {
-    console.error('Error sending message:', err);
-    return { success: false, error: err.message };
+  const title = String(payload.message_head?.title ?? 'Message');
+  const body = String(payload.message_body?.content ?? payload.message_body?.body ?? '');
+  const { createDirectMessage } = await import('@/lib/communication/api');
+  const result = await createDirectMessage(payload.to_user_id, title, body);
+  if (!result.success) {
+    return { success: false, error: result.error };
   }
+  return { success: true, data: { message_id: result.messageId } };
 }
 
 export async function sendBroadcastMessage(payload: SendBroadcastPayload): Promise<{ success: boolean; error?: string; data?: any }> {
-  const supabase = getClient();
-  
-  try {
-    const { data, error } = await supabase.rpc('send_broadcast_message', {
-      p_target_role: payload.target_role,
-      p_message_head: payload.message_head,
-      p_message_body: payload.message_body
-    });
-
-    if (error) {
-      console.error('Error sending broadcast:', error);
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data };
-  } catch (err: any) {
-    console.error('Error sending broadcast:', err);
-    return { success: false, error: err.message };
+  const title = String(payload.message_head?.title ?? 'Broadcast');
+  const body = String(payload.message_body?.content ?? payload.message_body?.body ?? '');
+  const audience = payload.target_role === 'EMPLOYEE' ? 'EMPLOYEES' : payload.target_role;
+  const { createAdminBroadcast } = await import('@/lib/communication/api');
+  const result = await createAdminBroadcast(audience as 'ALL' | 'EMPLOYEES' | 'TENANTS', title, body);
+  if (!result.success) {
+    return { success: false, error: result.error };
   }
+  return { success: true, data: { message_id: result.messageId, recipient_count: result.recipientCount } };
 }
 
 export async function markMessageAsRead(messageId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = getClient();
-  
-  try {
-    const { error } = await supabase.rpc('mark_message_read', {
-      p_message_id: messageId
-    });
-
-    if (error) {
-      console.error('Error marking message as read:', error);
-      return { success: false, error: error.message };
-    }
-
-    return { success: true };
-  } catch (err: any) {
-    console.error('Error marking message as read:', err);
-    return { success: false, error: err.message };
-  }
+  const { markCommunicationRead } = await import('@/lib/communication/api');
+  const result = await markCommunicationRead(messageId);
+  return { success: result.success, error: result.error };
 }
 
 export async function getUserMessages(): Promise<Message[]> {
-  const supabase = getClient();
-  
-  try {
-    const { data, error } = await supabase
-      .from('user_inbox')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (err: any) {
-    console.error('Error fetching messages:', err);
-    return [];
-  }
+  const { getMyMessages } = await import('@/lib/communication/api');
+  const rows = await getMyMessages();
+  return rows
+    .filter((m) => m.direction === 'INBOX')
+    .map((m) => ({
+      id: m.message_id,
+      from_user_id: m.sender_user_id,
+      to_user_id: null,
+      message_type: m.message_type as Message['message_type'],
+      message_head: { title: m.title },
+      message_body: { content: m.body },
+      is_read: Boolean(m.read_at),
+      read_at: m.read_at,
+      created_at: m.created_at,
+      updated_at: m.created_at,
+    }));
 }
 
 export async function getSentMessages(): Promise<Message[]> {
-  const supabase = getClient();
-  
-  try {
-    const { data, error } = await supabase
-      .from('user_sent_messages')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching sent messages:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (err: any) {
-    console.error('Error fetching sent messages:', err);
-    return [];
-  }
+  const { getMyMessages } = await import('@/lib/communication/api');
+  const rows = await getMyMessages();
+  return rows
+    .filter((m) => m.direction === 'SENT')
+    .map((m) => ({
+      id: m.message_id,
+      from_user_id: m.sender_user_id,
+      to_user_id: null,
+      message_type: m.message_type as Message['message_type'],
+      message_head: { title: m.title },
+      message_body: { content: m.body },
+      is_read: true,
+      read_at: null,
+      created_at: m.created_at,
+      updated_at: m.created_at,
+    }));
 }
 
 // ============================================================================

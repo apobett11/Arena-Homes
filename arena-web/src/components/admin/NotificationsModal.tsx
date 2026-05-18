@@ -1,17 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminModal from "@/components/admin/AdminModal";
-import { getSupabaseClient } from "@/lib/supabase/client";
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-  type: string;
-}
+import {
+  getMyNotificationsRpc,
+  markCommunicationRead,
+  type CommunicationNotificationItem,
+} from "@/lib/communication/api";
 
 interface NotificationsModalProps {
   open: boolean;
@@ -19,7 +15,8 @@ interface NotificationsModalProps {
 }
 
 export default function NotificationsModal({ open, onClose }: NotificationsModalProps) {
-  const [items, setItems] = useState<NotificationItem[]>([]);
+  const router = useRouter();
+  const [items, setItems] = useState<CommunicationNotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
 
@@ -30,24 +27,8 @@ export default function NotificationsModal({ open, onClose }: NotificationsModal
     const load = async () => {
       setLoading(true);
       try {
-        const supabase = getSupabaseClient() as any;
-        const authResult = await supabase.auth.getUser();
-        const userId = authResult.data?.user?.id;
-        if (!userId) {
-          setItems([]);
-          return;
-        }
-        const { data, error } = await supabase
-          .from("notifications")
-          .select("id,title,message,is_read,created_at,type")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(30);
-        if (error) {
-          setItems([]);
-          return;
-        }
-        setItems((data ?? []) as NotificationItem[]);
+        const data = await getMyNotificationsRpc();
+        setItems(data);
       } finally {
         setLoading(false);
       }
@@ -55,24 +36,37 @@ export default function NotificationsModal({ open, onClose }: NotificationsModal
     void load();
   }, [open]);
 
+  const openNotification = async (item: CommunicationNotificationItem) => {
+    const messageId =
+      (item.data?.communication_message_id as string) ||
+      (item.data?.message_id as string) ||
+      null;
+    if (messageId) {
+      await markCommunicationRead(messageId);
+    }
+    setItems((prev) =>
+      prev.map((n) => (n.id === item.id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n))
+    );
+    onClose();
+    router.push("/admin/messages");
+  };
+
   const markAllAsRead = async () => {
     setMarkingAll(true);
     try {
-      const supabase = getSupabaseClient() as any;
-      const authResult = await supabase.auth.getUser();
-      const userId = authResult.data?.user?.id;
-      if (!userId) return;
-      await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
-      setItems((prev) => prev.map((item) => ({ ...item, is_read: true })));
+      for (const item of items.filter((n) => !n.is_read)) {
+        const messageId =
+          (item.data?.communication_message_id as string) ||
+          (item.data?.message_id as string) ||
+          null;
+        if (messageId) {
+          await markCommunicationRead(messageId);
+        }
+      }
+      setItems((prev) => prev.map((item) => ({ ...item, is_read: true, read_at: new Date().toISOString() })));
     } finally {
       setMarkingAll(false);
     }
-  };
-
-  const markOneAsRead = async (id: string) => {
-    const supabase = getSupabaseClient() as any;
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)));
   };
 
   return (
@@ -80,7 +74,7 @@ export default function NotificationsModal({ open, onClose }: NotificationsModal
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm text-slate-400">{unreadCount} unread</p>
         <button
-          onClick={markAllAsRead}
+          onClick={() => void markAllAsRead()}
           disabled={markingAll || unreadCount === 0}
           className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -98,9 +92,8 @@ export default function NotificationsModal({ open, onClose }: NotificationsModal
           {items.map((item) => (
             <button
               key={item.id}
-              onClick={() => {
-                if (!item.is_read) void markOneAsRead(item.id);
-              }}
+              type="button"
+              onClick={() => void openNotification(item)}
               className={`w-full rounded-xl border p-3 text-left transition ${
                 item.is_read
                   ? "border-slate-800 bg-slate-950/40 text-slate-300"
@@ -109,9 +102,11 @@ export default function NotificationsModal({ open, onClose }: NotificationsModal
             >
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-semibold">{item.title}</p>
-                <span className="text-[11px] text-slate-400">{new Date(item.created_at).toLocaleString()}</span>
-              </div>
-              <p className="mt-1 text-sm text-slate-300">{item.message}</p>
+                <span className="text-[11px] text-slate-400">
+                  {new Date(item.created_at).toLocaleString()}
+                </span>
+                </div>
+              <p className="mt-1 text-sm text-slate-300">{item.body}</p>
             </button>
           ))}
         </div>

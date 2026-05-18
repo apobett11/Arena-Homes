@@ -14,6 +14,7 @@ import { Footer } from '@/components/Footer';
 import {
   getTenantDashboardData,
   getTenantNotifications,
+  markNotificationRead,
   getTenantAnnouncements,
   getTenantPropertyRules,
   getTenantPropertyFaqs,
@@ -381,7 +382,41 @@ export default function TenantDashboard() {
             <main ref={mainRef} className="pt-20 px-4 md:px-8 md:ml-64 max-w-7xl mx-auto transition-all duration-300">
                 <div className="max-w-4xl mx-auto">
                     {globalMessage && <div className="mb-4 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800">{globalMessage}</div>}
-                    
+
+                    {!loading && notifications.filter((n) => !n.readAt).length > 0 && (
+                        <div className="mb-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 p-4">
+                            <div className="flex items-center justify-between gap-3 mb-2">
+                                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Notifications</h3>
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/tenant/messages')}
+                                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                                >
+                                    Open messages
+                                </button>
+                            </div>
+                            <ul className="space-y-2">
+                                {notifications.filter((n) => !n.readAt).slice(0, 3).map((n) => (
+                                    <li key={n.id}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                void markNotificationRead(n.id, n.messageId);
+                                                router.push('/tenant/messages');
+                                            }}
+                                            className="w-full text-left text-sm text-blue-900 dark:text-blue-100 hover:opacity-80"
+                                        >
+                                            <span className="font-medium">{n.title}</span>
+                                            {n.body && (
+                                                <span className="text-blue-700/80 dark:text-blue-300/80"> — {n.body}</span>
+                                            )}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
                             <div className="text-center">

@@ -68,6 +68,7 @@ export interface TenantNotification {
   body: string;
   readAt: string | null;
   createdAt: string;
+  messageId?: string;
 }
 
 export interface TenantAnnouncement {
