@@ -84,11 +84,52 @@ export default function TenantDashboard() {
 
         async function load() {
             try {
-                // PRIMARY: Get dashboard data from tenant_dashboard_view
+                const supabaseClient = (await import('@/lib/supabase/client')).getSupabaseClient();
+                const { data: { user } } = await supabaseClient.auth.getUser();
+
+                if (!user) {
+                    router.replace('/auth/login');
+                    return;
+                }
+
+                const { data: activeTenant } = await supabaseClient
+                    .from('tenants')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('status', 'ACTIVE')
+                    .maybeSingle();
+
+                if (!activeTenant) {
+                    const { data: applicationData } = await supabaseClient
+                        .from('tenant_applications')
+                        .select('has_completed_profile, has_accepted_agreement')
+                        .eq('converted_user_id', user.id)
+                        .eq('status', 'ACCEPTED')
+                        .eq('has_set_password', true)
+                        .order('created_at', { ascending: false })
+                        .maybeSingle();
+
+                    const application = applicationData as {
+                        has_completed_profile: boolean;
+                        has_accepted_agreement: boolean;
+                    } | null;
+
+                    if (
+                        application &&
+                        (!application.has_completed_profile || !application.has_accepted_agreement)
+                    ) {
+                        router.replace('/tenant/onboarding');
+                        return;
+                    }
+
+                    setDashboardError('NOT_A_TENANT');
+                    setLoading(false);
+                    return;
+                }
+
                 const { data: dashData, error: dashError } = await getTenantDashboardData();
                 
                 if (dashError) {
-                    // Check if this is a "no tenant record" error
                     if (dashError.code === 'NO_TENANT_ASSIGNMENT' || 
                         dashError.message?.includes('No tenant assignment')) {
                         setDashboardError('NOT_A_TENANT');
@@ -104,40 +145,6 @@ export default function TenantDashboard() {
                     setDashboardError('NOT_A_TENANT');
                     setLoading(false);
                     return;
-                }
-
-                // ENHANCED GUARD: Check if tenant is fully onboarded
-                // Must check tenant_applications flags for complete onboarding status
-                const supabaseClient = (await import('@/lib/supabase/client')).getSupabaseClient();
-                const { data: { user } } = await supabaseClient.auth.getUser();
-
-                if (user) {
-                    const { data: appData } = await supabaseClient
-                        .from('tenant_applications')
-                        .select('has_set_password, has_completed_profile, has_accepted_agreement, status')
-                        .eq('converted_user_id', user.id)
-                        .or(`converted_tenant_id.eq.${dashData.tenantId}`)
-                        .order('created_at', { ascending: false })
-                        .maybeSingle();
-
-                    const application = appData as {
-                        has_set_password: boolean;
-                        has_completed_profile: boolean;
-                        has_accepted_agreement: boolean;
-                        status: string;
-                    } | null;
-
-                    // Redirect to onboarding if any onboarding step is incomplete
-                    const needsOnboarding =
-                        dashData.tenantStatus === 'PENDING_SETUP' ||
-                        !application?.has_set_password ||
-                        !application?.has_completed_profile ||
-                        !application?.has_accepted_agreement;
-
-                    if (needsOnboarding) {
-                        router.replace('/tenant/onboarding');
-                        return;
-                    }
                 }
                 
                 setDashboardData(dashData);

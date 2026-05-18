@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthApi } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { getCurrentUserRoleProfile, redirectToRoleHome } from '@/lib/auth/role-routing';
+import { resolvePostLoginRoute } from '@/lib/auth/tenant-routing';
 import { Home, ArrowRight, Eye, EyeOff, AlertCircle, ArrowLeft, Send } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function LoginPage() {
+function LoginPageContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -44,6 +46,16 @@ export default function LoginPage() {
                 }
                 setError(roleResult.message);
                 setLoading(false);
+                return;
+            }
+
+            const tenantRoute = await resolvePostLoginRoute(
+                roleResult.userId,
+                searchParams.get('redirect'),
+                searchParams.get('from')
+            );
+            if (tenantRoute) {
+                router.replace(tenantRoute);
                 return;
             }
 
@@ -239,5 +251,19 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+                    <p className="text-slate-600 dark:text-slate-400">Loading...</p>
+                </div>
+            }
+        >
+            <LoginPageContent />
+        </Suspense>
     );
 }
