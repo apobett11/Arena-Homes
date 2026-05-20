@@ -49,20 +49,30 @@ export default function Home() {
   }, [router]);
 
   if (checkingSession) {
-    return <div className="p-6 text-sm text-slate-600">Checking your session...</div>;
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-surface-navy transition-opacity duration-700"
+        aria-live="polite"
+      >
+        <div className="relative mb-6 h-24 w-24">
+          <div className="absolute inset-0 rounded-full border-4 border-vibrant-blue/20" />
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-t-vibrant-blue border-r-transparent border-b-transparent border-l-transparent" />
+        </div>
+        <p className="font-semibold tracking-tight text-primary-fixed-dim text-[24px] leading-tight">
+          Checking your session...
+        </p>
+      </div>
+    );
   }
 
   return (
     <>
-      {/* Hero Section */}
       <Hero />
 
-      {/* Main Content Sections */}
       <FeaturedListings />
-      
-      {/* Unified Section: How It Works + Why Choose Us + Testimonials + Stats */}
+
       <UnifiedFeaturesSection />
-      
+
       <FAQRulesSection />
     </>
   );

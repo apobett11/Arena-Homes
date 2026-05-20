@@ -23,7 +23,7 @@ export const Footer = () => {
     ];
     
     return (
-        <footer className="bg-[#0F172A] text-slate-400 border-t border-blue-500/20">
+        <footer className="border-t border-vibrant-blue/20 bg-surface-navy text-slate-400">
             {/* Main Footer - Compressed */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
@@ -32,12 +32,12 @@ export const Footer = () => {
                         <Link href="/" className="flex items-center gap-2 mb-3 group">
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-vibrant-blue text-white shadow-lg shadow-vibrant-blue/30"
                             >
                                 <Home size={18} />
                             </motion.div>
                             <span className="text-lg font-bold text-white">
-                                Arena<span className="text-blue-400">Homes</span>
+                                Arena<span className="text-primary-fixed-dim">Homes</span>
                             </span>
                         </Link>
                         <p className="text-xs text-slate-400 leading-relaxed mb-3 max-w-xs">
@@ -49,7 +49,7 @@ export const Footer = () => {
                                     key={i}
                                     href="#"
                                     whileHover={{ scale: 1.1, y: -2 }}
-                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-all border border-slate-700 hover:border-blue-500"
+                                    className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-400 transition-all hover:border-vibrant-blue hover:bg-vibrant-blue hover:text-white"
                                     aria-label={`Social link ${i + 1}`}
                                 >
                                     <Icon size={14} />
@@ -66,7 +66,7 @@ export const Footer = () => {
                                 <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                                     {quickLinks.map((link) => (
                                         <li key={link.href}>
-                                            <Link href={link.href} className="text-slate-400 hover:text-blue-400 transition-colors">
+                                            <Link href={link.href} className="text-slate-400 hover:text-gold-accent transition-colors">
                                                 {link.label}
                                             </Link>
                                         </li>
@@ -78,7 +78,7 @@ export const Footer = () => {
                                 <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                                     {staffLinks.map((link) => (
                                         <li key={link.href}>
-                                            <Link href={link.href} className="text-slate-400 hover:text-blue-400 transition-colors">
+                                            <Link href={link.href} className="text-slate-400 hover:text-gold-accent transition-colors">
                                                 {link.label}
                                             </Link>
                                         </li>
@@ -93,14 +93,14 @@ export const Footer = () => {
                         <h4 className="text-white font-semibold text-xs mb-2 uppercase tracking-wider">Contact</h4>
                         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                             <li className="flex items-center gap-1">
-                                <Mail size={12} className="text-blue-400 shrink-0" />
-                                <a href="mailto:info@arenahomes.co.ke" className="text-slate-400 hover:text-blue-400 transition-colors">
+                                <Mail size={12} className="shrink-0 text-vibrant-blue" />
+                                <a href="mailto:info@arenahomes.co.ke" className="text-slate-400 hover:text-gold-accent transition-colors">
                                     info@arenahomes.co.ke
                                 </a>
                             </li>
                             <li className="flex items-center gap-1">
-                                <Phone size={12} className="text-blue-400 shrink-0" />
-                                <a href="tel:+254712345678" className="text-slate-400 hover:text-blue-400 transition-colors">
+                                <Phone size={12} className="shrink-0 text-vibrant-blue" />
+                                <a href="tel:+254712345678" className="text-slate-400 hover:text-gold-accent transition-colors">
                                     +254 712 345 678
                                 </a>
                             </li>
@@ -115,9 +115,9 @@ export const Footer = () => {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-500">
                         <p>© {currentYear} Arena Homes. All rights reserved.</p>
                         <div className="flex items-center gap-4">
-                            <Link href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</Link>
-                            <Link href="#" className="hover:text-blue-400 transition-colors">Terms of Service</Link>
-                            <Link href="#" className="hover:text-blue-400 transition-colors">Cookie Policy</Link>
+                            <Link href="#" className="hover:text-gold-accent transition-colors">Privacy Policy</Link>
+                            <Link href="#" className="hover:text-gold-accent transition-colors">Terms of Service</Link>
+                            <Link href="#" className="hover:text-gold-accent transition-colors">Cookie Policy</Link>
                         </div>
                     </div>
                 </div>

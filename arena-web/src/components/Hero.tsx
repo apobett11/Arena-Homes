@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, MapPin, Home, DollarSign, Sparkles, ChevronDown } from "lucide-react";
+import { Search, MapPin, Home, DollarSign, Sparkles, ChevronDown, CheckCircle, Shield, Headphones } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -8,179 +8,196 @@ import Image from "next/image";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export const Hero = () => {
-    const router = useRouter();
-    const [location, setLocation] = useState("");
-    const [type, setType] = useState("");
-    const [priceRange, setPriceRange] = useState("");
-    const [locations, setLocations] = useState<string[]>([]);
+  const router = useRouter();
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState("");
+  const [priceRange, setPriceRange] = useState("");
+  const [locations, setLocations] = useState<string[]>([]);
 
-    useEffect(() => {
-        async function loadLocations() {
-            const supabase = getSupabaseClient();
-            try {
-                // Get unique locations from properties
-                const { data: locationData } = await supabase
-                    .from('properties')
-                    .select('location')
-                    .not('location', 'is', null);
+  useEffect(() => {
+    async function loadLocations() {
+      const supabase = getSupabaseClient();
+      try {
+        const { data: locationData } = await supabase
+          .from("properties")
+          .select("location")
+          .not("location", "is", null);
 
-                const uniqueLocations = [...new Set(locationData?.map((p: { location: string }) => p.location).filter(Boolean))].sort();
-                setLocations(uniqueLocations);
-            } catch (e) {
-                console.error('Failed to load locations:', e);
-            }
-        }
-        loadLocations();
-    }, []);
+        const uniqueLocations = [
+          ...new Set(locationData?.map((p: { location: string }) => p.location).filter(Boolean)),
+        ].sort() as string[];
+        setLocations(uniqueLocations);
+      } catch (e) {
+        console.error("Failed to load locations:", e);
+      }
+    }
+    loadLocations();
+  }, []);
 
-    const handleSearch = () => {
-        const params = new URLSearchParams();
-        if (location) params.set("location", location);
-        if (type && type !== "All Types") params.set("type", type);
-        if (priceRange === "Low") params.set("sort", "asc");
-        if (priceRange === "High") params.set("sort", "desc");
-        router.push(`/listings?${params.toString()}`);
-    };
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (location) params.set("location", location);
+    if (type && type !== "All Types") params.set("type", type);
+    if (priceRange === "Low") params.set("sort", "asc");
+    if (priceRange === "High") params.set("sort", "desc");
+    router.push(`/listings?${params.toString()}`);
+  };
 
-    const heroImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
+  const heroImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
 
-    return (
-        <section className="relative min-h-[90vh] md:min-h-screen flex items-center overflow-hidden">
-            {/* Hero Background - 100% Opacity Visual Photo */}
-            <div className="absolute inset-0 z-0">
-                <Image
-                    src={heroImage}
-                    alt="Modern student housing near Egerton University"
-                    fill
-                    className="object-cover"
-                    priority
-                    quality={100}
-                />
-                {/* Subtle Dark Overlay for Text Readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/40" />
-                <div className="absolute inset-0 bg-blue-900/20" />
-            </div>
+  return (
+    <section className="relative flex min-h-[95vh] items-center overflow-hidden pt-24 md:min-h-[90vh]">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={heroImage}
+          alt="Modern student housing near Egerton University"
+          fill
+          className="object-cover"
+          priority
+          quality={100}
+        />
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/40 to-background" />
+      </div>
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 md:pt-32">
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="mx-auto max-w-5xl"
-                >
-                    {/* Premium Trust Badge - White on Dark Image */}
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2, duration: 0.5 }}
-                        className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-medium text-white shadow-lg"
+      <div className="relative z-20 mx-auto w-full max-w-[1280px] px-4 md:px-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-5xl"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="public-glass public-glass-border mb-8 inline-flex items-center gap-3 rounded-full px-4 py-2 backdrop-blur-xl"
+          >
+            <span className="h-2.5 w-2.5 rounded-full bg-vibrant-blue pulse-dot" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-fixed-dim md:text-[14px] md:leading-none">
+              Now serving Egerton University & surrounding areas
+            </span>
+            <Sparkles size={14} className="text-primary-fixed-dim" />
+          </motion.div>
+
+          <h1 className="mb-6 max-w-3xl font-bold leading-tight tracking-tight text-white drop-shadow-2xl text-[32px] leading-tight md:mb-12 md:text-[48px] md:leading-[1.1] md:tracking-[-0.02em]">
+            Find a verified student home near Egerton University
+          </h1>
+
+          <p className="mb-10 max-w-2xl font-normal leading-relaxed text-white/90 drop-shadow-md text-[18px] leading-[1.6] md:text-xl">
+            Browse trusted rooms, bedsitters, and apartments built around student budgets, safety, and campus
+            convenience.
+          </p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mx-auto max-w-4xl"
+          >
+            <div className="rounded-[24px] border border-white/10 bg-white p-2 shadow-2xl backdrop-blur-xl dark:bg-surface-navy/90 md:rounded-[32px] md:p-3">
+              <div className="mb-2 grid grid-cols-3 gap-0 md:mb-0 md:gap-2">
+                <div className="flex flex-col gap-1 rounded-l-2xl border-r border-outline-variant/10 bg-white p-2 dark:border-outline-variant/10 dark:bg-surface-slate/50 md:rounded-2xl md:border md:p-4">
+                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-outline md:text-[10px]">
+                    Location
+                  </span>
+                  <div className="relative flex items-center gap-1 md:gap-2">
+                    <MapPin className="h-4 w-4 shrink-0 text-vibrant-blue md:h-5 md:w-5" aria-hidden />
+                    <select
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] text-on-surface focus:ring-0 md:text-base"
                     >
-                        <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-400"></span>
-                        </span>
-                        <span>Now serving Egerton University & surrounding areas</span>
-                        <Sparkles size={14} className="text-blue-300" />
-                    </motion.div>
+                      <option value="">All Locations</option>
+                      {locations.map((loc) => (
+                        <option key={loc} value={loc}>
+                          {loc}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      className="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-outline-variant opacity-60 md:hidden"
+                      aria-hidden
+                    />
+                  </div>
+                </div>
 
-                    {/* Main Heading - White Text for Image Background */}
-                    <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-white leading-[1.1] drop-shadow-lg">
-                        Find a verified{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-blue-200 to-white">
-                            student home
-                        </span>
-                        <br className="hidden sm:block" />
-                        near <span className="text-blue-300">Egerton University</span>
-                    </h1>
-
-                    {/* Description */}
-                    <p className="mb-10 text-lg md:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-                        Browse trusted rooms, bedsitters, and apartments built around student budgets,
-                        safety, and campus convenience.
-                    </p>
-
-                    {/* Premium Search Bar */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.6 }}
-                        className="mx-auto max-w-4xl"
+                <div className="flex flex-col gap-1 border-r border-outline-variant/10 bg-white p-2 dark:border-outline-variant/10 dark:bg-surface-slate/50 md:rounded-2xl md:border md:p-4">
+                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-outline md:text-[10px]">
+                    Budget
+                  </span>
+                  <div className="relative flex items-center gap-1 md:gap-2">
+                    <DollarSign className="h-4 w-4 shrink-0 text-gold-accent md:h-5 md:w-5" aria-hidden />
+                    <select
+                      value={priceRange}
+                      onChange={(e) => setPriceRange(e.target.value)}
+                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] text-on-surface focus:ring-0 md:text-base"
                     >
-                        <div className="glass-elevated rounded-3xl p-3 shadow-2xl shadow-[#0F172A]/8 border border-[#C9B37F]/25">
-                            <div className="flex flex-col gap-3 p-3 bg-white/95 backdrop-blur-sm rounded-2xl border border-blue-200/50 shadow-xl shadow-blue-900/10">
-                                <div className="grid grid-cols-3 gap-2">
-                                    {/* Location Dropdown */}
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500">
-                                            <MapPin size={16} />
-                                        </div>
-                                        <select 
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
-                                            className="w-full h-11 pl-9 pr-7 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium text-xs focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
-                                        >
-                                            <option value="">All Locations</option>
-                                            {locations.map(loc => (
-                                                <option key={loc} value={loc}>{loc}</option>
-                                            ))}
-                                        </select>
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                            <ChevronDown size={14} />
-                                        </div>
-                                    </div>
+                      <option value="">Any Price</option>
+                      <option value="Low">Under KSh 5k</option>
+                      <option value="5k-8k">KSh 5k - 8k</option>
+                      <option value="8k-12k">KSh 8k - 12k</option>
+                      <option value="High">Above KSh 12k</option>
+                    </select>
+                  </div>
+                </div>
 
-                                    {/* Price Range Dropdown */}
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500">
-                                            <DollarSign size={16} />
-                                        </div>
-                                        <select className="w-full h-11 pl-9 pr-7 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium text-xs focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer">
-                                            <option>Any Price</option>
-                                            <option>Under KSh 5k</option>
-                                            <option>KSh 5k - 8k</option>
-                                            <option>KSh 8k - 12k</option>
-                                            <option>Above KSh 12k</option>
-                                        </select>
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                            <ChevronDown size={14} />
-                                        </div>
-                                    </div>
+                <div className="flex flex-col gap-1 rounded-r-2xl bg-white p-2 dark:bg-surface-slate/50 md:rounded-2xl md:border md:p-4">
+                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-outline md:text-[10px]">
+                    Type
+                  </span>
+                  <div className="relative flex items-center gap-1 md:gap-2">
+                    <Home className="h-4 w-4 shrink-0 text-vibrant-blue md:h-5 md:w-5" aria-hidden />
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] text-on-surface focus:ring-0 md:text-base"
+                    >
+                      <option value="">All Types</option>
+                      <option value="Single Room">Single Room</option>
+                      <option value="Bedsitter">Bedsitter</option>
+                      <option value="1 Bedroom">1 Bedroom</option>
+                      <option value="2 Bedroom">2 Bedroom</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
 
-                                    {/* Property Type */}
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500">
-                                            <Home size={16} />
-                                        </div>
-                                        <select className="w-full h-11 pl-9 pr-7 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium text-xs focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer">
-                                            <option>All Types</option>
-                                            <option>Single Room</option>
-                                            <option>Bedsitter</option>
-                                            <option>1 Bedroom</option>
-                                            <option>2 Bedroom</option>
-                                        </select>
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                            <ChevronDown size={14} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Full Width Search Button */}
-                                <motion.button 
-                                    onClick={handleSearch}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white font-semibold text-sm transition-all hover:bg-blue-500 shadow-lg shadow-blue-500/25"
-                                    aria-label="Search properties"
-                                >
-                                    <Search size={18} />
-                                    Search Properties
-                                </motion.button>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                </motion.div>
+              <motion.button
+                onClick={handleSearch}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-vibrant-blue py-4 font-semibold text-[14px] leading-none text-white shadow-lg transition-all hover:bg-primary-marketing hover:shadow-vibrant-blue/20 md:rounded-2xl md:py-5 md:text-[14px]"
+                aria-label="Search properties"
+              >
+                <Search size={18} />
+                Search Properties
+              </motion.button>
             </div>
-        </section>
-    );
+          </motion.div>
+
+          <div className="mt-8 flex flex-wrap items-center gap-2 md:mt-8 md:gap-6">
+            <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 backdrop-blur-md md:gap-2 md:px-4 md:py-2">
+              <CheckCircle className="h-3 w-3 text-success-emerald md:h-4 md:w-4" aria-hidden />
+              <span className="whitespace-nowrap text-[10px] font-semibold leading-none text-white md:text-xs">
+                500+ Verified Homes
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 backdrop-blur-md md:gap-2 md:px-4 md:py-2">
+              <Shield className="h-3 w-3 text-gold-accent md:h-4 md:w-4" aria-hidden />
+              <span className="whitespace-nowrap text-[10px] font-semibold leading-none text-white md:text-xs">
+                100% Secure Payments
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 backdrop-blur-md md:gap-2 md:px-4 md:py-2">
+              <Headphones className="h-3 w-3 text-vibrant-blue md:h-4 md:w-4" aria-hidden />
+              <span className="whitespace-nowrap text-[10px] font-semibold leading-none text-white md:text-xs">
+                24/7 Support
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
 };

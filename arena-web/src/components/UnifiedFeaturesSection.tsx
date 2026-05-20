@@ -1,188 +1,146 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { HowItWorks } from "./HowItWorks";
-import { TrustSection } from "./TrustSection";
-import { Testimonials } from "./Testimonials";
+import { Search, ArrowRightLeft, ClipboardList, KeyRound, ShieldCheck, GraduationCap, Scale, Headphones, Star } from "lucide-react";
+
+const HOW_STEPS = [
+  { icon: Search, title: "Search", desc: "Browse verified listings." },
+  { icon: ArrowRightLeft, title: "Compare", desc: "Distance & prices." },
+  { icon: ClipboardList, title: "Apply", desc: "Reserve instantly." },
+  { icon: KeyRound, title: "Move In", desc: "Start your semester." },
+] as const;
+
+const WHY_FEATURES = [
+  { icon: ShieldCheck, title: "Verified", desc: "Physical inspections." },
+  { icon: GraduationCap, title: "Student First", desc: "Tailored policies." },
+  { icon: Scale, title: "Transparent", desc: "No agency fees." },
+  { icon: Headphones, title: "Fast", desc: "24hr support." },
+] as const;
+
+const REVIEWS = [
+  { name: "Sarah K.", role: "Nursing Student", text: "Found my perfect room in 2 days!", avatar: "SK", rating: 5 },
+  { name: "James M.", role: "Engineering", text: "Best platform for student housing.", avatar: "JM", rating: 5 },
+  { name: "Grace N.", role: "Education", text: "Transparent pricing, no surprises.", avatar: "GN", rating: 5 },
+];
+
+const WHY_IMAGE =
+  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80";
 
 export const UnifiedFeaturesSection = () => {
-    return (
-        <section id="how-it-works" className="py-12 md:py-16 bg-slate-950">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Glassmorphic Card with White Tint */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 md:p-8 shadow-2xl shadow-black/20"
-                >
-                    {/* Section 1: How It Works */}
-                    <div className="mb-8 pb-8 border-b border-white/10">
-                        <div className="text-center mb-6">
-                            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-300">
-                                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                                Simple Process
-                            </span>
-                            <h2 className="text-xl md:text-2xl font-bold text-white mt-2">
-                                How It <span className="text-blue-300">Works</span>
-                            </h2>
-                        </div>
-                        <HowItWorksCompact />
-                    </div>
+  return (
+    <section id="how-it-works" className="relative bg-surface py-6 md:py-stack-lg">
+      <div className="pointer-events-none absolute inset-0 h-16 bg-gradient-to-b from-slate-950 to-surface md:h-40" />
 
-                    {/* Section 2: Why Choose Us */}
-                    <div className="mb-8 pb-8 border-b border-white/10">
-                        <div className="text-center mb-6">
-                            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-300">
-                                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                                Why Choose Us
-                            </span>
-                            <h2 className="text-xl md:text-2xl font-bold text-white mt-2">
-                                Why <span className="text-blue-300">Arena Homes</span>
-                            </h2>
-                        </div>
-                        <TrustSectionCompact />
-                    </div>
-
-                    {/* Section 3: Testimonials + Stats */}
-                    <div>
-                        <div className="text-center mb-6">
-                            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-300">
-                                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                                Student Stories
-                            </span>
-                            <h2 className="text-xl md:text-2xl font-bold text-white mt-2">
-                                Loved by <span className="text-blue-300">Students</span>
-                            </h2>
-                        </div>
-                        <TestimonialsCompact />
-                    </div>
-                </motion.div>
+      <div className="relative z-10 mx-auto max-w-[1280px] px-4 md:px-10">
+        {/* How it works */}
+        <div className="mb-6 overflow-hidden rounded-[24px] border border-outline-variant/10 shadow-2xl public-glass public-glass-border md:mb-12 md:rounded-[40px]">
+          <div className="p-5 md:p-stack-lg">
+            <div className="mb-4 text-center md:mb-12">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-vibrant-blue">Process</span>
+              <h2 className="mt-1 font-bold text-on-surface text-[24px] leading-tight md:text-3xl">How It Works</h2>
             </div>
-        </section>
-    );
-};
-
-// Compact HowItWorks for unified section
-import { Search, ArrowRightLeft, FileText, KeyRound } from "lucide-react";
-
-const HowItWorksCompact = () => {
-    const steps = [
-        { icon: Search, title: "Search", desc: "Browse verified listings with smart filters." },
-        { icon: ArrowRightLeft, title: "Compare", desc: "Review photos, pricing, and details." },
-        { icon: FileText, title: "Apply", desc: "Submit with one click. 24hr response." },
-        { icon: KeyRound, title: "Move In", desc: "Schedule viewing and get your keys." },
-    ];
-
-    return (
-        <div className="flex justify-center gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {steps.map((step, index) => (
-                <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex-shrink-0 w-[140px] sm:w-[160px] bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50 hover:bg-slate-800/70 transition-colors"
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-gutter">
+              {HOW_STEPS.map((step) => (
+                <div
+                  key={step.title}
+                  className="group flex flex-col items-center text-center transition-transform hover:scale-[1.02]"
                 >
-                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 mb-3 shadow-md">
-                        <step.icon size={20} className="text-white" />
-                    </div>
-                    <h3 className="text-white text-sm font-semibold mb-1">{index + 1}. {step.title}</h3>
-                    <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">{step.desc}</p>
-                </motion.div>
-            ))}
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-vibrant-blue/10 text-vibrant-blue transition-transform group-hover:scale-110 md:mb-4 md:h-16 md:w-16 md:rounded-2xl">
+                    <step.icon className="h-5 w-5 md:h-8 md:w-8" aria-hidden />
+                  </div>
+                  <h4 className="mb-1 text-xs font-semibold text-on-surface md:text-sm">{step.title}</h4>
+                  <p className="text-[9px] leading-snug text-outline md:text-sm">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-    );
-};
 
-// Compact TrustSection for unified section
-import { ShieldCheck, GraduationCap, Scale, Headphones } from "lucide-react";
-
-const TrustSectionCompact = () => {
-    const features = [
-        { icon: ShieldCheck, label: "Verified", desc: "Inspected for safety" },
-        { icon: GraduationCap, label: "Student First", desc: "Budget-friendly options" },
-        { icon: Scale, label: "Transparent", desc: "No hidden fees" },
-        { icon: Headphones, label: "Fast Response", desc: "24hr support" },
-    ];
-
-    return (
-        <div className="flex justify-center gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {features.map((feature, index) => (
-                <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="flex-shrink-0 w-[140px] sm:w-[160px] bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:bg-slate-800/70 transition-colors"
-                >
-                    <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md mb-3">
-                        <feature.icon size={20} />
-                    </div>
-                    <h4 className="text-white text-sm font-semibold mb-1">{feature.label}</h4>
-                    <p className="text-slate-400 text-xs leading-relaxed">{feature.desc}</p>
-                </motion.div>
-            ))}
-        </div>
-    );
-};
-
-// Compact Testimonials for unified section
-import { Star } from "lucide-react";
-
-const TestimonialsCompact = () => {
-    const reviews = [
-        { name: "Sarah K.", role: "Nursing Student", text: "Found my perfect room in 2 days!", avatar: "SK", rating: 5 },
-        { name: "James M.", role: "Engineering", text: "Best platform for student housing.", avatar: "JM", rating: 5 },
-        { name: "Grace N.", role: "Education", text: "Transparent pricing, no surprises.", avatar: "GN", rating: 5 },
-    ];
-
-    return (
-        <div>
-            <div className="flex justify-center gap-4 overflow-x-auto pb-4 scrollbar-hide mb-6">
-                {reviews.map((review, index) => (
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        viewport={{ once: true }}
-                        className="flex-shrink-0 w-[180px] sm:w-[200px] bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:bg-slate-800/70 transition-colors"
+        {/* Why Arena Homes */}
+        <div className="mb-6 overflow-hidden rounded-[24px] border border-outline-variant/10 shadow-2xl public-glass public-glass-border md:rounded-[40px]">
+          <div className="p-5 md:p-stack-lg">
+            <div className="grid grid-cols-1 items-center gap-4 md:gap-stack-lg lg:grid-cols-2">
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-vibrant-blue">Our Edge</span>
+                <h2 className="mb-3 mt-1 text-xl font-semibold text-on-surface md:mb-6 md:text-2xl">
+                  Why Arena Homes?
+                </h2>
+                <div className="grid grid-cols-2 gap-2 md:gap-4">
+                  {WHY_FEATURES.map((f) => (
+                    <div
+                      key={f.title}
+                      className="rounded-xl border border-white/20 bg-white/40 p-2.5 shadow-sm backdrop-blur-sm md:rounded-2xl md:p-4"
                     >
-                        <div className="flex gap-1 mb-2">
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={12} className={i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-600"} />
-                            ))}
-                        </div>
-                        <p className="text-slate-300 text-sm leading-relaxed mb-3 line-clamp-2">"{review.text}"</p>
-                        <div className="flex items-center gap-2 pt-3 border-t border-slate-700/50">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs">
-                                {review.avatar}
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-sm text-white">{review.name}</h4>
-                                <p className="text-xs text-slate-400">{review.role}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Stats */}
-            <div className="flex justify-center gap-6">
-                {[
-                    { value: "4.9/5", label: "Rating" },
-                    { value: "500+", label: "Students" },
-                    { value: "98%", label: "Recommend" }
-                ].map((stat, index) => (
-                    <div key={index} className="text-center px-4">
-                        <span className="block text-lg font-bold text-blue-400">{stat.value}</span>
-                        <span className="text-xs text-slate-500">{stat.label}</span>
+                      <f.icon className="mb-1 h-4 w-4 text-vibrant-blue md:h-5 md:w-5" aria-hidden />
+                      <h5 className="text-[10px] font-semibold text-on-surface md:text-sm">{f.title}</h5>
+                      <p className="text-[8px] text-outline md:text-xs">{f.desc}</p>
                     </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+              <div className="relative mt-3 h-[180px] overflow-hidden rounded-2xl border border-white/20 shadow-lg md:mt-0 md:h-[400px] md:rounded-3xl">
+                <Image src={WHY_IMAGE} alt="" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+              </div>
             </div>
+          </div>
         </div>
-    );
+
+        {/* Testimonials + stats */}
+        <div className="mt-6 p-5 md:p-stack-lg">
+          <div className="mb-6 text-center md:mb-12">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-vibrant-blue">Testimonials</span>
+            <h2 className="mt-1 font-semibold text-on-surface text-xl md:text-2xl">Student Stories</h2>
+          </div>
+
+          <div className="-mx-4 mb-6 flex gap-4 overflow-x-auto px-4 hide-scrollbar md:mx-0 md:mb-12 md:grid md:min-w-0 md:grid-cols-3 md:gap-gutter md:px-0">
+            {REVIEWS.map((review, index) => (
+              <motion.div
+                key={review.name}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                viewport={{ once: true }}
+                className="min-w-[280px] flex-shrink-0 rounded-[24px] border border-outline-variant/10 bg-white p-6 shadow-xl transition-transform hover:-translate-y-1 md:min-w-0 md:rounded-[32px] md:p-8"
+              >
+                <div className="mb-3 flex items-center gap-0.5 text-gold-accent md:mb-4">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      className={`h-4 w-4 md:h-5 md:w-5 ${s <= review.rating ? "fill-gold-accent text-gold-accent" : "text-outline-variant/40"}`}
+                    />
+                  ))}
+                </div>
+                <p className="mb-6 italic leading-relaxed text-outline text-xs md:mb-8 md:text-sm">&ldquo;{review.text}&rdquo;</p>
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-vibrant-blue/20 bg-vibrant-blue/10 text-sm font-bold text-vibrant-blue md:h-12 md:w-12 md:text-base">
+                    {review.avatar}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-on-surface text-xs md:text-sm">{review.name}</div>
+                    <div className="text-[8px] font-semibold uppercase tracking-wider text-outline md:text-[10px]">
+                      {review.role}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+            {[
+              { value: "4.9/5", label: "Rating" },
+              { value: "500+", label: "Students" },
+              { value: "98%", label: "Recommend" },
+            ].map((stat) => (
+              <div key={stat.label} className="px-4 text-center">
+                <span className="block text-lg font-bold text-vibrant-blue">{stat.value}</span>
+                <span className="text-xs text-outline">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 };

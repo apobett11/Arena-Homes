@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Arena Homes | Find Your Ideal Space",
+  title: "Arena Homes | Premium Student Housing",
   description: "Experience modern living with Arena Homes. Premium listings, verified hosts, and seamless rental experience.",
 };
 

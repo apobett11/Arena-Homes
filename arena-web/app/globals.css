@@ -5,6 +5,28 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Public homepage design tokens (Arena premium marketing) */
+  --color-vibrant-blue: #2e5bff;
+  --color-surface-navy: #0f172a;
+  --color-surface-slate: #1e293b;
+  --color-primary-fixed-dim: #b8c3ff;
+  --color-outline-variant: #c4c5d9;
+  --color-on-surface: #131b2e;
+  --color-on-background: #131b2e;
+  --color-success-emerald: #10b981;
+  --color-gold-accent: #fbbf24;
+  --color-primary-marketing: #0040e0;
+  /* Light marketing surface (prototype `surface`) */
+  --color-surface: #faf8ff;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 40px;
+  --spacing-stack-sm: 12px;
+  --spacing-stack-md: 24px;
+  --spacing-stack-lg: 48px;
+  --spacing-gutter: 24px;
+  --spacing-container-max: 1280px;
+  --max-width-container-max: 1280px;
 }
 
 :root {
@@ -25,7 +47,8 @@
   body {
     font-family: var(--font-sans);
     height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden;
     position: relative;
     margin: 0;
     padding: 0;
@@ -242,4 +265,64 @@
 ::selection {
   background: rgba(59, 130, 246, 0.2);
   color: #1e293b;
+}
+
+/* —— Public marketing page utilities (match prototype) —— */
+.public-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dark .public-glass {
+  background: rgba(15, 23, 42, 0.7);
+}
+.public-glass-border {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes pulse-blue {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(46, 91, 255, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(46, 91, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(46, 91, 255, 0);
+  }
+}
+.pulse-dot {
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

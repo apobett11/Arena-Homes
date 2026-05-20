@@ -11,19 +11,19 @@ const FAQItem = ({ faq, index, activeFaq, setActiveFaq }: { faq: any; index: num
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         viewport={{ once: true }}
-        className={`bg-slate-900 rounded-xl border border-slate-700 shadow-lg shadow-black/20 overflow-hidden transition-all ${activeFaq === index ? "border-blue-500/50 ring-1 ring-blue-500/30" : ""}`}
+        className={`bg-slate-900 rounded-xl border border-slate-700 shadow-lg shadow-black/20 overflow-hidden transition-all ${activeFaq === index ? "border-vibrant-blue/50 ring-1 ring-vibrant-blue/30" : ""}`}
     >
         <button
             onClick={() => setActiveFaq(activeFaq === index ? null : index)}
             className="w-full flex items-center justify-between p-3 text-left gap-3"
             aria-expanded={activeFaq === index}
         >
-            <span className={`font-medium text-sm ${activeFaq === index ? "text-blue-400" : "text-white"}`}>
+            <span className={`font-medium text-sm ${activeFaq === index ? "text-vibrant-blue" : "text-white"}`}>
                 {faq.question}
             </span>
             <div className={`h-7 w-7 flex-shrink-0 flex items-center justify-center rounded-lg transition-all ${
                 activeFaq === index 
-                    ? "bg-blue-600 text-white" 
+                    ? "bg-vibrant-blue text-white" 
                     : "bg-slate-700 text-slate-400"
             }`}>
                 {activeFaq === index ? <Minus size={14} /> : <Plus size={14} />}
@@ -63,7 +63,7 @@ const RuleItem = ({ rule, index }: { rule: any; index: number }) => (
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
                 rule.type === 'alert' 
                     ? 'bg-rose-500/20 text-rose-400' 
-                    : 'bg-blue-500/20 text-blue-400'
+                    : 'bg-vibrant-blue/20 text-vibrant-blue'
             }`}>
                 {rule.type === 'alert' ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
             </div>
@@ -126,7 +126,7 @@ export const FAQRulesSection = () => {
     const [activeTab, setActiveTab] = useState<'faq' | 'rules'>('faq');
 
     return (
-        <section id="rules" className="relative py-12 md:py-16 overflow-hidden">
+        <section id="faqs" className="relative py-12 md:py-16 overflow-hidden">
             {/* Background gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100" />
             
@@ -154,7 +154,7 @@ export const FAQRulesSection = () => {
                         Information
                     </span>
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">
-                        FAQs & <span className="text-blue-600">House Rules</span>
+                        FAQs & <span className="text-vibrant-blue">House Rules</span>
                     </h2>
                     <p className="mt-2 text-slate-500 max-w-xl mx-auto">
                         Everything you need to know about finding and living in your student home
@@ -167,7 +167,7 @@ export const FAQRulesSection = () => {
                         onClick={() => setActiveTab('faq')}
                         className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
                             activeTab === 'faq' 
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' 
+                                ? 'bg-vibrant-blue text-white shadow-lg shadow-vibrant-blue/25' 
                                 : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                     >
@@ -177,7 +177,7 @@ export const FAQRulesSection = () => {
                         onClick={() => setActiveTab('rules')}
                         className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
                             activeTab === 'rules' 
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' 
+                                ? 'bg-vibrant-blue text-white shadow-lg shadow-vibrant-blue/25' 
                                 : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                     >
@@ -216,6 +216,7 @@ export const FAQRulesSection = () => {
 
                     {/* Rules Column */}
                     <motion.div
+                        id="rules"
                         initial={{ opacity: 0, x: 20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}

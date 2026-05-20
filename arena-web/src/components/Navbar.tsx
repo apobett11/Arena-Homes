@@ -50,7 +50,7 @@ function ContactUsButton() {
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="nav-link text-sm font-medium px-4 py-2 text-white/80 hover:text-white transition-all"
+                className="rounded-xl bg-vibrant-blue px-4 py-2 text-sm font-semibold leading-none text-white transition-all hover:scale-105 hover:bg-primary-marketing active:scale-95 md:px-6 md:py-3"
             >
                 Contact Us
             </button>
@@ -262,36 +262,44 @@ export const Navbar = () => {
 
     useEffect(() => {
         setMounted(true);
+    }, []);
 
+    useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
+    useEffect(() => {
         const hydrateRole = async () => {
             const result = await getCurrentUserRoleProfile();
             if (!result.ok) {
                 setRole(null);
-                setDashboardRoute('/auth/login');
+                setDashboardRoute("/auth/login");
                 return;
             }
             setRole(result.role);
-            setDashboardRoute(getHomeRouteForRole(result.role) ?? '/auth/login');
+            setDashboardRoute(getHomeRouteForRole(result.role) ?? "/auth/login");
         };
-        void hydrateRole();
         const hydrateBrand = async () => {
-            const site = await safeMaybeSingle<any>("site_settings", (q) => q.select("*").eq("id", "default").maybeSingle());
+            const site = await safeMaybeSingle<any>("site_settings", (q) =>
+                q.select("*").eq("id", "default").maybeSingle()
+            );
             if (site) {
                 setBrandName(site.site_name || "ArenaHomes");
                 setBrandLogo(site.logo_url || "");
                 return;
             }
-            const fallback = await safeMaybeSingle<any>("app_settings", (q) => q.select("*").eq("key", "site_brand").maybeSingle());
+            const fallback = await safeMaybeSingle<any>("app_settings", (q) =>
+                q.select("*").eq("key", "site_brand").maybeSingle()
+            );
             const value = fallback?.value || {};
             setBrandName(value.site_name || "ArenaHomes");
             setBrandLogo(value.logo_url || "");
         };
+        void hydrateRole();
         void hydrateBrand();
     }, []);
 
@@ -326,65 +334,68 @@ export const Navbar = () => {
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className={`fixed top-0 z-50 w-full py-3 transition-all duration-300 bg-black shadow-lg shadow-black/40`}
+            className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-black/80 py-4 backdrop-blur-xl transition-all duration-300 px-4 md:px-10"
         >
-            {/* Subtle animated background glow */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-                <div className="absolute top-0 right-1/4 w-48 h-48 bg-blue-400/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '-4s' }} />
-            </div>
-
-            <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 relative z-10">
-                <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="relative z-10 mx-auto flex max-w-[1280px] items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
                     {brandLogo ? (
-                        <img src={brandLogo} alt="Brand logo" className="h-10 w-10 rounded-xl object-cover shadow-lg shadow-blue-500/20" />
+                        <img
+                            src={brandLogo}
+                            alt="Brand logo"
+                            className="h-8 w-auto object-contain md:h-10"
+                        />
                     ) : (
-                        <motion.div 
+                        <motion.div
                             whileHover={{ scale: 1.05 }}
-                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                            className="flex h-8 w-8 items-center justify-center rounded-xl bg-vibrant-blue text-white shadow-lg shadow-vibrant-blue/30 md:h-10 md:w-10"
                         >
                             <Home size={22} />
                         </motion.div>
                     )}
-                    <span className="text-xl md:text-2xl font-bold tracking-tight text-white">
-                        {brandName}
-                    </span>
+                    <span className="text-xl font-bold tracking-tight text-white md:text-2xl">{brandName}</span>
                 </Link>
 
                 {/* Desktop Navigation */}
-                <div className="hidden items-center gap-1 lg:gap-2 md:flex">
+                <div className="hidden items-center gap-10 lg:flex">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             href={link.href}
-                            className={`nav-link text-sm font-medium px-4 py-2 text-white/80 hover:text-white transition-all ${isActive(link.href) ? 'active text-white' : ''}`}
+                            className={`text-sm font-semibold uppercase tracking-wide transition-colors ${
+                                isActive(link.href)
+                                    ? "text-primary-fixed-dim"
+                                    : "text-outline-variant hover:text-gold-accent"
+                            }`}
                         >
                             {link.name}
                         </Link>
                     ))}
                     <ContactUsButton />
-                    
-                    <div className="flex items-center gap-2 pl-4 ml-2 border-l border-white/20">
+
+                    <div className="ml-2 flex items-center gap-4 border-l border-white/10 pl-6">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all"
+                            className="hidden rounded-full p-2 text-primary-fixed-dim transition-colors hover:bg-white/10 md:block"
                             aria-label="Toggle theme"
                         >
                             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                         </motion.button>
 
                         {role ? (
-                            <div className="flex gap-2">
-                                <Link href={dashboardRoute} className="flex items-center gap-2 rounded-xl bg-blue-600/20 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600/30 transition-all border border-blue-500/30">
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href={dashboardRoute}
+                                    className="flex items-center gap-2 rounded-xl border border-vibrant-blue/30 bg-vibrant-blue/15 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-vibrant-blue/25"
+                                >
                                     <User size={16} /> Dashboard
                                 </Link>
-                                <motion.button 
+                                <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={handleLogout} 
-                                    className="flex items-center justify-center rounded-xl bg-rose-500/20 px-3 py-2.5 text-rose-300 hover:bg-rose-500/30 transition-all border border-rose-500/30" 
+                                    onClick={handleLogout}
+                                    className="flex items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/20 px-3 py-2.5 text-rose-300 hover:bg-rose-500/30"
                                     aria-label="Sign out"
                                 >
                                     <LogOut size={16} />
@@ -392,7 +403,10 @@ export const Navbar = () => {
                             </div>
                         ) : (
                             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                <Link href="/auth/login" className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-500 shadow-lg shadow-blue-500/25">
+                                <Link
+                                    href="/auth/login"
+                                    className="flex items-center gap-2 font-semibold text-white transition-colors hover:text-gold-accent"
+                                >
                                     <User size={16} />
                                     Login
                                 </Link>
@@ -401,17 +415,20 @@ export const Navbar = () => {
                     </div>
                 </div>
 
-                {/* Mobile Menu Toggle */}
-                <div className="flex items-center gap-3 md:hidden pr-2">
+                {/* Mobile: theme + menu */}
+                <div className="flex items-center gap-3 lg:hidden">
                     <button
+                        type="button"
                         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 text-white/80 hover:text-white transition-all"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-primary-fixed-dim transition-colors hover:bg-white/10"
+                        aria-label="Toggle theme"
                     >
                         {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
                     <button
+                        type="button"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl text-white hover:bg-white/10 transition-all mr-2"
+                        className="flex h-10 w-10 items-center justify-center text-white"
                     >
                         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -425,7 +442,7 @@ export const Navbar = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="border-t border-white/10 bg-[#0F172A]/98 backdrop-blur-xl md:hidden"
+                        className="border-t border-white/10 bg-[#0F172A]/98 backdrop-blur-xl lg:hidden"
                     >
                         <div className="flex flex-col gap-2 p-4">
                             {navLinks.map((link, index) => (
