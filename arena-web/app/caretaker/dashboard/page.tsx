@@ -359,7 +359,7 @@ function CaretakerDashboardContent() {
           <div className="space-y-6">
             {property && (
               <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-5">
-                <div className={ck.card}>
+                <div className={cn(ck.card, "caretaker-info-card")}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className={ck.iconTile}>
                       <Home className="w-5 h-5" />
@@ -413,7 +413,7 @@ function CaretakerDashboardContent() {
                         ? setActiveTab("issues")
                         : setActiveTab("announcements")
                     }
-                    className="relative z-10 mt-5 inline-flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/30 active:scale-[0.98] transition"
+                    className="relative z-10 mt-5 inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-primary shadow-[0_10px_22px_rgba(0,0,0,0.18)] ring-1 ring-white/60 transition hover:bg-blue-50 hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)] active:scale-[0.98]"
                   >
                     {pendingIssues === 0 && pendingApps === 0 ? (
                       <CheckCircle className="w-4 h-4" />
@@ -566,10 +566,14 @@ function OverviewListCard({
   items: { id: string; title: string; subtitle: string; badge: string; tone: "warning" | "danger" | "info" | "success" | "neutral" }[];
 }) {
   return (
-    <div className={ck.card}>
+    <div className={cn(ck.card, "caretaker-info-card")}>
       <div className="flex justify-between items-center mb-4">
         <h4 className={ck.headline}>{title}</h4>
-        <button type="button" onClick={onViewAll} className="caretaker-label-caps text-primary hover:underline">
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="inline-flex min-h-[34px] items-center justify-center rounded-lg bg-white px-3 py-1 text-xs font-bold uppercase text-primary shadow-sm ring-1 ring-primary/20 transition hover:bg-primary hover:text-white active:scale-[0.98]"
+        >
           View all
         </button>
       </div>
@@ -580,7 +584,7 @@ function OverviewListCard({
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between p-3 bg-arena-surface rounded-xl border border-arena-outline-variant/30"
+              className="flex items-center justify-between p-3 bg-white/78 rounded-xl border border-arena-outline-variant/45 shadow-sm"
             >
               <div>
                 <p className="font-semibold text-sm text-arena-on-surface">{item.title}</p>
@@ -612,7 +616,10 @@ function OverviewToolCard({
     <button
       type="button"
       onClick={onClick}
-      className={cn(ck.card, "text-left active-tap hover:border-primary/40")}
+      className={cn(
+        ck.card,
+        "caretaker-info-card text-left active-tap hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+      )}
     >
       <div className="flex items-start gap-3">
         <div className={ck.iconTile}>
@@ -621,7 +628,9 @@ function OverviewToolCard({
         <div className="min-w-0">
           <h4 className={ck.headline}>{title}</h4>
           <p className={cn(ck.body, "mt-1")}>{subtitle}</p>
-          <p className="caretaker-label-caps text-primary mt-4">{action}</p>
+          <span className="mt-4 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-primary px-3 py-2 text-xs font-bold uppercase text-white shadow-[0_9px_18px_rgba(46,91,255,0.22)] transition group-hover:bg-[#071a33]">
+            {action}
+          </span>
         </div>
       </div>
     </button>

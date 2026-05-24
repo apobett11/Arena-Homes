@@ -76,19 +76,10 @@ export const Sidebar = () => {
         <p className="caretaker-label-caps text-blue-100/75 mt-1">Caretaker Console</p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setQuickActionsOpen(true)}
-        className="mb-4 flex items-center justify-center gap-2 rounded-xl bg-white text-[#071a33] px-4 py-2.5 text-sm font-bold shadow-[0_12px_26px_rgba(0,0,0,0.2)] transition hover:bg-blue-50 active:scale-[0.98]"
-      >
-        <Sparkles className="w-5 h-5 text-[#2e5bff]" />
-        Quick Actions
-      </button>
-
       <nav className="flex-1 space-y-1 pr-1">
         {sidebarItems.map((item) => {
           const active = isNavActive(pathname, searchParams, item.href, null);
-          return (
+          const navItem = (
             <Link
               key={item.name}
               href={item.href}
@@ -102,6 +93,24 @@ export const Sidebar = () => {
               <item.icon className={cn("w-5 h-5", active && "text-sky-200")} />
               <span>{item.name}</span>
             </Link>
+          );
+
+          if (item.name !== "Home") {
+            return navItem;
+          }
+
+          return (
+            <React.Fragment key={item.name}>
+              {navItem}
+              <button
+                type="button"
+                onClick={() => setQuickActionsOpen(true)}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-medium text-blue-50/82 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <Sparkles className="h-5 w-5" />
+                <span>Quick Actions</span>
+              </button>
+            </React.Fragment>
           );
         })}
       </nav>

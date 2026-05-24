@@ -14,7 +14,7 @@ export default function CaretakerLayout({
 }) {
   return (
     <RoleGate allowedRoles={["CARETAKER", "ADMIN"]}>
-      <div className="caretaker-console flex min-h-screen bg-arena-surface text-arena-on-surface selection:bg-primary/20">
+      <div className="caretaker-console m-0 flex min-h-screen bg-arena-surface text-arena-on-surface selection:bg-primary/20">
         <Suspense fallback={<CaretakerNavFallback />}>
           <Sidebar />
         </Suspense>

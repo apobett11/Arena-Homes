@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bell, Search, User, LogOut, Sparkles, X } from "lucide-react";
+import { Bell, Search, User, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthApi } from "@/lib/api/auth";
@@ -26,7 +26,7 @@ export const TopBar = () => {
   };
 
   return (
-    <header className="sticky top-0 w-full h-16 bg-[#071a33] text-white shadow-[0_8px_24px_rgba(7,26,51,0.2)] flex justify-between items-center px-4 md:px-6 z-40">
+    <header className="sticky top-0 left-0 right-0 m-0 w-full h-16 shrink-0 bg-[#071a33] text-white shadow-[0_8px_24px_rgba(7,26,51,0.2)] flex justify-between items-center px-4 md:px-6 z-40">
       <div className="flex items-center gap-3 w-full max-w-xl">
         <Link href="/caretaker/dashboard" className="lg:hidden font-bold text-white text-sm shrink-0">
           Arena Homes
@@ -54,9 +54,9 @@ export const TopBar = () => {
           type="button"
           onClick={() => setQuickActionsOpen(true)}
           className="p-2 rounded-xl text-blue-50/85 hover:text-white hover:bg-white/10 transition-colors lg:hidden"
-          aria-label="Quick actions"
+          aria-label="Open quick actions menu"
         >
-          <Sparkles className="w-5 h-5" />
+          <Menu className="w-5 h-5" />
         </button>
 
         <div className="h-6 w-px bg-white/20 hidden md:block" />
