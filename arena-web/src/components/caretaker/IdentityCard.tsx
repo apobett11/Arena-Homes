@@ -27,10 +27,10 @@ export const IdentityCard = ({
   }
 
   return (
-    <div className={cn(ck.card, "grid grid-cols-1 lg:grid-cols-2 gap-6")}>
+    <div className={cn(ck.card, "grid grid-cols-1 lg:grid-cols-2 gap-6 bg-[linear-gradient(135deg,#ffffff_0%,#eef6ff_58%,#eefaf4_100%)]")}>
       <div className="flex items-center gap-4">
-        <div className="w-20 h-20 rounded-xl bg-arena-surface-container-high flex items-center justify-center shrink-0 border border-arena-outline-variant/40">
-          <User className="text-primary w-10 h-10" />
+        <div className="w-20 h-20 rounded-xl bg-[#071a33] flex items-center justify-center shrink-0 border border-[#071a33]/20 shadow-[0_14px_28px_rgba(7,26,51,0.18)]">
+          <User className="text-white w-10 h-10" />
         </div>
         <div>
           <p className="caretaker-label-caps text-primary">Caretaker</p>
@@ -48,7 +48,7 @@ export const IdentityCard = ({
       </div>
 
       <div className="flex flex-col justify-between gap-4">
-        <div className="caretaker-card p-4 bg-arena-surface-container-low border-arena-outline-variant/30 shadow-none">
+        <div className="caretaker-card p-4 bg-[linear-gradient(135deg,#e9f2ff,#f5fbf8)] border-arena-outline-variant/30 shadow-none">
           <p className="caretaker-label-caps text-primary mb-1">Managed property</p>
           <h4 className="font-semibold text-arena-on-surface">{property?.name || caretaker.property_name}</h4>
           <p className={ck.body}>

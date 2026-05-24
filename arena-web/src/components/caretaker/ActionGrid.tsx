@@ -32,6 +32,7 @@ interface ActionGridProps {
   onTabChange: (tab: TabType) => void;
   activeTab: TabType;
   pendingApplicationsCount?: number;
+  showHeading?: boolean;
 }
 
 const actions: {
@@ -51,12 +52,17 @@ const actions: {
   { id: "facilities", label: "Reports", icon: Clipboard, desc: "Generate reports" },
 ];
 
-export const ActionGrid = ({ onTabChange, activeTab, pendingApplicationsCount = 0 }: ActionGridProps) => {
+export const ActionGrid = ({
+  onTabChange,
+  activeTab,
+  pendingApplicationsCount = 0,
+  showHeading = true,
+}: ActionGridProps) => {
   const hasPendingApplications = pendingApplicationsCount > 0;
 
   return (
     <section className="space-y-3">
-      <h3 className={ck.headline}>Quick Actions</h3>
+      {showHeading && <h3 className={ck.headline}>Quick Actions</h3>}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         {actions.map((action) => {
           const Icon = action.icon;

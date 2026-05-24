@@ -42,8 +42,8 @@ export const ck = {
   statGrid: "grid grid-cols-2 md:grid-cols-4 gap-5",
   actionGrid: "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3",
   quickActionBtn:
-    "flex flex-col items-center justify-center gap-2 bg-arena-surface-container p-4 rounded-2xl border border-arena-outline-variant/40 hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-[0.98] group min-h-[104px]",
-  tabBar: "flex gap-2 overflow-x-auto hide-scrollbar pb-1",
+    "flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-white to-arena-surface-container p-4 rounded-2xl border border-arena-outline-variant/50 shadow-[0_10px_22px_rgba(7,26,51,0.08)] hover:border-primary/35 hover:bg-primary-container hover:from-primary-container hover:to-secondary-container hover:text-on-primary-container hover:shadow-[0_16px_30px_rgba(46,91,255,0.18)] transition-all active:scale-[0.98] group min-h-[104px]",
+  tabBar: "flex flex-wrap gap-2 pb-1",
   tabButton:
     "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
   modalBackdrop: "fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50",

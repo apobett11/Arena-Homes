@@ -347,7 +347,8 @@
 
 /* —— Caretaker console (Stitch design system) —— */
 .caretaker-console {
-  --ct-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+  --ct-shadow: 0px 12px 30px rgba(7, 26, 51, 0.08);
+  background: linear-gradient(180deg, #eef5ff 0%, #f7fbff 45%, #edf7f2 100%);
 }
 
 .caretaker-label-caps {
@@ -372,30 +373,41 @@
 }
 
 .caretaker-card {
-  background: var(--color-arena-surface-container-lowest, #ffffff);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(235, 243, 255, 0.94)),
+    var(--color-arena-surface-container-lowest, #ffffff);
   border-radius: var(--radius-arena-card);
-  border: 1px solid color-mix(in srgb, var(--color-arena-outline-variant, #c4c5d9) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-arena-outline-variant, #c4c5d9) 46%, transparent);
   box-shadow: var(--ct-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .caretaker-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.08);
+  border-color: color-mix(in srgb, var(--color-primary, #0040e0) 25%, var(--color-arena-outline-variant, #c4c5d9));
+  box-shadow: 0px 18px 36px rgba(7, 26, 51, 0.12);
 }
 
 .caretaker-stat-card {
-  background: var(--color-arena-surface-container-lowest, #ffffff);
+  background:
+    radial-gradient(circle at top right, rgba(46, 91, 255, 0.12), transparent 42%),
+    linear-gradient(145deg, #ffffff 0%, #edf5ff 100%);
   border-radius: var(--radius-arena-card);
-  border: 1px solid color-mix(in srgb, var(--color-arena-outline-variant, #c4c5d9) 30%, transparent);
-  box-shadow: var(--ct-shadow);
+  border: 1px solid color-mix(in srgb, var(--color-arena-outline-variant, #c4c5d9) 52%, transparent);
+  box-shadow: 0 12px 26px rgba(7, 26, 51, 0.09);
   padding: 1rem;
   border-left-width: 4px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .caretaker-stat-card:hover {
   transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-primary, #0040e0) 28%, var(--color-arena-outline-variant, #c4c5d9));
+  box-shadow: 0 18px 34px rgba(7, 26, 51, 0.14);
+}
+
+.caretaker-stat-card:active {
+  transform: translateY(0) scale(0.99);
 }
 
 .caretaker-input {
@@ -445,7 +457,7 @@
   padding: 0.5rem 1rem;
   border-radius: var(--radius-arena-control);
   border: 1px solid var(--color-arena-outline-variant, #c4c5d9);
-  background: transparent;
+  background: color-mix(in srgb, var(--color-arena-surface-container-lowest, #ffffff) 72%, transparent);
   color: var(--color-arena-on-surface, #0b1c30);
   font-size: 14px;
   font-weight: 600;

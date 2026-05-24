@@ -8,7 +8,7 @@ import {
   ClipboardList,
   FileText,
   Home,
-  MessageSquare,
+  Image as ImageIcon,
   ShieldCheck,
 } from "lucide-react";
 
@@ -48,7 +48,6 @@ import type {
 
 import { IdentityCard } from "@/components/caretaker/IdentityCard";
 import { QuickStats } from "@/components/caretaker/QuickStats";
-import { ActionGrid } from "@/components/caretaker/ActionGrid";
 import { UnitsPanel } from "@/components/caretaker/UnitsPanel";
 import { TenantsPanel } from "@/components/caretaker/TenantsPanel";
 import { IssuesPanel } from "@/components/caretaker/IssuesPanel";
@@ -62,7 +61,7 @@ import { FacilitiesInventoryPanel } from "@/components/caretaker/FacilitiesInven
 import { PriorityAlerts } from "@/components/caretaker/PriorityAlerts";
 import { SettingsPanel } from "@/components/caretaker/SettingsPanel";
 import { cn, ck, statusChipClass, statusToneFromValue } from "@/components/caretaker/caretaker-ui";
-import Link from "next/link";
+import { getPropertyPhotoCount } from "@/lib/supabase/storage";
 
 type TabType =
   | "overview"
@@ -124,6 +123,12 @@ function CaretakerDashboardContent() {
   const [applications, setApplications] = useState<CaretakerApplication[]>([]);
   const [facilities, setFacilities] = useState<CaretakerFacilities | null>(null);
   const [inventory, setInventory] = useState<CaretakerInventoryItem[]>([]);
+  const [photoStatus, setPhotoStatus] = useState({
+    total_count: 0,
+    has_cover: false,
+    has_gate: false,
+    gallery_count: 0,
+  });
   const [caretakerEmployeeId, setCaretakerEmployeeId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -164,6 +169,7 @@ function CaretakerDashboardContent() {
         applicationsData,
         facilitiesData,
         inventoryData,
+        photoCountData,
       ] = await Promise.all([
         getCaretakerProperty(propertyId),
         getCaretakerUnits(propertyId),
@@ -177,6 +183,7 @@ function CaretakerDashboardContent() {
         getCaretakerApplications(propertyId),
         getCaretakerFacilities(propertyId),
         getCaretakerInventory(propertyId),
+        getPropertyPhotoCount(propertyId),
       ]);
 
       setProperty(propertyData);
@@ -191,6 +198,7 @@ function CaretakerDashboardContent() {
       setApplications(applicationsData);
       setFacilities(facilitiesData);
       setInventory(inventoryData);
+      setPhotoStatus(photoCountData);
     } catch (err) {
       console.error("Failed to load caretaker data:", err);
       setError("Failed to load dashboard data. Please try again.");
@@ -220,10 +228,14 @@ function CaretakerDashboardContent() {
     return "Good evening";
   };
 
+  const photosComplete =
+    photoStatus.total_count >= 10 &&
+    photoStatus.has_cover &&
+    photoStatus.has_gate &&
+    photoStatus.gallery_count >= 8;
+
   const tabs: { id: TabType; label: string; badge?: number }[] = [
     { id: "overview", label: "Overview" },
-    { id: "units", label: `Units (${units.length})` },
-    { id: "tenants", label: `Tenants (${tenants.length})` },
     { id: "issues", label: `Issues (${issues.filter((i) => i.status === "PENDING").length})`, badge: issues.filter((i) => i.status === "PENDING").length },
     { id: "applications", label: `Applications (${applications.length})`, badge: pendingApps },
     { id: "repairs", label: `Repairs (${repairs.length})` },
@@ -258,26 +270,34 @@ function CaretakerDashboardContent() {
 
   return (
     <div className={ck.page}>
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <section className="rounded-2xl bg-[#071a33] px-5 py-5 text-white shadow-[0_18px_45px_rgba(7,26,51,0.18)] md:px-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className={ck.display}>
+          <h2 className="caretaker-display-lg text-white">
             {greeting()}, {dashboardData?.caretaker_full_name?.split(" ")[0] || "Caretaker"}
           </h2>
-          <div className="flex items-center gap-2 mt-1 text-arena-on-surface-variant">
-            <Home className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-2 mt-1 text-blue-100/82">
+            <Home className="w-4 h-4 text-sky-200" />
             <p className="text-sm">
               {property?.name || dashboardData?.property_name || "Assigned property"} -{" "}
               {property?.location || dashboardData?.property_location || "Location not set"}
             </p>
           </div>
         </div>
-        <Link
-          href="/caretaker/messages"
-          className="caretaker-btn-ghost self-start md:self-auto"
+        <button
+          type="button"
+          onClick={() => setActiveTab("photos")}
+          className={cn(
+            "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition active:scale-[0.98] self-start md:self-auto",
+            photosComplete
+              ? "bg-emerald-500 text-white shadow-[0_10px_22px_rgba(16,185,129,0.24)] hover:bg-emerald-600"
+              : "bg-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.25)] hover:bg-red-700"
+          )}
         >
-          <MessageSquare className="w-4 h-4" />
-          Messages
-        </Link>
+          <ImageIcon className="w-4 h-4" />
+          {photosComplete ? "Photos uploaded" : "Photos need to be uploaded"}
+        </button>
+        </div>
       </section>
 
       <PriorityAlerts
@@ -309,14 +329,8 @@ function CaretakerDashboardContent() {
         incomingAnnouncements={announcements.incoming.length}
       />
 
-      <ActionGrid
-        onTabChange={setActiveTab}
-        activeTab={activeTab}
-        pendingApplicationsCount={pendingApps}
-      />
-
-      <div className="caretaker-card p-2">
-        <nav className={ck.tabBar}>
+      <div className="caretaker-card p-3 md:p-4 bg-arena-surface-container-low">
+        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -325,8 +339,8 @@ function CaretakerDashboardContent() {
               className={cn(
                 ck.tabButton,
                 activeTab === tab.id
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-arena-on-surface-variant hover:text-arena-on-surface hover:bg-arena-surface-container-low"
+                  ? "bg-primary text-white shadow-[0_8px_18px_rgba(46,91,255,0.22)]"
+                  : "bg-white/70 text-arena-on-surface-variant hover:text-arena-on-surface hover:bg-white hover:shadow-sm"
               )}
             >
               {tab.label}

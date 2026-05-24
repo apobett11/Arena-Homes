@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Bell,
   ClipboardList,
@@ -12,11 +12,14 @@ import {
   Home,
   MessageSquare,
   Plus,
+  Sparkles,
   Settings,
   Users,
   Wrench,
+  X,
 } from "lucide-react";
 import { cn } from "./caretaker-ui";
+import { ActionGrid } from "./ActionGrid";
 
 const sidebarItems = [
   { name: "Home", icon: Home, href: "/caretaker/dashboard" },
@@ -56,16 +59,33 @@ function isNavActive(pathname: string, searchParams: URLSearchParams, href: stri
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const activeTab = (searchParams.get("tab") || "overview") as Parameters<typeof ActionGrid>[0]["activeTab"];
+
+  const handleTabChange = (tab: Parameters<typeof ActionGrid>[0]["activeTab"]) => {
+    setQuickActionsOpen(false);
+    router.push(tab === "overview" ? "/caretaker/dashboard" : `/caretaker/dashboard?tab=${tab}`);
+  };
 
   return (
-    <aside className="hidden lg:flex flex-col w-[240px] min-h-screen bg-arena-surface border-r border-arena-outline-variant py-6 px-4 z-40 shrink-0">
+    <aside className="hidden lg:flex sticky top-0 flex-col w-[240px] h-screen bg-[#071a33] text-white py-6 px-4 z-40 shrink-0 shadow-[8px_0_30px_rgba(7,26,51,0.16)]">
       <div className="mb-8 px-2">
-        <h2 className="caretaker-headline-md text-primary font-bold">Arena Homes</h2>
-        <p className="caretaker-label-caps text-arena-on-surface-variant opacity-70 mt-1">Caretaker Console</p>
+        <h2 className="caretaker-headline-md text-white font-bold">Arena Homes</h2>
+        <p className="caretaker-label-caps text-blue-100/75 mt-1">Caretaker Console</p>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto hide-scrollbar pr-1">
+      <button
+        type="button"
+        onClick={() => setQuickActionsOpen(true)}
+        className="mb-4 flex items-center justify-center gap-2 rounded-xl bg-white text-[#071a33] px-4 py-2.5 text-sm font-bold shadow-[0_12px_26px_rgba(0,0,0,0.2)] transition hover:bg-blue-50 active:scale-[0.98]"
+      >
+        <Sparkles className="w-5 h-5 text-[#2e5bff]" />
+        Quick Actions
+      </button>
+
+      <nav className="flex-1 space-y-1 pr-1">
         {sidebarItems.map((item) => {
           const active = isNavActive(pathname, searchParams, item.href, null);
           return (
@@ -75,11 +95,11 @@ export const Sidebar = () => {
               className={cn(
                 "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors font-medium text-sm",
                 active
-                  ? "text-primary font-bold bg-arena-surface-container-low border-r-4 border-primary rounded-r-none"
-                  : "text-arena-on-surface-variant hover:bg-arena-surface-container-low"
+                  ? "text-white font-bold bg-white/14 shadow-inner"
+                  : "text-blue-50/82 hover:bg-white/10 hover:text-white"
               )}
             >
-              <item.icon className={cn("w-5 h-5", active && "text-primary")} />
+              <item.icon className={cn("w-5 h-5", active && "text-sky-200")} />
               <span>{item.name}</span>
             </Link>
           );
@@ -88,11 +108,37 @@ export const Sidebar = () => {
 
       <Link
         href="/caretaker/dashboard?tab=issues"
-        className="mt-5 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-sm hover:opacity-90"
+        className="mt-5 bg-[#2e5bff] text-white px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-sm hover:bg-[#416aff]"
       >
         <Plus className="w-5 h-5" />
         New Request
       </Link>
+
+      {quickActionsOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#071a33]/55 p-4 backdrop-blur-sm">
+          <div className="caretaker-card w-full max-w-4xl p-5 md:p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="caretaker-label-caps text-primary">Caretaker shortcuts</p>
+                <h3 className="caretaker-headline-sm font-semibold text-arena-on-surface">Quick Actions</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickActionsOpen(false)}
+                className="rounded-full bg-arena-surface-container-high p-2 text-arena-on-surface hover:bg-error-container/40 hover:text-error"
+                aria-label="Close quick actions"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <ActionGrid
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              showHeading={false}
+            />
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

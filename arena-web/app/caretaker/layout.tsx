@@ -20,8 +20,10 @@ export default function CaretakerLayout({
         </Suspense>
 
         <div className="flex-1 flex flex-col min-w-0 lg:pl-0">
-          <TopBar />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-28 lg:pb-8">{children}</main>
+          <Suspense fallback={null}>
+            <TopBar />
+          </Suspense>
+          <main className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#eef5ff_0%,#f6f9ff_45%,#eef7f4_100%)] p-4 md:p-6 pb-28 lg:pb-8">{children}</main>
         </div>
 
         <Suspense fallback={null}>

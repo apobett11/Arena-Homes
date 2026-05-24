@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { cn, borderAccentClass, ck } from "./caretaker-ui";
+import { cn, borderAccentClass } from "./caretaker-ui";
 
 interface QuickStatsProps {
   totalRooms?: number;
@@ -31,23 +31,25 @@ export const QuickStats = ({
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
   const statItems = [
-    { label: "TOTAL UNITS", value: totalRooms, subtext: `${occupancyRate}% Occupancy`, accent: "border-primary" },
-    { label: "OCCUPIED", value: occupiedRooms, subtext: `${vacantRooms} Vacant`, accent: "border-emerald-500" },
-    { label: "VACANT", value: vacantRooms, subtext: "Available", accent: "border-amber-400" },
-    { label: "TENANTS", value: tenantsCount, subtext: "Active", accent: "border-secondary" },
+    { label: "TOTAL UNITS", value: totalRooms, subtext: `${occupancyRate}% Occupancy`, accent: "border-primary", wash: "from-blue-50 to-white" },
+    { label: "OCCUPIED", value: occupiedRooms, subtext: `${vacantRooms} Vacant`, accent: "border-emerald-500", wash: "from-emerald-50 to-white" },
+    { label: "VACANT", value: vacantRooms, subtext: "Available", accent: "border-amber-400", wash: "from-amber-50 to-white" },
+    { label: "TENANTS", value: tenantsCount, subtext: "Active", accent: "border-secondary", wash: "from-indigo-50 to-white" },
     {
       label: "PENDING ISSUES",
       value: pendingIssues,
       subtext: `${resolvedIssues} Resolved`,
       accent: "border-error",
+      wash: "from-red-50 to-white",
       alert: pendingIssues > 0,
     },
-    { label: "PENDING REPAIRS", value: pendingRepairs, subtext: `${solvedRepairs} Done`, accent: "border-orange-400" },
+    { label: "PENDING REPAIRS", value: pendingRepairs, subtext: `${solvedRepairs} Done`, accent: "border-orange-400", wash: "from-orange-50 to-white" },
     {
       label: "PENDING APPS",
       value: pendingApplications,
       subtext: "Pending Review",
       accent: "border-blue-400",
+      wash: "from-sky-50 to-white",
       alert: pendingApplications > 0,
     },
     {
@@ -55,6 +57,7 @@ export const QuickStats = ({
       value: incomingAnnouncements,
       subtext: "Unread",
       accent: "border-tertiary",
+      wash: "from-rose-50 to-white",
       alert: incomingAnnouncements > 0,
     },
   ];
@@ -66,7 +69,7 @@ export const QuickStats = ({
           key={stat.label}
           className={cn(
             borderAccentClass(stat.accent),
-            "hover:-translate-y-0.5 transition-transform",
+            `bg-gradient-to-br ${stat.wash} hover:-translate-y-0.5 transition-transform`,
             stat.alert && "ring-1 ring-error/20"
           )}
         >
