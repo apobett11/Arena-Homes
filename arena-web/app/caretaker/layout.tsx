@@ -1,39 +1,33 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Sidebar, BottomNav } from "@/components/caretaker/Navigation";
 import { TopBar } from "@/components/caretaker/TopBar";
 import RoleGate from "@/components/auth/RoleGate";
 
+function CaretakerNavFallback() {
+  return <div className="hidden lg:block w-[240px] shrink-0" />;
+}
+
 export default function CaretakerLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <RoleGate allowedRoles={["CARETAKER", "ADMIN"]}>
-            <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-primary/30 transition-colors duration-300">
-                {/* Sidebar - Desktop Only */}
-                <div className="hidden lg:block flex-shrink-0">
-                    <Sidebar />
-                </div>
+  return (
+    <RoleGate allowedRoles={["CARETAKER", "ADMIN"]}>
+      <div className="caretaker-console flex min-h-screen bg-arena-surface text-arena-on-surface selection:bg-primary/20">
+        <Suspense fallback={<CaretakerNavFallback />}>
+          <Sidebar />
+        </Suspense>
 
-                <div className="flex-1 flex flex-col min-w-0">
-                    {/* Top Header */}
-                    <TopBar />
+        <div className="flex-1 flex flex-col min-w-0 lg:pl-0">
+          <TopBar />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-28 lg:pb-8">{children}</main>
+        </div>
 
-                    {/* Main Content Area */}
-                    <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
-                        {children}
-                    </main>
-                </div>
-
-                {/* Bottom Nav - Mobile Only */}
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-                    <BottomNav />
-                </div>
-                
-                {/* Mobile padding */}
-                <div className="lg:hidden h-20" />
-            </div>
-        </RoleGate>
-    );
+        <Suspense fallback={null}>
+          <BottomNav />
+        </Suspense>
+      </div>
+    </RoleGate>
+  );
 }

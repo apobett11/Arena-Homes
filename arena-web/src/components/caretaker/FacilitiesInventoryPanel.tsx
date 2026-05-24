@@ -1,15 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { Building2, Package, Plus, Edit2, Trash2, Droplets, Shield, Car, Wifi, Trash } from "lucide-react";
+import { Building2, Package, Plus, Edit2, Droplets, Shield, Car, Wifi, Trash } from "lucide-react";
 import type { CaretakerFacilities, CaretakerInventoryItem } from "@/lib/caretaker/types";
-import { upsertCaretakerFacilities, createInventoryItem, updateInventoryItem } from "@/lib/caretaker/dashboard";
+import { upsertCaretakerFacilities, createInventoryItem } from "@/lib/caretaker/dashboard";
+import { cn, ck, filterButtonClass } from "./caretaker-ui";
 
 interface FacilitiesInventoryPanelProps {
   facilities: CaretakerFacilities | null;
   inventory: CaretakerInventoryItem[];
   propertyId: string;
   onDataChange: () => void;
+}
+
+interface FacilityFormData {
+  water_source?: string;
+  security?: string;
+  parking?: boolean;
+  wifi?: boolean;
+  trash_collection?: string;
+  notes?: string;
+}
+
+interface InventoryFormData {
+  name: string;
+  quantity: number;
+  condition?: string;
+  notes?: string;
 }
 
 export const FacilitiesInventoryPanel = ({
@@ -21,14 +38,7 @@ export const FacilitiesInventoryPanel = ({
   const [activeTab, setActiveTab] = useState<"facilities" | "inventory">("facilities");
   const [loading, setLoading] = useState(false);
 
-  const handleUpdateFacilities = async (data: {
-    water_source?: string;
-    security?: string;
-    parking?: boolean;
-    wifi?: boolean;
-    trash_collection?: string;
-    notes?: string;
-  }) => {
+  const handleUpdateFacilities = async (data: FacilityFormData) => {
     setLoading(true);
     const result = await upsertCaretakerFacilities({
       ...data,
@@ -40,12 +50,7 @@ export const FacilitiesInventoryPanel = ({
     setLoading(false);
   };
 
-  const handleCreateInventory = async (data: {
-    name: string;
-    quantity: number;
-    condition?: string;
-    notes?: string;
-  }) => {
+  const handleCreateInventory = async (data: InventoryFormData) => {
     setLoading(true);
     const result = await createInventoryItem({
       ...data,
@@ -59,26 +64,25 @@ export const FacilitiesInventoryPanel = ({
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className={ck.display}>Property Content</h2>
+        <p className={ck.body}>Manage facility details, tenant-facing services, and property inventory.</p>
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
+      <div className={ck.tabBar}>
         <button
+          type="button"
           onClick={() => setActiveTab("facilities")}
-          className={`pb-3 px-4 font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "facilities"
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={filterButtonClass(activeTab === "facilities")}
         >
           <Building2 className="w-4 h-4" />
           Facilities
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("inventory")}
-          className={`pb-3 px-4 font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "inventory"
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={filterButtonClass(activeTab === "inventory")}
         >
           <Package className="w-4 h-4" />
           Inventory ({inventory.length})
@@ -109,7 +113,7 @@ const FacilitiesTab = ({
   loading,
 }: {
   facilities: CaretakerFacilities | null;
-  onUpdate: (data: any) => void;
+  onUpdate: (data: FacilityFormData) => void;
   loading: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -130,25 +134,25 @@ const FacilitiesTab = ({
 
   if (isEditing) {
     return (
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4">
+      <form onSubmit={handleSubmit} className={cn(ck.card, "space-y-4")}>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Water Source</label>
+          <label className={ck.fieldLabel}>Water Source</label>
           <input
             type="text"
             value={formData.water_source}
             onChange={(e) => setFormData({ ...formData, water_source: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800"
+            className={cn(ck.input, "w-full")}
             placeholder="e.g., Borehole, Municipal"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Security</label>
+          <label className={ck.fieldLabel}>Security</label>
           <input
             type="text"
             value={formData.security}
             onChange={(e) => setFormData({ ...formData, security: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800"
+            className={cn(ck.input, "w-full")}
             placeholder="e.g., 24/7 Guard, CCTV"
           />
         </div>
@@ -161,7 +165,7 @@ const FacilitiesTab = ({
               onChange={(e) => setFormData({ ...formData, parking: e.target.checked })}
               className="w-4 h-4 rounded border-slate-300"
             />
-            <span className="text-sm text-slate-700 dark:text-slate-300">Parking Available</span>
+            <span className="text-sm text-arena-on-surface">Parking Available</span>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -170,28 +174,28 @@ const FacilitiesTab = ({
               onChange={(e) => setFormData({ ...formData, wifi: e.target.checked })}
               className="w-4 h-4 rounded border-slate-300"
             />
-            <span className="text-sm text-slate-700 dark:text-slate-300">WiFi Available</span>
+            <span className="text-sm text-arena-on-surface">WiFi Available</span>
           </label>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Trash Collection</label>
+          <label className={ck.fieldLabel}>Trash Collection</label>
           <input
             type="text"
             value={formData.trash_collection}
             onChange={(e) => setFormData({ ...formData, trash_collection: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800"
+            className={cn(ck.input, "w-full")}
             placeholder="e.g., Daily, Weekly"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label>
+          <label className={ck.fieldLabel}>Notes</label>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800"
+            className={cn(ck.input, "w-full")}
           />
         </div>
 
@@ -199,14 +203,14 @@ const FacilitiesTab = ({
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 py-2 bg-primary text-white rounded-lg font-medium disabled:opacity-50"
+            className={cn(ck.btnSuccess, "flex-1")}
           >
             {loading ? "Saving..." : "Save"}
           </button>
           <button
             type="button"
             onClick={() => setIsEditing(false)}
-            className="flex-1 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg font-medium"
+            className={cn(ck.btnGhost, "flex-1")}
           >
             Cancel
           </button>
@@ -216,12 +220,13 @@ const FacilitiesTab = ({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-white/10">
+    <div className={ck.card}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-semibold text-slate-900 dark:text-white">Property Facilities</h3>
+        <h3 className={ck.headline}>Property Facilities</h3>
         <button
+          type="button"
           onClick={() => setIsEditing(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90"
+          className={ck.btnManage}
         >
           <Edit2 className="w-4 h-4" />
           Edit
@@ -259,9 +264,9 @@ const FacilitiesTab = ({
       </div>
 
       {facilities?.notes && (
-        <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes:</p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{facilities.notes}</p>
+        <div className="mt-6 p-4 bg-arena-surface-container-low rounded-xl">
+          <p className={ck.sectionTitle}>Notes</p>
+          <p className={ck.body}>{facilities.notes}</p>
         </div>
       )}
     </div>
@@ -296,7 +301,7 @@ const InventoryTab = ({
   loading,
 }: {
   inventory: CaretakerInventoryItem[];
-  onCreate: (data: any) => void;
+  onCreate: (data: InventoryFormData) => void;
   loading: boolean;
 }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);

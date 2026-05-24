@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { FileText, Plus, Edit2, Trash2, HelpCircle, Check } from "lucide-react";
+import { FileText, Plus, Edit2, Trash2, HelpCircle } from "lucide-react";
 import type { CaretakerRule, CaretakerFaq } from "@/lib/caretaker/types";
 import { createCaretakerRule, updateCaretakerRule, deleteCaretakerRule, createCaretakerFaq, updateCaretakerFaq, deleteCaretakerFaq } from "@/lib/caretaker/dashboard";
+import { cn, ck, filterButtonClass } from "./caretaker-ui";
 
 interface RulesFaqsPanelProps {
   rules: CaretakerRule[];
@@ -80,25 +81,24 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className={ck.display}>Rules & FAQ</h2>
+        <p className={ck.body}>Maintain tenant-facing guidance, house rules, and common answers.</p>
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
+      <div className={ck.tabBar}>
         <button
+          type="button"
           onClick={() => setActiveTab("rules")}
-          className={`pb-3 px-4 font-medium transition-colors ${
-            activeTab === "rules"
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={filterButtonClass(activeTab === "rules")}
         >
           Property Rules ({rules.filter(r => r.is_active).length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("faqs")}
-          className={`pb-3 px-4 font-medium transition-colors ${
-            activeTab === "faqs"
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={filterButtonClass(activeTab === "faqs")}
         >
           FAQs ({faqs.filter(f => f.is_active).length})
         </button>
@@ -106,8 +106,9 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
 
       {/* Create Button */}
       <button
+        type="button"
         onClick={() => setShowCreateModal(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+        className={ck.btnManage}
       >
         <Plus className="w-4 h-4" />
         Add {activeTab === "rules" ? "Rule" : "FAQ"}
@@ -148,15 +149,15 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
 
       {/* Empty State */}
       {activeTab === "rules" && rules.filter(r => r.is_active).length === 0 && (
-        <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/10">
-          <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">No rules defined yet.</p>
+        <div className={ck.empty}>
+          <FileText className="w-12 h-12 text-arena-on-surface-variant mx-auto mb-4" />
+          <p className={ck.body}>No rules defined yet.</p>
         </div>
       )}
       {activeTab === "faqs" && faqs.filter(f => f.is_active).length === 0 && (
-        <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/10">
-          <HelpCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">No FAQs defined yet.</p>
+        <div className={ck.empty}>
+          <HelpCircle className="w-12 h-12 text-arena-on-surface-variant mx-auto mb-4" />
+          <p className={ck.body}>No FAQs defined yet.</p>
         </div>
       )}
 
@@ -165,7 +166,13 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
         <CreateModal
           type={activeTab}
           onClose={() => setShowCreateModal(false)}
-          onCreate={activeTab === "rules" ? handleCreateRule : handleCreateFaq}
+          onCreate={(data) => {
+            if (activeTab === "rules") {
+              void handleCreateRule({ title: data.title || "", description: data.description || "" });
+            } else {
+              void handleCreateFaq({ question: data.question || "", answer: data.answer || "" });
+            }
+          }}
           loading={loading === "creating"}
         />
       )}
@@ -173,37 +180,52 @@ export const RulesFaqsPanel = ({ rules, faqs, propertyId, onDataChange }: RulesF
   );
 };
 
-const RuleCard = ({ rule, isLoading, isEditing, onEdit, onCancel, onUpdate, onDelete }: any) => {
+type RuleForm = { title: string; description: string };
+type FaqForm = { question: string; answer: string };
+
+interface RuleCardProps {
+  rule: CaretakerRule;
+  isLoading: boolean;
+  isEditing: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onUpdate: (data: RuleForm) => void;
+  onDelete: () => void;
+}
+
+const RuleCard = ({ rule, isLoading, isEditing, onEdit, onCancel, onUpdate, onDelete }: RuleCardProps) => {
   const [title, setTitle] = useState(rule.title);
   const [description, setDescription] = useState(rule.description || "");
 
   if (isEditing) {
     return (
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
+      <div className={ck.card}>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-3"
+          className={cn(ck.input, "w-full mb-3")}
           placeholder="Rule title"
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-3"
+          className={cn(ck.input, "w-full mb-3")}
           placeholder="Rule description"
         />
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => onUpdate({ title, description })}
             disabled={isLoading}
-            className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50"
+            className={cn(ck.btnSuccess, "flex-1")}
           >
             {isLoading ? "Saving..." : "Save"}
           </button>
           <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium"
+            className={cn(ck.btnGhost, "flex-1")}
           >
             Cancel
           </button>
@@ -213,68 +235,84 @@ const RuleCard = ({ rule, isLoading, isEditing, onEdit, onCancel, onUpdate, onDe
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
+    <div className={ck.card}>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className={ck.iconTile}>
             <FileText className="w-4 h-4 text-primary" />
           </div>
-          <h3 className="font-semibold text-slate-900 dark:text-white">{rule.title}</h3>
+          <h3 className="font-semibold text-arena-on-surface">{rule.title}</h3>
         </div>
         <div className="flex gap-1">
           <button
+            type="button"
             onClick={onEdit}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400"
+            className="p-2 hover:bg-arena-surface-container-low rounded-lg text-secondary"
+            aria-label="Edit rule"
           >
             <Edit2 className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={onDelete}
             disabled={isLoading}
-            className="p-2 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg text-rose-600 dark:text-rose-400"
+            className="p-2 hover:bg-error-container/30 rounded-lg text-error disabled:opacity-50"
+            aria-label="Deactivate rule"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
       {rule.description && (
-        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 ml-11">{rule.description}</p>
+        <p className={cn(ck.body, "mt-3 ml-12")}>{rule.description}</p>
       )}
     </div>
   );
 };
 
-const FaqCard = ({ faq, isLoading, isEditing, onEdit, onCancel, onUpdate, onDelete }: any) => {
+interface FaqCardProps {
+  faq: CaretakerFaq;
+  isLoading: boolean;
+  isEditing: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onUpdate: (data: FaqForm) => void;
+  onDelete: () => void;
+}
+
+const FaqCard = ({ faq, isLoading, isEditing, onEdit, onCancel, onUpdate, onDelete }: FaqCardProps) => {
   const [question, setQuestion] = useState(faq.question);
   const [answer, setAnswer] = useState(faq.answer);
 
   if (isEditing) {
     return (
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
+      <div className={ck.card}>
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-3"
+          className={cn(ck.input, "w-full mb-3")}
           placeholder="Question"
         />
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-3"
+          className={cn(ck.input, "w-full mb-3")}
           placeholder="Answer"
         />
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => onUpdate({ question, answer })}
             disabled={isLoading}
-            className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50"
+            className={cn(ck.btnSuccess, "flex-1")}
           >
             {isLoading ? "Saving..." : "Save"}
           </button>
           <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium"
+            className={cn(ck.btnGhost, "flex-1")}
           >
             Cancel
           </button>
@@ -284,28 +322,32 @@ const FaqCard = ({ faq, isLoading, isEditing, onEdit, onCancel, onUpdate, onDele
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
+    <div className={ck.card}>
       <div className="flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <div className={ck.iconTile}>
             <HelpCircle className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white">{faq.question}</h3>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{faq.answer}</p>
+            <h3 className="font-semibold text-arena-on-surface">{faq.question}</h3>
+            <p className={cn(ck.body, "mt-2")}>{faq.answer}</p>
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
           <button
+            type="button"
             onClick={onEdit}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400"
+            className="p-2 hover:bg-arena-surface-container-low rounded-lg text-secondary"
+            aria-label="Edit FAQ"
           >
             <Edit2 className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={onDelete}
             disabled={isLoading}
-            className="p-2 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg text-rose-600 dark:text-rose-400"
+            className="p-2 hover:bg-error-container/30 rounded-lg text-error disabled:opacity-50"
+            aria-label="Deactivate FAQ"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -315,7 +357,14 @@ const FaqCard = ({ faq, isLoading, isEditing, onEdit, onCancel, onUpdate, onDele
   );
 };
 
-const CreateModal = ({ type, onClose, onCreate, loading }: any) => {
+interface CreateModalProps {
+  type: "rules" | "faqs";
+  onClose: () => void;
+  onCreate: (data: Partial<RuleForm & FaqForm>) => void;
+  loading: boolean;
+}
+
+const CreateModal = ({ type, onClose, onCreate, loading }: CreateModalProps) => {
   const [field1, setField1] = useState("");
   const [field2, setField2] = useState("");
 
@@ -329,15 +378,15 @@ const CreateModal = ({ type, onClose, onCreate, loading }: any) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+    <div className={ck.modalBackdrop}>
+      <div className="caretaker-card p-6 w-full max-w-md">
+        <h2 className={cn(ck.headline, "mb-4")}>
           Add {type === "rules" ? "Rule" : "FAQ"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className={ck.fieldLabel}>
               {type === "rules" ? "Rule Title" : "Question"}
             </label>
             <input
@@ -345,12 +394,12 @@ const CreateModal = ({ type, onClose, onCreate, loading }: any) => {
               value={field1}
               onChange={(e) => setField1(e.target.value)}
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className={cn(ck.input, "w-full")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className={ck.fieldLabel}>
               {type === "rules" ? "Description" : "Answer"}
             </label>
             <textarea
@@ -358,7 +407,7 @@ const CreateModal = ({ type, onClose, onCreate, loading }: any) => {
               onChange={(e) => setField2(e.target.value)}
               rows={3}
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className={cn(ck.input, "w-full")}
             />
           </div>
 
@@ -366,14 +415,14 @@ const CreateModal = ({ type, onClose, onCreate, loading }: any) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg font-medium"
+              className={cn(ck.btnGhost, "flex-1")}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2 px-4 bg-primary text-white rounded-lg font-medium disabled:opacity-50"
+              className={cn(ck.btnSuccess, "flex-1")}
             >
               {loading ? "Adding..." : "Add"}
             </button>

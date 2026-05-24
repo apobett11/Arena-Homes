@@ -5,6 +5,8 @@ import { FileText, User, Mail, Phone, Calendar, CheckCircle, XCircle, Clock, Hom
 import { getCurrentCaretakerEmployee, getCaretakerUnits } from "@/lib/caretaker/dashboard";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { CaretakerApplication } from "@/lib/caretaker/types";
+import { ck } from "@/components/caretaker/caretaker-ui";
+import Link from "next/link";
 
 interface ApplicationWithProperty extends CaretakerApplication {
   property_name?: string;
@@ -235,15 +237,17 @@ export default function CaretakerApplicationsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Link href="/caretaker/dashboard" className="text-sm text-primary font-semibold hover:underline">
+            Back to dashboard
+          </Link>
+          <h1 className="caretaker-display-lg text-arena-on-surface flex items-center gap-2 mt-2">
             <FileText className="w-6 h-6 text-primary" />
             Applications
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Manage tenant applications for your property
+          <p className={ck.body}>
+            Manage tenant applications for your property - approve, reject, and assign units.
           </p>
         </div>
         <div className="flex items-center gap-4">

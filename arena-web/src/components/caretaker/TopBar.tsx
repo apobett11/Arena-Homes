@@ -1,81 +1,75 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Bell, Moon, Sun, Search, User, Settings, LogOut } from "lucide-react";
-import { useTheme } from "next-themes";
+import React from "react";
+import { Bell, Search, User, LogOut, Grid } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthApi } from "@/lib/api/auth";
 
 export const TopBar = () => {
-    const { theme, setTheme } = useTheme();
-    const router = useRouter();
-    const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+  const handleLogout = async () => {
+    await AuthApi.logout();
+    localStorage.removeItem("user_role");
+    sessionStorage.removeItem("user_role");
+    router.replace("/");
+  };
 
-    const handleLogout = async () => {
-        await AuthApi.logout();
-        localStorage.removeItem('user_role');
-        sessionStorage.removeItem('user_role');
-        router.replace('/');
-    };
+  return (
+    <header className="sticky top-0 w-full h-16 bg-arena-surface border-b border-arena-outline-variant shadow-sm flex justify-between items-center px-4 md:px-6 z-40 lg:pl-[264px]">
+      <div className="flex items-center gap-3 w-full max-w-xl">
+        <Link href="/caretaker/dashboard" className="lg:hidden font-bold text-primary text-sm shrink-0">
+          Arena Homes
+        </Link>
+        <div className="relative w-full hidden sm:block">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-arena-on-surface-variant" />
+          <input
+            type="text"
+            placeholder="Search units, tenants, or records..."
+            className="w-full bg-arena-surface-container-low border border-arena-outline-variant rounded-xl pl-10 pr-4 py-2 text-sm text-arena-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          />
+        </div>
+      </div>
 
-    if (!mounted) return null;
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+        <Link
+          href="/caretaker/dashboard?tab=announcements"
+          className="p-2 rounded-xl text-arena-on-surface-variant hover:text-primary hover:bg-arena-surface-container-low transition-colors"
+          aria-label="Notifications and announcements"
+        >
+          <Bell className="w-5 h-5" />
+        </Link>
 
-    return (
-        <header className="h-16 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 sticky top-0 z-30 px-4 md:px-6 flex items-center justify-between shadow-sm">
-            <div className="flex-1 max-w-lg hidden md:block">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg py-2 pl-9 pr-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-all"
-                    />
-                </div>
-            </div>
+        <Link
+          href="/caretaker/dashboard?tab=facilities"
+          className="p-2 rounded-xl text-arena-on-surface-variant hover:text-primary hover:bg-arena-surface-container-low transition-colors hidden sm:block"
+          aria-label="Property tools"
+        >
+          <Grid className="w-5 h-5" />
+        </Link>
 
-            <div className="flex items-center gap-2 ml-auto">
-                <button className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all relative shadow-sm">
-                    <Bell className="w-4 h-4" />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950" />
-                </button>
+        <div className="h-6 w-px bg-arena-outline-variant/60 hidden md:block" />
 
-                <button
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
-                >
-                    {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </button>
+        <Link href="/caretaker/dashboard?tab=settings" className="flex items-center gap-2 rounded-xl hover:bg-arena-surface-container-low px-1.5 py-1 transition-colors">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-bold text-arena-on-surface leading-none">Caretaker</p>
+            <p className="caretaker-label-caps text-arena-on-surface-variant mt-0.5">Lead Caretaker</p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-primary-container border-2 border-primary-container flex items-center justify-center overflow-hidden">
+            <User className="w-5 h-5 text-on-primary-container" />
+          </div>
+        </Link>
 
-                <button className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
-                    <Settings className="w-4 h-4" />
-                </button>
-
-                <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block" />
-
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all text-sm font-medium"
-                >
-                    <LogOut className="w-4 h-4" />
-                    <span className="hidden sm:inline">Logout</span>
-                </button>
-
-                <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block" />
-
-                <div className="flex items-center gap-2 pl-1">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                        <User className="text-primary w-4 h-4" />
-                    </div>
-                    <div className="hidden md:block text-left">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white leading-none">Caretaker</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Property Manager</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-error hover:bg-error-container/30 transition-colors text-sm font-semibold"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
+      </div>
+    </header>
+  );
 };

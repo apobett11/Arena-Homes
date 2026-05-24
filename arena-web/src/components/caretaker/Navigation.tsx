@@ -1,105 +1,126 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
-    Home,
-    DoorOpen,
-    Users,
-    MessageSquare,
-    Settings,
-    ChevronRight,
-    ShieldCheck
+  Bell,
+  ClipboardList,
+  DoorOpen,
+  FileText,
+  HelpCircle,
+  Home,
+  MessageSquare,
+  Plus,
+  Settings,
+  Users,
+  Wrench,
 } from "lucide-react";
-import { gsap } from "gsap";
+import { cn } from "./caretaker-ui";
 
-const navItems = [
-    { name: "Home", icon: Home, href: "/caretaker/dashboard" },
-    { name: "Rooms", icon: DoorOpen, href: "#rooms" },
-    { name: "Tenants", icon: Users, href: "#tenants" },
-    { name: "Messages", icon: MessageSquare, href: "#messages" },
+const sidebarItems = [
+  { name: "Home", icon: Home, href: "/caretaker/dashboard" },
+  { name: "Units", icon: DoorOpen, href: "/caretaker/dashboard?tab=units" },
+  { name: "Tenants", icon: Users, href: "/caretaker/dashboard?tab=tenants" },
+  { name: "Applications", icon: ClipboardList, href: "/caretaker/dashboard?tab=applications" },
+  { name: "Issues", icon: Wrench, href: "/caretaker/dashboard?tab=issues" },
+  { name: "Messages", icon: MessageSquare, href: "/caretaker/messages" },
+  { name: "Content", icon: FileText, href: "/caretaker/dashboard?tab=facilities" },
+  { name: "Rules & FAQ", icon: HelpCircle, href: "/caretaker/dashboard?tab=rules" },
+  { name: "Announcements", icon: Bell, href: "/caretaker/dashboard?tab=announcements" },
+  { name: "Settings", icon: Settings, href: "/caretaker/dashboard?tab=settings" },
 ];
 
+const bottomNavItems = [
+  { name: "Home", icon: Home, href: "/caretaker/dashboard", matchTab: null },
+  { name: "Units", icon: DoorOpen, href: "/caretaker/dashboard?tab=units", matchTab: "units" },
+  { name: "Tenants", icon: Users, href: "/caretaker/dashboard?tab=tenants", matchTab: "tenants" },
+  { name: "Messages", icon: MessageSquare, href: "/caretaker/messages", matchTab: null },
+  { name: "Settings", icon: Settings, href: "/caretaker/dashboard?tab=settings", matchTab: "settings" },
+];
+
+function isNavActive(pathname: string, searchParams: URLSearchParams, href: string, matchTab: string | null) {
+  const [path, query] = href.split("?");
+  if (pathname !== path) {
+    if (href === "/caretaker/messages" && pathname.startsWith("/caretaker/messages")) return true;
+    if (href === "/caretaker/applications" && pathname.startsWith("/caretaker/applications")) return true;
+    return false;
+  }
+  if (!query) {
+    const tab = searchParams.get("tab");
+    return !tab || tab === "overview";
+  }
+  const expectedTab = new URLSearchParams(query).get("tab");
+  return searchParams.get("tab") === expectedTab || (matchTab && searchParams.get("tab") === matchTab);
+}
+
 export const Sidebar = () => {
-    const sidebarRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-    useEffect(() => {
-        if (sidebarRef.current) {
-            gsap.fromTo(
-                sidebarRef.current,
-                { x: -100, opacity: 0 },
-                { x: 0, opacity: 1, duration: 1, ease: "power4.out" }
-            );
-        }
-    }, []);
+  return (
+    <aside className="hidden lg:flex flex-col w-[240px] min-h-screen bg-arena-surface border-r border-arena-outline-variant py-6 px-4 z-40 shrink-0">
+      <div className="mb-8 px-2">
+        <h2 className="caretaker-headline-md text-primary font-bold">Arena Homes</h2>
+        <p className="caretaker-label-caps text-arena-on-surface-variant opacity-70 mt-1">Caretaker Console</p>
+      </div>
 
-    return (
-        <aside
-            ref={sidebarRef}
-            className="hidden lg:flex flex-col w-64 min-h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-white/10 p-6 z-40"
-        >
-            <div className="flex items-center gap-3 mb-10 px-2">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                    <ShieldCheck className="text-white w-6 h-6" />
-                </div>
-                <div>
-                    <h2 className="text-slate-900 dark:text-white font-bold text-xl tracking-tight uppercase">Arena</h2>
-                    <p className="text-primary text-[10px] uppercase font-bold tracking-widest mt-[-4px]">Command Center</p>
-                </div>
-            </div>
+      <nav className="flex-1 space-y-1 overflow-y-auto hide-scrollbar pr-1">
+        {sidebarItems.map((item) => {
+          const active = isNavActive(pathname, searchParams, item.href, null);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors font-medium text-sm",
+                active
+                  ? "text-primary font-bold bg-arena-surface-container-low border-r-4 border-primary rounded-r-none"
+                  : "text-arena-on-surface-variant hover:bg-arena-surface-container-low"
+              )}
+            >
+              <item.icon className={cn("w-5 h-5", active && "text-primary")} />
+              <span>{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
-            <nav className="flex-1 space-y-2">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.name}
-                        href={item.href}
-                        className="group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white border border-transparent hover:border-slate-200"
-                    >
-                        <div className="flex items-center gap-4">
-                            <item.icon className="w-6 h-6 group-hover:text-primary dark:group-hover:text-primary transition-colors" />
-                            <span className="font-bold text-sm uppercase tracking-wide">{item.name}</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
-                    </Link>
-                ))}
-            </nav>
-
-            <div className="mt-auto pt-6 border-t border-slate-200 dark:border-white/10">
-                <Link
-                    href="#settings"
-                    className="flex items-center gap-3 p-3 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 transition-all"
-                >
-                    <Settings className="w-5 h-5" />
-                    <span className="font-bold">Settings</span>
-                </Link>
-            </div>
-        </aside>
-    );
+      <Link
+        href="/caretaker/dashboard?tab=issues"
+        className="mt-5 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-sm hover:opacity-90"
+      >
+        <Plus className="w-5 h-5" />
+        New Request
+      </Link>
+    </aside>
+  );
 };
 
 export const BottomNav = () => {
-    return (
-        <div className="lg:hidden fixed bottom-10 left-6 right-6 z-50 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-3xl shadow-xl">
-            <div className="flex justify-between items-center max-w-md mx-auto">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-                    >
-                        <item.icon className="w-6 h-6" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">{item.name}</span>
-                    </Link>
-                ))}
-                <Link
-                    href="#settings"
-                    className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-                >
-                    <Settings className="w-6 h-6" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Settings</span>
-                </Link>
-            </div>
-        </div>
-    );
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  return (
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 pb-safe bg-arena-surface shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] rounded-t-xl">
+      {bottomNavItems.map((item) => {
+        const active = isNavActive(pathname, searchParams, item.href, item.matchTab);
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "flex flex-col items-center justify-center px-3 py-1.5 rounded-xl min-w-[56px] transition-colors",
+              active
+                ? "bg-primary-container text-on-primary-container"
+                : "text-arena-on-surface-variant"
+            )}
+          >
+            <item.icon className="w-5 h-5" />
+            <span className="caretaker-label-caps text-[10px] mt-0.5">{item.name}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
 };

@@ -5,6 +5,7 @@ import { Bell, Plus, Send } from "lucide-react";
 import type { CaretakerAnnouncement } from "@/lib/caretaker/types";
 import { createCaretakerAnnouncement } from "@/lib/caretaker/dashboard";
 import { getCaretakerBroadcastStats } from "@/lib/communication/api";
+import { cn, ck, filterButtonClass } from "./caretaker-ui";
 
 interface AnnouncementsPanelProps {
   incoming: CaretakerAnnouncement[];
@@ -17,6 +18,7 @@ interface AnnouncementsPanelProps {
 export const AnnouncementsPanel = ({
   incoming,
   outgoing,
+  propertyId,
   onDataChange,
 }: AnnouncementsPanelProps) => {
   const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">("incoming");
@@ -33,7 +35,7 @@ export const AnnouncementsPanel = ({
     const result = await createCaretakerAnnouncement({
       title: data.title,
       body: data.body,
-      property_id: "",
+      property_id: propertyId,
       target_role: "TENANT",
     });
     setLoading(false);
@@ -63,25 +65,24 @@ export const AnnouncementsPanel = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
+      <div>
+        <h2 className={ck.display}>Notifications & Announcements</h2>
+        <p className={ck.body}>Read admin notices and broadcast updates to tenants assigned to your property.</p>
+      </div>
+
+      <div className={ck.tabBar}>
         <button
+          type="button"
           onClick={() => setActiveTab("incoming")}
-          className={`pb-3 px-4 font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "incoming"
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={filterButtonClass(activeTab === "incoming")}
         >
           <Bell className="w-4 h-4" />
           Incoming ({incoming.length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("outgoing")}
-          className={`pb-3 px-4 font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "outgoing"
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={filterButtonClass(activeTab === "outgoing")}
         >
           <Send className="w-4 h-4" />
           My broadcasts ({outgoing.length})
@@ -89,15 +90,16 @@ export const AnnouncementsPanel = ({
       </div>
 
       {feedback && (
-        <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2">
+        <p className="text-sm text-arena-on-surface-variant bg-arena-surface-container-low border border-arena-outline-variant/60 rounded-xl px-3 py-2">
           {feedback}
         </p>
       )}
 
       {activeTab === "outgoing" && (
         <button
+          type="button"
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+          className={ck.btnManage}
         >
           <Plus className="w-4 h-4" />
           Send broadcast to my tenants
@@ -116,29 +118,29 @@ export const AnnouncementsPanel = ({
       </div>
 
       {announcements.length === 0 && (
-        <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/10">
-          <Bell className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">
+        <div className={ck.empty}>
+          <Bell className="w-12 h-12 text-arena-on-surface-variant mx-auto mb-4" />
+          <p className={ck.body}>
             No {activeTab === "incoming" ? "incoming" : "outgoing"} items.
           </p>
         </div>
       )}
 
       {statsFor && activeTab === "outgoing" && (
-        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm">
+        <div className="rounded-xl border border-arena-outline-variant/60 bg-arena-surface-container-low p-4 text-sm">
           {statsLoading ? (
-            <p className="text-slate-500">Loading read stats...</p>
+            <p className={ck.body}>Loading read stats...</p>
           ) : stats ? (
-            <div className="space-y-2 text-slate-700 dark:text-slate-300">
+            <div className="space-y-2 text-arena-on-surface">
               <p>
                 Read: {String(stats.read_count)} / {String(stats.total_tenants)} (
                 {String(stats.read_percentage)}%)
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-arena-on-surface-variant">
                 Unread tenants:{" "}
                 {Array.isArray(stats.unread_tenants)
                   ? (stats.unread_tenants as { name?: string }[]).map((t) => t.name).join(", ") || "None"
-                  : "—"}
+                  : "-"}
               </p>
             </div>
           ) : null}
@@ -166,9 +168,9 @@ const AnnouncementCard = ({
   onViewStats?: () => void;
 }) => {
   return (
-    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
+    <div className={ck.card}>
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+        <div className={ck.iconTile}>
           {type === "incoming" ? (
             <Bell className="w-5 h-5 text-primary" />
           ) : (
@@ -176,9 +178,9 @@ const AnnouncementCard = ({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-slate-900 dark:text-white">{announcement.title}</h3>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{announcement.body}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+          <h3 className="font-semibold text-arena-on-surface">{announcement.title}</h3>
+          <p className={cn(ck.body, "mt-1")}>{announcement.body}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-arena-on-surface-variant">
             <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
             {onViewStats && (
               <button type="button" onClick={onViewStats} className="text-primary font-semibold hover:underline">
@@ -210,35 +212,35 @@ const CreateModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+    <div className={ck.modalBackdrop}>
+      <div className="caretaker-card p-6 w-full max-w-md">
+        <h2 className={cn(ck.headline, "mb-2")}>
           Broadcast to my tenants
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+        <p className={cn(ck.body, "mb-4")}>
           Only tenants assigned to your properties will receive this message.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+            <label className={ck.fieldLabel}>Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className={cn(ck.input, "w-full")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Message</label>
+            <label className={ck.fieldLabel}>Message</label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className={cn(ck.input, "w-full")}
             />
           </div>
 
@@ -246,14 +248,14 @@ const CreateModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg font-medium"
+              className={cn(ck.btnGhost, "flex-1")}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2 px-4 bg-primary text-white rounded-lg font-medium disabled:opacity-50"
+              className={cn(ck.btnInfo, "flex-1")}
             >
               {loading ? "Sending..." : "Send"}
             </button>

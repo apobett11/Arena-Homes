@@ -344,9 +344,17 @@ GRANT SELECT ON public.communication_messages TO authenticated;
 GRANT SELECT, UPDATE ON public.communication_recipients TO authenticated;
 
 -- Neutralize unsafe legacy policies
-DROP POLICY IF EXISTS "System can create message recipients" ON public.message_recipients;
-DROP POLICY IF EXISTS "System can create announcement recipients" ON public.announcement_recipients;
+-- Neutralize unsafe legacy policies only if legacy tables exist.
+  DO $$
+  BEGIN
+    IF to_regclass('public.message_recipients') IS NOT NULL THEN
+      EXECUTE 'DROP POLICY IF EXISTS "System can create message recipients" ON public.message_recipients';
+    END IF;
 
+    IF to_regclass('public.announcement_recipients') IS NOT NULL THEN
+      EXECUTE 'DROP POLICY IF EXISTS "System can create announcement recipients" ON public.announcement_recipients';
+    END IF;
+  END $$;
 -- ---------------------------------------------------------------------------
 -- 6. Core RPCs
 -- ---------------------------------------------------------------------------

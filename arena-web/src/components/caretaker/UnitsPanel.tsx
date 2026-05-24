@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { DoorOpen, Plus, Edit2, Check, X, AlertCircle } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import Link from "next/link";
+import { DoorOpen, Edit2, Eye, Search, UserPlus } from "lucide-react";
 import type { CaretakerUnit } from "@/lib/caretaker/types";
-import { updateUnitAvailability, setUnitStatus } from "@/lib/caretaker/dashboard";
+import { setUnitStatus } from "@/lib/caretaker/dashboard";
+import { cn, ck, filterButtonClass, statusChipClass, statusToneFromValue } from "./caretaker-ui";
 
 interface UnitsPanelProps {
   units: CaretakerUnit[];
@@ -12,28 +14,43 @@ interface UnitsPanelProps {
 }
 
 const availabilityOptions = [
-  { value: "AVAILABLE", label: "Available", color: "bg-emerald-500" },
-  { value: "RESERVED", label: "Reserved", color: "bg-amber-500" },
-  { value: "OCCUPIED", label: "Occupied", color: "bg-blue-500" },
-  { value: "UNDER_MAINTENANCE", label: "Maintenance", color: "bg-rose-500" },
-  { value: "UNAVAILABLE", label: "Unavailable", color: "bg-slate-500" },
+  { value: "AVAILABLE", label: "Available" },
+  { value: "RESERVED", label: "Reserved" },
+  { value: "OCCUPIED", label: "Occupied" },
+  { value: "UNDER_MAINTENANCE", label: "Maintenance" },
+  { value: "UNAVAILABLE", label: "Unavailable" },
 ];
 
-export const UnitsPanel = ({ units, propertyId, onDataChange }: UnitsPanelProps) => {
+export const UnitsPanel = ({ units, onDataChange }: UnitsPanelProps) => {
   const [editingUnit, setEditingUnit] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [feedback, setFeedback] = useState<string | null>(null);
 
-  const filteredUnits = units.filter((unit) => {
-    if (filter === "all") return true;
-    return unit.availability_status === filter;
-  });
+  const filteredUnits = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return units.filter((unit) => {
+      const matchesFilter = filter === "all" || unit.availability_status === filter;
+      const matchesSearch =
+        !query ||
+        unit.room_number?.toLowerCase().includes(query) ||
+        unit.room_type?.toLowerCase().includes(query) ||
+        unit.status?.toLowerCase().includes(query) ||
+        unit.availability_status?.toLowerCase().includes(query);
+      return matchesFilter && matchesSearch;
+    });
+  }, [filter, searchTerm, units]);
 
   const handleStatusChange = async (unitId: string, newStatus: string) => {
     setLoading(unitId);
-    const result = await setUnitStatus(unitId, newStatus as any);
+    setFeedback(null);
+    const result = await setUnitStatus(unitId, newStatus as Parameters<typeof setUnitStatus>[1]);
     if (result.success) {
+      setFeedback("Unit status updated.");
       onDataChange();
+    } else {
+      setFeedback(result.error || "Could not update unit status.");
     }
     setLoading(null);
     setEditingUnit(null);
@@ -49,26 +66,81 @@ export const UnitsPanel = ({ units, propertyId, onDataChange }: UnitsPanelProps)
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
+      <PanelHeader
+        title="Units Management"
+        description="Inventory and real-time status tracking for assigned rooms."
+      />
+
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard label="Total" value={stats.total} color="bg-slate-500" />
-        <StatCard label="Available" value={stats.available} color="bg-emerald-500" />
-        <StatCard label="Occupied" value={stats.occupied} color="bg-blue-500" />
-        <StatCard label="Reserved" value={stats.reserved} color="bg-amber-500" />
-        <StatCard label="Maintenance" value={stats.maintenance} color="bg-rose-500" />
+        <StatCard label="Total units" value={stats.total} accent="border-primary" />
+        <StatCard label="Available" value={stats.available} accent="border-emerald-500" />
+        <StatCard label="Occupied" value={stats.occupied} accent="border-blue-500" />
+        <StatCard label="Reserved" value={stats.reserved} accent="border-amber-500" />
+        <StatCard label="Maintenance" value={stats.maintenance} accent="border-error" />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <FilterButton active={filter === "all"} onClick={() => setFilter("all")} label="All" />
-        <FilterButton active={filter === "AVAILABLE"} onClick={() => setFilter("AVAILABLE")} label="Available" color="emerald" />
-        <FilterButton active={filter === "OCCUPIED"} onClick={() => setFilter("OCCUPIED")} label="Occupied" color="blue" />
-        <FilterButton active={filter === "RESERVED"} onClick={() => setFilter("RESERVED")} label="Reserved" color="amber" />
-        <FilterButton active={filter === "UNDER_MAINTENANCE"} onClick={() => setFilter("UNDER_MAINTENANCE")} label="Maintenance" color="rose" />
+      <div className="caretaker-card p-4 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+        <div className="relative flex-1 max-w-xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-arena-on-surface-variant" />
+          <input
+            type="text"
+            placeholder="Search by unit, type, or status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={cn(ck.input, "w-full pl-10")}
+          />
+        </div>
+        <div className={ck.tabBar}>
+          <FilterButton active={filter === "all"} onClick={() => setFilter("all")} label="All" />
+          {availabilityOptions.map((option) => (
+            <FilterButton
+              key={option.value}
+              active={filter === option.value}
+              onClick={() => setFilter(option.value)}
+              label={option.label}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Units Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {feedback && (
+        <div className="rounded-xl border border-arena-outline-variant/60 bg-arena-surface-container-low px-4 py-3 text-sm text-arena-on-surface-variant">
+          {feedback}
+        </div>
+      )}
+
+      <div className={cn(ck.tableWrap, "hidden md:block")}>
+        <div className="caretaker-table-scroll">
+          <table className="w-full text-left border-collapse">
+            <thead className={ck.tableHead}>
+              <tr>
+                <th className={ck.tableHeader}>Room</th>
+                <th className={ck.tableHeader}>Type</th>
+                <th className={ck.tableHeader}>Price</th>
+                <th className={ck.tableHeader}>Capacity</th>
+                <th className={ck.tableHeader}>Status</th>
+                <th className={ck.tableHeader}>Deposit</th>
+                <th className={cn(ck.tableHeader, "text-right")}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-arena-outline-variant/60">
+              {filteredUnits.map((unit) => (
+                <UnitRow
+                  key={unit.id}
+                  unit={unit}
+                  isEditing={editingUnit === unit.id}
+                  isLoading={loading === unit.id}
+                  onEdit={() => setEditingUnit(unit.id)}
+                  onCancel={() => setEditingUnit(null)}
+                  onStatusChange={(status) => handleStatusChange(unit.id, status)}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:hidden">
         {filteredUnits.map((unit) => (
           <UnitCard
             key={unit.id}
@@ -83,49 +155,95 @@ export const UnitsPanel = ({ units, propertyId, onDataChange }: UnitsPanelProps)
       </div>
 
       {filteredUnits.length === 0 && (
-        <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/10">
-          <DoorOpen className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">No units found for this filter.</p>
+        <div className={ck.empty}>
+          <DoorOpen className="w-12 h-12 text-arena-on-surface-variant mx-auto mb-4" />
+          <p className={ck.body}>No units found for this search or filter.</p>
         </div>
       )}
     </div>
   );
 };
 
-const StatCard = ({ label, value, color }: { label: string; value: number; color: string }) => (
-  <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
-    <div className={`w-3 h-3 rounded-full ${color} mb-2`} />
-    <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
-    <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+const PanelHeader = ({ title, description }: { title: string; description: string }) => (
+  <div>
+    <h2 className={ck.display}>{title}</h2>
+    <p className={ck.body}>{description}</p>
   </div>
 );
 
-const FilterButton = ({
-  active,
-  onClick,
-  label,
-  color = "slate",
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  color?: string;
-}) => {
-  const colorClasses: Record<string, string> = {
-    slate: active ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-    emerald: active ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    blue: active ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    amber: active ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    rose: active ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
-  };
+const StatCard = ({ label, value, accent }: { label: string; value: number; accent: string }) => (
+  <div className={cn(ck.statCard, "border-l-4", accent)}>
+    <p className={ck.sectionTitle}>{label}</p>
+    <p className="caretaker-display-lg text-arena-on-surface mt-1">{value}</p>
+  </div>
+);
 
+const FilterButton = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
+  <button type="button" onClick={onClick} className={filterButtonClass(active)}>
+    {label}
+  </button>
+);
+
+const UnitRow = ({
+  unit,
+  isEditing,
+  isLoading,
+  onEdit,
+  onCancel,
+  onStatusChange,
+}: {
+  unit: CaretakerUnit;
+  isEditing: boolean;
+  isLoading: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onStatusChange: (status: string) => void;
+}) => {
   return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${colorClasses[color]}`}
-    >
-      {label}
-    </button>
+    <tr className={ck.tableRow}>
+      <td className={ck.tableCell}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-arena-surface-container flex items-center justify-center">
+            <DoorOpen className="w-5 h-5 text-primary" />
+          </div>
+          <span className="font-bold">Room {unit.room_number || "Unknown"}</span>
+        </div>
+      </td>
+      <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>{unit.room_type}</td>
+      <td className={cn(ck.tableCell, "font-semibold")}>KES {unit.base_price.toLocaleString()}</td>
+      <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>{unit.capacity} person(s)</td>
+      <td className={ck.tableCell}>
+        {isEditing ? (
+          <InlineStatusEditor
+            current={unit.availability_status}
+            isLoading={isLoading}
+            onCancel={onCancel}
+            onStatusChange={onStatusChange}
+          />
+        ) : (
+          <span className={statusChipClass(statusToneFromValue(unit.availability_status))}>
+            {formatStatus(unit.availability_status)}
+          </span>
+        )}
+      </td>
+      <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>
+        {unit.deposit_amount ? `KES ${unit.deposit_amount.toLocaleString()}` : "Not set"}
+      </td>
+      <td className={cn(ck.tableCell, "text-right")}>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onEdit} className={cn(ck.btnManage, "px-3")}>
+            <Edit2 className="w-4 h-4" />
+            Update status
+          </button>
+          {unit.availability_status === "AVAILABLE" && (
+            <Link href="/caretaker/dashboard?tab=applications" className={cn(ck.btnSuccess, "px-3")}>
+              <UserPlus className="w-4 h-4" />
+              Assign tenant
+            </Link>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 };
 
@@ -143,85 +261,92 @@ const UnitCard = ({
   onEdit: () => void;
   onCancel: () => void;
   onStatusChange: (status: string) => void;
-}) => {
-  const currentStatus = availabilityOptions.find((o) => o.value === unit.availability_status);
-
-  return (
-    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
-      <div className="flex items-start justify-between mb-3">
+}) => (
+  <div className={ck.card}>
+    <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-center gap-3">
+        <div className={ck.iconTile}>
+          <DoorOpen className="w-5 h-5" />
+        </div>
         <div>
-          <div className="flex items-center gap-2">
-            <DoorOpen className="w-5 h-5 text-slate-400" />
-            <h3 className="font-semibold text-slate-900 dark:text-white">
-              Room {unit.room_number || "Unknown"}
-            </h3>
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 ml-7">{unit.room_type}</p>
+          <h3 className="font-semibold text-arena-on-surface">Room {unit.room_number || "Unknown"}</h3>
+          <p className={ck.body}>{unit.room_type}</p>
         </div>
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium text-white ${
-            currentStatus?.color || "bg-slate-500"
-          }`}
-        >
-          {currentStatus?.label || unit.availability_status}
-        </span>
       </div>
-
-      <div className="space-y-2 mb-4">
-        <div className="flex justify-between text-sm">
-          <span className="text-slate-500 dark:text-slate-400">Price:</span>
-          <span className="font-medium text-slate-900 dark:text-white">KES {unit.base_price.toLocaleString()}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-slate-500 dark:text-slate-400">Capacity:</span>
-          <span className="font-medium text-slate-900 dark:text-white">{unit.capacity} person(s)</span>
-        </div>
-        {unit.deposit_amount && (
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500 dark:text-slate-400">Deposit:</span>
-            <span className="font-medium text-slate-900 dark:text-white">
-              KES {unit.deposit_amount.toLocaleString()}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {isEditing ? (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Update Status:</p>
-          <div className="grid grid-cols-2 gap-2">
-            {availabilityOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => onStatusChange(option.value)}
-                disabled={isLoading}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  unit.availability_status === option.value
-                    ? `${option.color} text-white`
-                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="w-full py-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400"
-          >
-            Cancel
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={onEdit}
-          className="w-full py-2 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-        >
-          <Edit2 className="w-4 h-4" />
-          Update Status
-        </button>
-      )}
+      <span className={statusChipClass(statusToneFromValue(unit.availability_status))}>
+        {formatStatus(unit.availability_status)}
+      </span>
     </div>
-  );
-};
+
+    <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+      <Info label="Price" value={`KES ${unit.base_price.toLocaleString()}`} />
+      <Info label="Capacity" value={`${unit.capacity} person(s)`} />
+      <Info label="Deposit" value={unit.deposit_amount ? `KES ${unit.deposit_amount.toLocaleString()}` : "Not set"} />
+      <Info label="System status" value={unit.status} />
+    </div>
+
+    {isEditing ? (
+      <InlineStatusEditor
+        current={unit.availability_status}
+        isLoading={isLoading}
+        onCancel={onCancel}
+        onStatusChange={onStatusChange}
+      />
+    ) : (
+      <div className="flex gap-2">
+        <button type="button" onClick={onEdit} className={cn(ck.btnManage, "flex-1")}>
+          <Edit2 className="w-4 h-4" />
+          Update status
+        </button>
+        <Link href="/caretaker/dashboard?tab=applications" className={cn(ck.btnGhost, "px-3")} aria-label="View assignment workflow">
+          <Eye className="w-4 h-4" />
+        </Link>
+      </div>
+    )}
+  </div>
+);
+
+const InlineStatusEditor = ({
+  current,
+  isLoading,
+  onCancel,
+  onStatusChange,
+}: {
+  current: string;
+  isLoading: boolean;
+  onCancel: () => void;
+  onStatusChange: (status: string) => void;
+}) => (
+  <div className="space-y-2">
+    <div className="flex flex-wrap gap-2">
+      {availabilityOptions.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => onStatusChange(option.value)}
+          disabled={isLoading}
+          className={cn(
+            "rounded-xl px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50",
+            current === option.value ? "bg-primary text-white" : "bg-arena-surface-container-low text-arena-on-surface-variant"
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+    <button type="button" onClick={onCancel} disabled={isLoading} className="text-xs font-semibold text-arena-on-surface-variant hover:text-arena-on-surface">
+      Cancel
+    </button>
+  </div>
+);
+
+const Info = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <p className={ck.sectionTitle}>{label}</p>
+    <p className="font-semibold text-arena-on-surface mt-1">{value}</p>
+  </div>
+);
+
+function formatStatus(value: string) {
+  return value.replaceAll("_", " ");
+}

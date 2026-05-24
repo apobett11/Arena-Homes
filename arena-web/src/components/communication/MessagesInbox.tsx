@@ -6,6 +6,7 @@ import {
   markCommunicationRead,
   type CommunicationMessageItem,
 } from "@/lib/communication/api";
+import { cn, ck, filterButtonClass, statusChipClass } from "@/components/caretaker/caretaker-ui";
 
 type Tab = "inbox" | "sent";
 
@@ -39,10 +40,7 @@ export default function MessagesInbox({ title = "Messages", className = "" }: Me
   }, [load]);
 
   const filtered = useMemo(
-    () =>
-      messages.filter((m) =>
-        tab === "inbox" ? m.direction === "INBOX" : m.direction === "SENT"
-      ),
+    () => messages.filter((m) => (tab === "inbox" ? m.direction === "INBOX" : m.direction === "SENT")),
     [messages, tab]
   );
 
@@ -64,62 +62,47 @@ export default function MessagesInbox({ title = "Messages", className = "" }: Me
 
   return (
     <div className={className}>
-      <h1 className="text-2xl font-bold text-white mb-4">{title}</h1>
-      {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+      <h1 className={cn(ck.headline, "mb-4")}>{title}</h1>
+      {error && <p className="mb-3 text-sm text-error">{error}</p>}
 
-      <div className="flex gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => setTab("inbox")}
-          className={`rounded-lg px-4 py-2 text-sm font-medium ${
-            tab === "inbox" ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300"
-          }`}
-        >
+      <div className={cn(ck.tabBar, "mb-4")}>
+        <button type="button" onClick={() => setTab("inbox")} className={filterButtonClass(tab === "inbox")}>
           Inbox
         </button>
-        <button
-          type="button"
-          onClick={() => setTab("sent")}
-          className={`rounded-lg px-4 py-2 text-sm font-medium ${
-            tab === "sent" ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300"
-          }`}
-        >
+        <button type="button" onClick={() => setTab("sent")} className={filterButtonClass(tab === "sent")}>
           Sent
         </button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-700 bg-slate-900/50 max-h-[28rem] overflow-y-auto">
+        <div className="rounded-2xl border border-arena-outline-variant/70 bg-arena-surface-container-lowest max-h-[28rem] overflow-y-auto">
           {loading ? (
-            <p className="p-4 text-sm text-slate-400">Loading...</p>
+            <p className="p-4 text-sm text-arena-on-surface-variant">Loading...</p>
           ) : filtered.length === 0 ? (
-            <p className="p-4 text-sm text-slate-400">No messages.</p>
+            <p className="p-4 text-sm text-arena-on-surface-variant">No messages.</p>
           ) : (
-            <ul className="divide-y divide-slate-800">
+            <ul className="divide-y divide-arena-outline-variant/60">
               {filtered.map((item) => (
                 <li key={`${item.direction}-${item.message_id}`}>
                   <button
                     type="button"
                     onClick={() => void openMessage(item)}
-                    className={`w-full p-3 text-left hover:bg-slate-800/60 ${
-                      selectedId === item.message_id ? "bg-slate-800/80" : ""
-                    }`}
+                    className={cn(
+                      "w-full p-4 text-left hover:bg-arena-surface-container-low transition-colors",
+                      selectedId === item.message_id && "bg-arena-surface-container-low"
+                    )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold text-white truncate">{item.title}</span>
+                      <span className="text-sm font-semibold text-arena-on-surface truncate">{item.title}</span>
                       {item.direction === "INBOX" && !item.read_at && (
-                        <span className="shrink-0 text-[10px] uppercase tracking-wide text-blue-400">
-                          New
-                        </span>
+                        <span className={cn(statusChipClass("info"), "shrink-0")}>New</span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {item.direction === "INBOX"
-                        ? `From ${item.sender_name}`
-                        : `To ${item.audience}`}{" "}
-                      · {item.message_type}
+                    <p className="text-xs text-arena-on-surface-variant mt-1">
+                      {item.direction === "INBOX" ? `From ${item.sender_name}` : `To ${item.audience}`} -{" "}
+                      {item.message_type}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-arena-on-surface-variant/80 mt-1">
                       {new Date(item.created_at).toLocaleString()}
                     </p>
                   </button>
@@ -129,18 +112,17 @@ export default function MessagesInbox({ title = "Messages", className = "" }: Me
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 min-h-[12rem]">
+        <div className="rounded-2xl border border-arena-outline-variant/70 bg-arena-surface-container-lowest p-4 min-h-[12rem]">
           {selected ? (
             <>
-              <h2 className="text-lg font-semibold text-white">{selected.title}</h2>
-              <p className="text-xs text-slate-400 mt-1 mb-3">
-                {selected.sender_name} ({selected.sender_role}) ·{" "}
-                {new Date(selected.created_at).toLocaleString()}
+              <h2 className="text-lg font-semibold text-arena-on-surface">{selected.title}</h2>
+              <p className="text-xs text-arena-on-surface-variant mt-1 mb-3">
+                {selected.sender_name} ({selected.sender_role}) - {new Date(selected.created_at).toLocaleString()}
               </p>
-              <p className="text-sm text-slate-200 whitespace-pre-wrap">{selected.body}</p>
+              <p className="text-sm text-arena-on-surface whitespace-pre-wrap">{selected.body}</p>
             </>
           ) : (
-            <p className="text-sm text-slate-400">Select a message to read.</p>
+            <p className="text-sm text-arena-on-surface-variant">Select a message to read.</p>
           )}
         </div>
       </div>

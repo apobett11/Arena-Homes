@@ -6,6 +6,33 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
+  /* Caretaker console (Stitch Arena Command Center) */
+  --color-primary: #0040e0;
+  --color-primary-container: #2e5bff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #efefff;
+  --color-secondary: #4648d4;
+  --color-secondary-container: #6063ee;
+  --color-on-secondary-container: #fffbff;
+  --color-tertiary: #993100;
+  --color-tertiary-container: #c24100;
+  --color-on-tertiary-container: #ffece6;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-arena-surface: #f8f9ff;
+  --color-arena-on-surface: #0b1c30;
+  --color-arena-on-surface-variant: #434656;
+  --color-arena-outline-variant: #c4c5d9;
+  --color-arena-surface-container-low: #eff4ff;
+  --color-arena-surface-container: #e5eeff;
+  --color-arena-surface-container-high: #dce9ff;
+  --color-arena-surface-container-lowest: #ffffff;
+  --spacing-arena-gutter: 20px;
+  --spacing-arena-container: 24px;
+  --radius-arena-card: 1.5rem;
+  --radius-arena-control: 1rem;
+
   /* Public homepage design tokens (Arena premium marketing) */
   --color-vibrant-blue: #2e5bff;
   --color-surface-navy: #0f172a;
@@ -316,6 +343,154 @@
 }
 .animate-bounce-slow {
   animation: bounce-slow 3s infinite ease-in-out;
+}
+
+/* —— Caretaker console (Stitch design system) —— */
+.caretaker-console {
+  --ct-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.caretaker-label-caps {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.caretaker-display-lg {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: 0;
+}
+
+.caretaker-headline-sm {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.caretaker-card {
+  background: var(--color-arena-surface-container-lowest, #ffffff);
+  border-radius: var(--radius-arena-card);
+  border: 1px solid color-mix(in srgb, var(--color-arena-outline-variant, #c4c5d9) 30%, transparent);
+  box-shadow: var(--ct-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.caretaker-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.08);
+}
+
+.caretaker-stat-card {
+  background: var(--color-arena-surface-container-lowest, #ffffff);
+  border-radius: var(--radius-arena-card);
+  border: 1px solid color-mix(in srgb, var(--color-arena-outline-variant, #c4c5d9) 30%, transparent);
+  box-shadow: var(--ct-shadow);
+  padding: 1rem;
+  border-left-width: 4px;
+  transition: transform 0.2s ease;
+}
+
+.caretaker-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.caretaker-input {
+  width: 100%;
+  border-radius: var(--radius-arena-control);
+  border: 1px solid var(--color-arena-outline-variant, #c4c5d9);
+  background: var(--color-arena-surface-container-low, #eff4ff);
+  padding: 0.625rem 1rem;
+  font-size: 14px;
+  color: var(--color-arena-on-surface, #0b1c30);
+}
+
+.caretaker-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary, #0040e0), 0 0 0 4px color-mix(in srgb, var(--color-primary, #0040e0) 15%, transparent);
+}
+
+.caretaker-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-arena-control);
+  background: var(--color-primary-container, #2e5bff);
+  color: var(--color-on-primary-container, #efefff);
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.caretaker-btn-primary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.caretaker-btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.caretaker-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-arena-control);
+  border: 1px solid var(--color-arena-outline-variant, #c4c5d9);
+  background: transparent;
+  color: var(--color-arena-on-surface, #0b1c30);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.caretaker-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@keyframes caretaker-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-pulse,
+.caretaker-status-pulse {
+  animation: caretaker-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.active-tap {
+  transition: transform 0.15s ease;
+}
+
+.active-tap:active {
+  transform: scale(0.98);
+}
+
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.caretaker-table-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 767px) {
+  .caretaker-card:hover,
+  .caretaker-stat-card:hover {
+    transform: none;
+  }
 }
 
 @keyframes shimmer {

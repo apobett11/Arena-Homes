@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Users, Mail, Phone, Home, Calendar, FileText, MessageSquare } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import Link from "next/link";
+import { Calendar, FileText, Mail, MessageSquare, Phone, Search, Users } from "lucide-react";
 import type { CaretakerTenant, CaretakerUnit } from "@/lib/caretaker/types";
+import { cn, ck, filterButtonClass, statusChipClass, statusToneFromValue } from "./caretaker-ui";
 
 interface TenantsPanelProps {
   tenants: CaretakerTenant[];
@@ -10,19 +12,33 @@ interface TenantsPanelProps {
   propertyId: string;
 }
 
+const tenantFilters = [
+  { value: "all", label: "All tenants" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "PENDING", label: "Pending" },
+  { value: "MOVED_OUT", label: "Moved out" },
+  { value: "SUSPENDED", label: "Suspended" },
+];
+
 export const TenantsPanel = ({ tenants, units }: TenantsPanelProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<string>("all");
 
-  const filteredTenants = tenants.filter((tenant) => {
-    const matchesSearch =
-      tenant.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.room_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.registration_number?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredTenants = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return tenants.filter((tenant) => {
+      const matchesSearch =
+        !query ||
+        tenant.full_name?.toLowerCase().includes(query) ||
+        tenant.room_number?.toLowerCase().includes(query) ||
+        tenant.unit?.room_number?.toLowerCase().includes(query) ||
+        tenant.registration_number?.toLowerCase().includes(query) ||
+        tenant.email?.toLowerCase().includes(query) ||
+        tenant.phone_number?.toLowerCase().includes(query);
 
-    if (filter === "all") return matchesSearch;
-    return tenant.status === filter && matchesSearch;
-  });
+      return matchesSearch && (filter === "all" || tenant.status === filter);
+    });
+  }, [filter, searchTerm, tenants]);
 
   const stats = {
     total: tenants.length,
@@ -33,127 +49,191 @@ export const TenantsPanel = ({ tenants, units }: TenantsPanelProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total" value={stats.total} color="bg-slate-500" />
-        <StatCard label="Active" value={stats.active} color="bg-emerald-500" />
-        <StatCard label="Pending" value={stats.pending} color="bg-amber-500" />
-        <StatCard label="Moved Out" value={stats.movedOut} color="bg-slate-400" />
+      <div>
+        <h2 className={ck.display}>Tenants Registry</h2>
+        <p className={ck.body}>Oversee residents, unit relationships, lease health, and communication across {units.length} unit(s).</p>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-4">
-        <div className="flex-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Total tenants" value={stats.total} accent="border-primary" />
+        <StatCard label="Active" value={stats.active} accent="border-emerald-500" />
+        <StatCard label="Pending" value={stats.pending} accent="border-amber-500" />
+        <StatCard label="Moved out" value={stats.movedOut} accent="border-slate-400" />
+      </div>
+
+      <div className="caretaker-card p-4 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+        <div className="relative flex-1 max-w-xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-arena-on-surface-variant" />
           <input
             type="text"
-            placeholder="Search by name, room, or registration number..."
+            placeholder="Search by name, room, registration, email, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            className={cn(ck.input, "w-full pl-10")}
           />
+        </div>
+        <div className={ck.tabBar}>
+          {tenantFilters.map((item) => (
+            <button key={item.value} type="button" onClick={() => setFilter(item.value)} className={filterButtonClass(filter === item.value)}>
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Tenants Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className={cn(ck.tableWrap, "hidden md:block")}>
+        <div className="caretaker-table-scroll">
+          <table className="w-full text-left border-collapse">
+            <thead className={ck.tableHead}>
+              <tr>
+                <th className={ck.tableHeader}>Tenant</th>
+                <th className={ck.tableHeader}>Status</th>
+                <th className={ck.tableHeader}>Unit</th>
+                <th className={ck.tableHeader}>Contact</th>
+                <th className={ck.tableHeader}>Move-in</th>
+                <th className={ck.tableHeader}>Lease</th>
+                <th className={cn(ck.tableHeader, "text-right")}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-arena-outline-variant/60">
+              {filteredTenants.map((tenant) => (
+                <TenantRow key={tenant.id} tenant={tenant} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:hidden">
         {filteredTenants.map((tenant) => (
           <TenantCard key={tenant.id} tenant={tenant} />
         ))}
       </div>
 
       {filteredTenants.length === 0 && (
-        <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/10">
-          <Users className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">No tenants found.</p>
+        <div className={ck.empty}>
+          <Users className="w-12 h-12 text-arena-on-surface-variant mx-auto mb-4" />
+          <p className={ck.body}>No tenants found for this search or filter.</p>
         </div>
       )}
     </div>
   );
 };
 
-const StatCard = ({ label, value, color }: { label: string; value: number; color: string }) => (
-  <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
-    <div className={`w-3 h-3 rounded-full ${color} mb-2`} />
-    <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
-    <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+const StatCard = ({ label, value, accent }: { label: string; value: number; accent: string }) => (
+  <div className={cn(ck.statCard, "border-l-4", accent)}>
+    <p className={ck.sectionTitle}>{label}</p>
+    <p className="caretaker-display-lg text-arena-on-surface mt-1">{value}</p>
   </div>
 );
 
-const TenantCard = ({ tenant }: { tenant: CaretakerTenant }) => {
-  const statusColors: Record<string, string> = {
-    ACTIVE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
-    PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-    INACTIVE: "bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400",
-    SUSPENDED: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
-    MOVED_OUT: "bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400",
-  };
-
-  return (
-    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white">{tenant.full_name || "Unknown"}</h3>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[tenant.status] || statusColors.PENDING}`}>
-              {tenant.status}
-            </span>
-          </div>
+const TenantRow = ({ tenant }: { tenant: CaretakerTenant }) => (
+  <tr className={ck.tableRow}>
+    <td className={ck.tableCell}>
+      <div className="flex items-center gap-3">
+        <Avatar name={tenant.full_name} />
+        <div>
+          <p className="font-bold">{tenant.full_name || "Unknown tenant"}</p>
+          <p className="caretaker-label-caps text-arena-on-surface-variant">
+            ID: {tenant.registration_number || tenant.id.slice(0, 8)}
+          </p>
         </div>
-        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-sm font-medium">
-          Room {tenant.room_number || tenant.unit?.room_number || "N/A"}
-        </span>
       </div>
-
-      <div className="space-y-2 text-sm">
-        {tenant.registration_number && (
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            <FileText className="w-4 h-4 text-slate-400" />
-            <span>{tenant.registration_number}</span>
-          </div>
-        )}
-        {tenant.phone_number && (
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            <Phone className="w-4 h-4 text-slate-400" />
-            <span>{tenant.phone_number}</span>
-          </div>
-        )}
-        {tenant.email && (
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            <Mail className="w-4 h-4 text-slate-400" />
-            <span className="truncate">{tenant.email}</span>
-          </div>
-        )}
-        {tenant.move_in_date && (
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>Since {new Date(tenant.move_in_date).toLocaleDateString()}</span>
-          </div>
-        )}
+    </td>
+    <td className={ck.tableCell}>
+      <span className={statusChipClass(statusToneFromValue(tenant.status))}>{tenant.status}</span>
+    </td>
+    <td className={ck.tableCell}>Room {tenant.room_number || tenant.unit?.room_number || "N/A"}</td>
+    <td className={ck.tableCell}>
+      <div className="space-y-1 text-arena-on-surface-variant">
+        {tenant.phone_number && <IconLine icon={Phone} text={tenant.phone_number} />}
+        {tenant.email && <IconLine icon={Mail} text={tenant.email} />}
       </div>
-
-      {tenant.lease && (
-        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-white/10">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-500 dark:text-slate-400">Lease:</span>
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[tenant.lease.status] || statusColors.PENDING}`}>
-              {tenant.lease.status}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+    </td>
+    <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>
+      {tenant.move_in_date ? new Date(tenant.move_in_date).toLocaleDateString() : "Not set"}
+    </td>
+    <td className={ck.tableCell}>
+      {tenant.lease ? (
+        <div>
+          <span className={statusChipClass(statusToneFromValue(tenant.lease.status))}>{tenant.lease.status}</span>
+          <p className="text-xs text-arena-on-surface-variant mt-1">
             Until {new Date(tenant.lease.end_date).toLocaleDateString()}
           </p>
         </div>
+      ) : (
+        <span className={statusChipClass("neutral")}>No lease</span>
       )}
+    </td>
+    <td className={cn(ck.tableCell, "text-right")}>
+      <Link href="/caretaker/messages" className={cn(ck.btnInfo, "px-3")}>
+        <MessageSquare className="w-4 h-4" />
+        Message
+      </Link>
+    </td>
+  </tr>
+);
 
-      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 flex gap-2">
-        <button className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2">
-          <MessageSquare className="w-4 h-4" />
-          Message
-        </button>
+const TenantCard = ({ tenant }: { tenant: CaretakerTenant }) => (
+  <div className={ck.card}>
+    <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <Avatar name={tenant.full_name} />
+        <div className="min-w-0">
+          <h3 className="font-semibold text-arena-on-surface truncate">{tenant.full_name || "Unknown tenant"}</h3>
+          <p className={ck.body}>Room {tenant.room_number || tenant.unit?.room_number || "N/A"}</p>
+        </div>
       </div>
+      <span className={statusChipClass(statusToneFromValue(tenant.status))}>{tenant.status}</span>
+    </div>
+
+    <div className="space-y-2 text-sm">
+      {tenant.registration_number && <IconLine icon={FileText} text={tenant.registration_number} />}
+      {tenant.phone_number && <IconLine icon={Phone} text={tenant.phone_number} />}
+      {tenant.email && <IconLine icon={Mail} text={tenant.email} />}
+      {tenant.move_in_date && <IconLine icon={Calendar} text={`Since ${new Date(tenant.move_in_date).toLocaleDateString()}`} />}
+    </div>
+
+    {tenant.lease && (
+      <div className="mt-4 pt-4 border-t border-arena-outline-variant/40">
+        <div className="flex items-center justify-between text-sm">
+          <span className={ck.sectionTitle}>Lease</span>
+          <span className={statusChipClass(statusToneFromValue(tenant.lease.status))}>{tenant.lease.status}</span>
+        </div>
+        <p className="text-xs text-arena-on-surface-variant mt-1">
+          Until {new Date(tenant.lease.end_date).toLocaleDateString()}
+        </p>
+      </div>
+    )}
+
+    <div className="mt-4 pt-4 border-t border-arena-outline-variant/40">
+      <Link href="/caretaker/messages" className={cn(ck.btnInfo, "w-full")}>
+        <MessageSquare className="w-4 h-4" />
+        Message tenant
+      </Link>
+    </div>
+  </div>
+);
+
+const Avatar = ({ name }: { name?: string | null }) => {
+  const initials =
+    name
+      ?.split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "T";
+
+  return (
+    <div className="h-10 w-10 rounded-full bg-arena-surface-container-highest flex items-center justify-center text-primary font-bold shrink-0">
+      {initials}
     </div>
   );
 };
+
+const IconLine = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
+  <div className="flex items-center gap-2 text-arena-on-surface-variant min-w-0">
+    <Icon className="w-4 h-4 shrink-0 text-arena-on-surface-variant" />
+    <span className="truncate">{text}</span>
+  </div>
+);
