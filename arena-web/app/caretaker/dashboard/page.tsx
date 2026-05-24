@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Bell,
   CheckCircle,
@@ -93,19 +93,33 @@ const VALID_TABS: TabType[] = [
 ];
 
 function CaretakerDashboardContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const activeTab: TabType =
-    tabParam && VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview";
+  const [activeTab, setActiveTabState] = useState<TabType>(
+    tabParam && VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview"
+  );
 
   const setActiveTab = (tab: TabType) => {
-    if (tab === "overview") {
-      router.push("/caretaker/dashboard");
-    } else {
-      router.push(`/caretaker/dashboard?tab=${tab}`);
+    setActiveTabState(tab);
+
+    if (typeof window !== "undefined") {
+      const url = tab === "overview" ? "/caretaker/dashboard" : `/caretaker/dashboard?tab=${tab}`;
+      window.history.pushState({ tab }, "", url);
     }
   };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextParams = new URLSearchParams(window.location.search);
+      const nextTab = nextParams.get("tab");
+      setActiveTabState(
+        nextTab && VALID_TABS.includes(nextTab as TabType) ? (nextTab as TabType) : "overview"
+      );
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const [dashboardData, setDashboardData] = useState<CaretakerDashboardData | null>(null);
   const [property, setProperty] = useState<CaretakerProperty | null>(null);
@@ -270,13 +284,13 @@ function CaretakerDashboardContent() {
 
   return (
     <div className={ck.page}>
-      <section className="rounded-2xl bg-[#071a33] px-5 py-5 text-white shadow-[0_18px_45px_rgba(7,26,51,0.18)] md:px-6">
+      <section className="rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#1e3a8a_58%,#312e81_100%)] px-5 py-5 text-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] ring-1 ring-white/10 md:px-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="caretaker-display-lg text-white">
             {greeting()}, {dashboardData?.caretaker_full_name?.split(" ")[0] || "Caretaker"}
           </h2>
-          <div className="flex items-center gap-2 mt-1 text-blue-100/82">
+          <div className="flex items-center gap-2 mt-2 text-blue-100/88">
             <Home className="w-4 h-4 text-sky-200" />
             <p className="text-sm">
               {property?.name || dashboardData?.property_name || "Assigned property"} -{" "}
@@ -290,8 +304,8 @@ function CaretakerDashboardContent() {
           className={cn(
             "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition active:scale-[0.98] self-start md:self-auto",
             photosComplete
-              ? "bg-emerald-500 text-white shadow-[0_10px_22px_rgba(16,185,129,0.24)] hover:bg-emerald-600"
-              : "bg-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.25)] hover:bg-red-700"
+              ? "bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.28)] ring-1 ring-white/20 hover:bg-emerald-600"
+              : "bg-red-600 text-white shadow-[0_12px_24px_rgba(220,38,38,0.3)] ring-1 ring-white/20 hover:bg-red-700"
           )}
         >
           <ImageIcon className="w-4 h-4" />
@@ -329,7 +343,7 @@ function CaretakerDashboardContent() {
         incomingAnnouncements={announcements.incoming.length}
       />
 
-      <div className="caretaker-card p-3 md:p-4 bg-arena-surface-container-low">
+      <div className="caretaker-card sticky top-0 z-30 p-3 md:p-4 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(238,244,255,0.96))] backdrop-blur-xl shadow-[0_16px_34px_rgba(15,23,42,0.12)]">
         <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {tabs.map((tab) => (
             <button
@@ -339,8 +353,8 @@ function CaretakerDashboardContent() {
               className={cn(
                 ck.tabButton,
                 activeTab === tab.id
-                  ? "bg-primary text-white shadow-[0_8px_18px_rgba(46,91,255,0.22)]"
-                  : "bg-white/70 text-arena-on-surface-variant hover:text-arena-on-surface hover:bg-white hover:shadow-sm"
+                  ? "bg-slate-950 text-white shadow-[0_10px_22px_rgba(15,23,42,0.18)]"
+                  : "bg-white/86 text-slate-600 ring-1 ring-slate-200 hover:text-slate-950 hover:bg-white hover:ring-blue-200 hover:shadow-sm"
               )}
             >
               {tab.label}
@@ -393,13 +407,13 @@ function CaretakerDashboardContent() {
                   </div>
                 </div>
 
-                <div className="caretaker-card p-5 md:p-6 bg-primary-container text-on-primary-container border-primary-container overflow-hidden relative">
+                <div className="caretaker-card p-5 md:p-6 bg-[linear-gradient(135deg,#1d4ed8,#4f46e5)] text-white border-blue-500/30 overflow-hidden relative shadow-[0_22px_46px_rgba(37,99,235,0.22)]">
                   <div className="relative z-10">
-                    <p className="caretaker-label-caps opacity-80">Command readiness</p>
+                    <p className="caretaker-label-caps text-blue-100/82">Command readiness</p>
                     <h3 className="caretaker-display-lg mt-1">
                       {pendingIssues === 0 && pendingApps === 0 ? "All clear" : "Action needed"}
                     </h3>
-                    <p className="text-sm opacity-85 mt-2">
+                    <p className="text-sm text-blue-50/88 mt-2">
                       {pendingIssues + pendingApps + announcements.incoming.length} item(s) need review across
                       applications, issues, and admin notices.
                     </p>
@@ -413,7 +427,7 @@ function CaretakerDashboardContent() {
                         ? setActiveTab("issues")
                         : setActiveTab("announcements")
                     }
-                    className="relative z-10 mt-5 inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-primary shadow-[0_10px_22px_rgba(0,0,0,0.18)] ring-1 ring-white/60 transition hover:bg-blue-50 hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)] active:scale-[0.98]"
+                    className="relative z-10 mt-5 inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-[0_12px_24px_rgba(15,23,42,0.2)] ring-1 ring-white/70 transition hover:bg-blue-50 hover:shadow-[0_16px_30px_rgba(15,23,42,0.24)] active:scale-[0.98]"
                   >
                     {pendingIssues === 0 && pendingApps === 0 ? (
                       <CheckCircle className="w-4 h-4" />
@@ -584,7 +598,7 @@ function OverviewListCard({
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between p-3 bg-white/78 rounded-xl border border-arena-outline-variant/45 shadow-sm"
+              className="flex items-center justify-between gap-3 p-3 bg-white/86 rounded-xl border border-slate-200 shadow-sm transition hover:border-blue-200 hover:shadow-md"
             >
               <div>
                 <p className="font-semibold text-sm text-arena-on-surface">{item.title}</p>
@@ -618,7 +632,7 @@ function OverviewToolCard({
       onClick={onClick}
       className={cn(
         ck.card,
-        "caretaker-info-card text-left active-tap hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+        "caretaker-info-card group text-left active-tap hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
       )}
     >
       <div className="flex items-start gap-3">
@@ -628,7 +642,7 @@ function OverviewToolCard({
         <div className="min-w-0">
           <h4 className={ck.headline}>{title}</h4>
           <p className={cn(ck.body, "mt-1")}>{subtitle}</p>
-          <span className="mt-4 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-primary px-3 py-2 text-xs font-bold uppercase text-white shadow-[0_9px_18px_rgba(46,91,255,0.22)] transition group-hover:bg-[#071a33]">
+          <span className="mt-4 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold uppercase text-white shadow-[0_10px_20px_rgba(37,99,235,0.24)] transition group-hover:bg-slate-950">
             {action}
           </span>
         </div>

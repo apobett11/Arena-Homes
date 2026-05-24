@@ -198,37 +198,37 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Property Photos</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <h2 className="text-lg font-bold text-slate-950 dark:text-white">Property Photos</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Manage photos for your property listing
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right rounded-xl bg-white/86 px-4 py-2 shadow-sm ring-1 ring-slate-200">
           <span className={cn(
             "text-2xl font-bold",
-            count.total === 10 ? "text-emerald-500" : "text-amber-500"
+            count.total === 10 ? "text-emerald-600" : "text-amber-600"
           )}>
             {count.total}/10
           </span>
-          <p className="text-xs text-slate-500 dark:text-slate-400">photos uploaded</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">photos uploaded</p>
         </div>
       </div>
 
       {/* Photo Count Warning */}
       {count.total < 10 && (
-        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-500/30 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-4 flex items-start gap-3 shadow-sm ring-1 ring-red-500/10">
           <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-rose-700 dark:text-rose-400">
+            <p className="text-sm font-bold text-red-700 dark:text-rose-400">
               This property has {count.total}/10 photos. Upload all 10 photos for best listing performance.
             </p>
             {!count.hasCover && (
-              <p className="text-xs text-rose-600 dark:text-rose-300 mt-1">
+              <p className="text-xs font-medium text-red-600 dark:text-rose-300 mt-1">
                 • Cover photo is required for listing cards
               </p>
             )}
             {!count.hasGate && (
-              <p className="text-xs text-rose-600 dark:text-rose-300 mt-1">
+              <p className="text-xs font-medium text-red-600 dark:text-rose-300 mt-1">
                 • Gate photo helps tenants locate the property
               </p>
             )}
@@ -238,9 +238,9 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
 
       {/* Success State */}
       {count.total === 10 && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4 flex items-center gap-3">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4 flex items-center gap-3 shadow-sm ring-1 ring-emerald-500/10">
           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
             All 10 photos uploaded! Your listing is fully optimized.
           </p>
         </div>
@@ -248,12 +248,12 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-3 flex items-center gap-2">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-3 flex items-center gap-2 shadow-sm">
           <AlertCircle className="w-4 h-4 text-red-500" />
           <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           <button 
             onClick={() => setError(null)}
-            className="ml-auto text-red-500 hover:text-red-700"
+            className="ml-auto rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-700"
           >
             <X className="w-4 h-4" />
           </button>
@@ -261,11 +261,11 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
       )}
 
       {/* Cover Photo Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="caretaker-card p-4 bg-[linear-gradient(180deg,#ffffff,#eff6ff)]">
         <div className="flex items-center gap-2 mb-3">
-          <Home className="w-5 h-5 text-blue-500" />
-          <h3 className="font-medium text-slate-900 dark:text-white">Cover Photo</h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">(Required - shown on listing cards)</span>
+          <Home className="w-5 h-5 text-blue-600" />
+          <h3 className="font-bold text-slate-950 dark:text-white">Cover Photo</h3>
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">(Required - shown on listing cards)</span>
         </div>
 
         {coverPhoto ? (
@@ -280,14 +280,14 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
               <button
                 onClick={() => coverInputRef.current?.click()}
                 disabled={uploading['COVER']}
-                className="px-3 py-1.5 bg-white text-slate-900 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
+                className="px-3 py-1.5 bg-white text-slate-900 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-100 transition-colors"
               >
                 {uploading['COVER'] ? 'Uploading...' : 'Replace'}
               </button>
               <button
                 onClick={() => handleDelete(coverPhoto.id)}
                 disabled={loading}
-                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
+                className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
@@ -299,10 +299,10 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
         ) : (
           <div 
             onClick={() => coverInputRef.current?.click()}
-            className="aspect-video rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            className="aspect-video rounded-lg border-2 border-dashed border-blue-200 bg-white/70 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
           >
             <Camera className="w-8 h-8 text-slate-400" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">Click to upload cover photo</span>
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Click to upload cover photo</span>
             <span className="text-xs text-slate-400">JPG, PNG, WebP (max 10MB)</span>
           </div>
         )}
@@ -320,11 +320,11 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
       </div>
 
       {/* Gate Photo Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="caretaker-card p-4 bg-[linear-gradient(180deg,#ffffff,#ecfdf5)]">
         <div className="flex items-center gap-2 mb-3">
-          <DoorOpen className="w-5 h-5 text-emerald-500" />
-          <h3 className="font-medium text-slate-900 dark:text-white">Gate Photo</h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">(Recommended - helps tenants find entrance)</span>
+          <DoorOpen className="w-5 h-5 text-emerald-600" />
+          <h3 className="font-bold text-slate-950 dark:text-white">Gate Photo</h3>
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">(Recommended - helps tenants find entrance)</span>
         </div>
 
         {gatePhoto ? (
@@ -339,14 +339,14 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
               <button
                 onClick={() => gateInputRef.current?.click()}
                 disabled={uploading['GATE']}
-                className="px-3 py-1.5 bg-white text-slate-900 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
+                className="px-3 py-1.5 bg-white text-slate-900 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-100 transition-colors"
               >
                 {uploading['GATE'] ? 'Uploading...' : 'Replace'}
               </button>
               <button
                 onClick={() => handleDelete(gatePhoto.id)}
                 disabled={loading}
-                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
+                className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
@@ -358,10 +358,10 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
         ) : (
           <div 
             onClick={() => gateInputRef.current?.click()}
-            className="aspect-video rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+            className="aspect-video rounded-lg border-2 border-dashed border-emerald-200 bg-white/70 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
           >
             <Camera className="w-8 h-8 text-slate-400" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">Click to upload gate photo</span>
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Click to upload gate photo</span>
             <span className="text-xs text-slate-400">JPG, PNG, WebP (max 10MB)</span>
           </div>
         )}
@@ -379,17 +379,17 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
       </div>
 
       {/* Gallery Photos Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="caretaker-card p-4 bg-[linear-gradient(180deg,#ffffff,#f5f3ff)]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-purple-500" />
-            <h3 className="font-medium text-slate-900 dark:text-white">Interior Photos</h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400">({galleryPhotos.length}/8)</span>
+            <ImageIcon className="w-5 h-5 text-purple-600" />
+            <h3 className="font-bold text-slate-950 dark:text-white">Interior Photos</h3>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">({galleryPhotos.length}/8)</span>
           </div>
           <button
             onClick={() => galleryInputRef.current?.click()}
             disabled={loading || count.total >= 10}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-bold shadow-[0_10px_20px_rgba(124,58,237,0.2)] hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Upload className="w-4 h-4" />
             Upload Multiple
@@ -429,7 +429,7 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
             {Array.from({ length: Math.max(0, 8 - galleryPhotos.length) }).map((_, idx) => (
               <div 
                 key={`empty-${idx}`}
-                className="aspect-square rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                className="aspect-square rounded-lg border-2 border-dashed border-purple-200 bg-white/60 flex items-center justify-center"
               >
                 <span className="text-xs text-slate-300 dark:text-slate-600">
                   {galleryPhotos.length + idx + 3}/10
@@ -440,10 +440,10 @@ export function PhotosPanel({ propertyId, initialPhotos = [], onDataChange }: Ph
         ) : (
           <div 
             onClick={() => galleryInputRef.current?.click()}
-            className="h-32 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+            className="h-32 rounded-lg border-2 border-dashed border-purple-200 bg-white/70 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
           >
             <Upload className="w-8 h-8 text-slate-400" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">Upload interior photos</span>
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Upload interior photos</span>
             <span className="text-xs text-slate-400">Select multiple files (max 8)</span>
           </div>
         )}
