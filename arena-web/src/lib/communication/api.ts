@@ -29,6 +29,16 @@ export interface CommunicationNotificationItem {
   created_at: string;
 }
 
+export interface CaretakerTenantRecipient {
+  tenant_id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  room_number: string | null;
+  property_id: string | null;
+  status: string | null;
+}
+
 function getClient() {
   return getSupabaseClient() as ReturnType<typeof getSupabaseClient> & {
     rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
@@ -120,6 +130,67 @@ export async function getMyNotificationsRpc(): Promise<CommunicationNotification
   }
   const payload = data as { notifications?: CommunicationNotificationItem[] };
   return Array.isArray(payload?.notifications) ? payload.notifications : [];
+}
+
+export async function getCaretakerTenantRecipients(): Promise<CaretakerTenantRecipient[]> {
+  const supabase = getClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error(userError?.message || 'Not authenticated');
+  }
+
+  const { data: employee, error: employeeError } = await supabase
+    .from('employees')
+    .select('assigned_property_id')
+    .eq('user_id', user.id)
+    .eq('role_id', 'CARETAKER')
+    .eq('status', 'ACTIVE')
+    .maybeSingle();
+
+  if (employeeError) {
+    throw new Error(employeeError.message);
+  }
+
+  const assignedPropertyId = (employee as { assigned_property_id?: string | null } | null)?.assigned_property_id;
+  const scope = assignedPropertyId
+    ? `caretaker_user_id.eq.${user.id},property_id.eq.${assignedPropertyId}`
+    : `caretaker_user_id.eq.${user.id}`;
+
+  const { data, error } = await supabase
+    .from('tenants')
+    .select('id, user_id, full_name, email, room_number, property_id, status')
+    .or(scope)
+    .not('user_id', 'is', null)
+    .in('status', ['ACTIVE', 'PENDING_SETUP', 'PENDING'])
+    .order('full_name', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return ((data || []) as Array<{
+    id: string;
+    user_id: string | null;
+    full_name: string | null;
+    email: string | null;
+    room_number: string | null;
+    property_id: string | null;
+    status: string | null;
+  }>)
+    .filter((tenant) => Boolean(tenant.user_id))
+    .map((tenant) => ({
+      tenant_id: tenant.id,
+      user_id: tenant.user_id as string,
+      full_name: tenant.full_name,
+      email: tenant.email,
+      room_number: tenant.room_number,
+      property_id: tenant.property_id,
+      status: tenant.status,
+    }));
 }
 
 export async function getAdminBroadcastStats(messageId: string) {
