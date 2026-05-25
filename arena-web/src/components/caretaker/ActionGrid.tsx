@@ -8,7 +8,6 @@ import {
   CheckCircle,
   Megaphone,
   Key,
-  History,
   Clipboard,
   ClipboardList,
 } from "lucide-react";
@@ -41,15 +40,15 @@ const actions: {
   icon: React.ElementType;
   desc: string;
 }[] = [
-  { id: "tenants", label: "Add Tenant", icon: UserPlus, desc: "Register new tenant" },
+  { id: "units", label: "Units", icon: Key, desc: "Rooms, reserve, repairs, photos" },
+  { id: "tenants", label: "Tenants", icon: UserPlus, desc: "Leases, issues, applications" },
   { id: "applications", label: "Applications", icon: ClipboardList, desc: "Review applicants" },
-  { id: "issues", label: "Log Issue", icon: Hammer, desc: "Report maintenance" },
-  { id: "leases", label: "Invoicing", icon: Receipt, desc: "Manage billing" },
-  { id: "repairs", label: "Inspection", icon: CheckCircle, desc: "Schedule inspection" },
-  { id: "announcements", label: "Announce", icon: Megaphone, desc: "Send notification" },
-  { id: "units", label: "Unit Entry", icon: Key, desc: "Access management" },
-  { id: "tenants", label: "Move-outs", icon: History, desc: "Process departure" },
-  { id: "facilities", label: "Reports", icon: Clipboard, desc: "Generate reports" },
+  { id: "issues", label: "Issues", icon: Hammer, desc: "Property-wide issues" },
+  { id: "repairs", label: "All repairs", icon: CheckCircle, desc: "Property repair queue" },
+  { id: "leases", label: "All leases", icon: Receipt, desc: "Property lease registry" },
+  { id: "photos", label: "Photos", icon: Clipboard, desc: "Property media uploads" },
+  { id: "announcements", label: "Announce", icon: Megaphone, desc: "Broadcasts and notices" },
+  { id: "facilities", label: "Content", icon: Clipboard, desc: "Facilities and inventory" },
 ];
 
 export const ActionGrid = ({

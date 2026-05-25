@@ -116,6 +116,11 @@ function CaretakerDashboardContent() {
   };
 
   useEffect(() => {
+    const nextTab = tabParam && VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview";
+    setActiveTabState(nextTab);
+  }, [tabParam]);
+
+  useEffect(() => {
     const handlePopState = () => {
       const nextParams = new URLSearchParams(window.location.search);
       const nextTab = nextParams.get("tab");
@@ -255,15 +260,14 @@ function CaretakerDashboardContent() {
     photoStatus.has_gate &&
     photoStatus.gallery_count >= 8;
 
+  const pendingIssueCount = issues.filter((i) => i.status === "PENDING").length;
+
   const tabs: { id: TabType; label: string; badge?: number }[] = [
     { id: "overview", label: "Overview" },
     { id: "units", label: `Units (${units.length})` },
     { id: "tenants", label: `Tenants (${tenants.length})` },
-    { id: "issues", label: `Issues (${issues.filter((i) => i.status === "PENDING").length})`, badge: issues.filter((i) => i.status === "PENDING").length },
+    { id: "issues", label: `Issues (${pendingIssueCount})`, badge: pendingIssueCount },
     { id: "applications", label: `Applications (${applications.length})`, badge: pendingApps },
-    { id: "repairs", label: `Repairs (${repairs.length})` },
-    { id: "leases", label: `Leases (${leases.length})` },
-    { id: "photos", label: "Photos" },
     { id: "announcements", label: "Announcements", badge: announcements.incoming.length },
     { id: "rules", label: "Rules & FAQ" },
     { id: "facilities", label: "Property Content" },
@@ -493,7 +497,14 @@ function CaretakerDashboardContent() {
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-5">
+              <OverviewToolCard
+                title="Repairs queue"
+                subtitle={`${repairs.filter((r) => r.status !== "SOLVED").length} open repair(s) across assigned units.`}
+                icon={ShieldCheck}
+                action="View all repairs"
+                onClick={() => setActiveTab("repairs")}
+              />
               <OverviewToolCard
                 title="Property content"
                 subtitle="Facilities, inventory, photos, and tenant-facing information."
@@ -543,11 +554,26 @@ function CaretakerDashboardContent() {
         {activeTab === "issues" && propertyId && (
           <IssuesPanel issues={issues} propertyId={propertyId} onDataChange={handleRefresh} />
         )}
-        {activeTab === "leases" && propertyId && (
-          <LeasesPanel leases={leases} propertyId={propertyId} />
-        )}
-        {activeTab === "photos" && propertyId && (
-          <PhotosPanel propertyId={propertyId} onDataChange={handleRefresh} />
+        {(activeTab === "leases" || activeTab === "photos" || activeTab === "repairs") && propertyId && (
+          <div className="space-y-4">
+            <p className={ck.body}>
+              {activeTab === "leases"
+                ? "Lease records are available per tenant from Tenants → Actions → Lease. Use the property-wide list below when needed."
+                : activeTab === "photos"
+                ? "Unit photos are available from Units → Actions → Photos. Property media is managed below."
+                : "Unit repairs are available from Units → Actions → Repairs. All property repairs are listed below."}
+            </p>
+            {activeTab === "leases" && <LeasesPanel leases={leases} propertyId={propertyId} />}
+            {activeTab === "photos" && <PhotosPanel propertyId={propertyId} onDataChange={handleRefresh} />}
+            {activeTab === "repairs" && (
+              <RepairsPanel
+                repairs={repairs}
+                issues={issues}
+                propertyId={propertyId}
+                onDataChange={handleRefresh}
+              />
+            )}
+          </div>
         )}
         {activeTab === "announcements" && propertyId && (
           <AnnouncementsPanel
@@ -560,14 +586,6 @@ function CaretakerDashboardContent() {
         )}
         {activeTab === "rules" && propertyId && (
           <RulesFaqsPanel rules={rules} faqs={faqs} propertyId={propertyId} onDataChange={handleRefresh} />
-        )}
-        {activeTab === "repairs" && propertyId && (
-          <RepairsPanel
-            repairs={repairs}
-            issues={issues}
-            propertyId={propertyId}
-            onDataChange={handleRefresh}
-          />
         )}
         {activeTab === "applications" && propertyId && (
           <ApplicationsPanel

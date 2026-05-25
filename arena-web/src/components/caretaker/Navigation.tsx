@@ -16,6 +16,7 @@ import {
   Settings,
   Users,
   Wrench,
+  Hammer,
   X,
 } from "lucide-react";
 import { cn } from "./caretaker-ui";
@@ -27,6 +28,7 @@ const sidebarItems = [
   { name: "Tenants", icon: Users, href: "/caretaker/dashboard?tab=tenants" },
   { name: "Applications", icon: ClipboardList, href: "/caretaker/dashboard?tab=applications" },
   { name: "Issues", icon: Wrench, href: "/caretaker/dashboard?tab=issues" },
+  { name: "Repairs", icon: Hammer, href: "/caretaker/dashboard?tab=repairs" },
   { name: "Messages", icon: MessageSquare, href: "/caretaker/messages" },
   { name: "Content", icon: FileText, href: "/caretaker/dashboard?tab=facilities" },
   { name: "Rules & FAQ", icon: HelpCircle, href: "/caretaker/dashboard?tab=rules" },
