@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { MailPlus, MessageSquare, RefreshCw, Send, X } from "lucide-react";
 import {
   createCaretakerBroadcast,
-  createDirectMessage,
+  createCaretakerDirectMessages,
   getCaretakerTenantRecipients,
   getMyMessages,
   markCommunicationRead,
@@ -143,12 +143,8 @@ export default function CaretakerMessagesPage() {
         const result = await createCaretakerBroadcast(trimmedSubject, trimmedBody);
         if (!result.success) throw new Error(result.error || "Failed to send message.");
       } else {
-        const selectedTenants = tenants.filter((tenant) => selectedTenantSet.has(tenant.tenant_id));
-        const results = await Promise.all(
-          selectedTenants.map((tenant) => createDirectMessage(tenant.user_id, trimmedSubject, trimmedBody))
-        );
-        const failed = results.find((result) => !result.success);
-        if (failed) throw new Error(failed.error || "Failed to send message.");
+        const result = await createCaretakerDirectMessages(selectedTenantIds, trimmedSubject, trimmedBody);
+        if (!result.success) throw new Error(result.error || "Failed to send message.");
       }
 
       await load();
@@ -251,7 +247,7 @@ export default function CaretakerMessagesPage() {
                       {selected.direction === "INBOX"
                         ? `From ${selected.sender_role === "ADMIN" ? "Admin" : selected.sender_name}`
                         : sentRecipientLabel(selected)}
-                      {" · "}
+                      {" - "}
                       {formatDate(selected.created_at)}
                     </p>
                   </div>
@@ -316,7 +312,7 @@ export default function CaretakerMessagesPage() {
                               {tenant.full_name || "Tenant"}
                             </span>
                             <span className="block truncate text-xs text-arena-on-surface-variant">
-                              Room {tenant.room_number || "N/A"}{tenant.email ? ` · ${tenant.email}` : ""}
+                              Room {tenant.room_number || "N/A"}{tenant.email ? ` - ${tenant.email}` : ""}
                             </span>
                           </span>
                         </label>

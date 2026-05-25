@@ -99,6 +99,26 @@ export async function createDirectMessage(
   return { success: Boolean(row?.success), messageId: row?.message_id };
 }
 
+export async function createCaretakerDirectMessages(
+  tenantIds: string[],
+  title: string,
+  body: string
+): Promise<{ success: boolean; messageId?: string; recipientCount?: number; error?: string }> {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc('create_caretaker_direct_messages', {
+    p_tenant_ids: tenantIds,
+    p_title: title,
+    p_body: body,
+  });
+  if (error) return { success: false, error: error.message };
+  const row = data as { success?: boolean; message_id?: string; recipient_count?: number };
+  return {
+    success: Boolean(row?.success),
+    messageId: row?.message_id,
+    recipientCount: row?.recipient_count,
+  };
+}
+
 export async function markCommunicationRead(
   messageId: string
 ): Promise<{ success: boolean; error?: string }> {
