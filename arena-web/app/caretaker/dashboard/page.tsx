@@ -1,251 +1,44 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import {
-  Bell,
-  CheckCircle,
-  ClipboardList,
-  FileText,
-  Home,
-  Image as ImageIcon,
-  ShieldCheck,
-} from "lucide-react";
-
-import {
-  getCaretakerDashboardData,
-  getCaretakerDashboardDataFallback,
-  getCaretakerProperty,
-  getCaretakerUnits,
-  getCaretakerTenants,
-  getCaretakerIssues,
-  getCaretakerLeases,
-  getCaretakerAnnouncements,
-  getCaretakerRules,
-  getCaretakerFaqs,
-  getCurrentCaretakerEmployee,
-  getCaretakerRepairs,
-  getCaretakerApplications,
-  getCaretakerFacilities,
-  getCaretakerInventory,
-} from "@/lib/caretaker/dashboard";
-
-import type {
-  CaretakerDashboardData,
-  CaretakerProperty,
-  CaretakerUnit,
-  CaretakerTenant,
-  CaretakerIssue,
-  CaretakerLease,
-  CaretakerAnnouncement,
-  CaretakerRule,
-  CaretakerFaq,
-  CaretakerRepair,
-  CaretakerApplication,
-  CaretakerFacilities,
-  CaretakerInventoryItem,
-} from "@/lib/caretaker/types";
+import React, { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Home, Image as ImageIcon } from "lucide-react";
+import Link from "next/link";
 
 import { IdentityCard } from "@/components/caretaker/IdentityCard";
-import { QuickStats } from "@/components/caretaker/QuickStats";
-import { UnitsPanel } from "@/components/caretaker/UnitsPanel";
-import { TenantsPanel } from "@/components/caretaker/TenantsPanel";
-import { IssuesPanel } from "@/components/caretaker/IssuesPanel";
-import { LeasesPanel } from "@/components/caretaker/LeasesPanel";
-import { AnnouncementsPanel } from "@/components/caretaker/AnnouncementsPanel";
-import { RulesFaqsPanel } from "@/components/caretaker/RulesFaqsPanel";
-import { PhotosPanel } from "@/components/caretaker/PhotosPanel";
-import { RepairsPanel } from "@/components/caretaker/RepairsPanel";
-import { ApplicationsPanel } from "@/components/caretaker/ApplicationsPanel";
-import { FacilitiesInventoryPanel } from "@/components/caretaker/FacilitiesInventoryPanel";
-import { PriorityAlerts } from "@/components/caretaker/PriorityAlerts";
-import { SettingsPanel } from "@/components/caretaker/SettingsPanel";
-import { cn, ck, statusChipClass, statusToneFromValue } from "@/components/caretaker/caretaker-ui";
-import { getPropertyPhotoCount } from "@/lib/supabase/storage";
+import { CaretakerQuickAccess } from "@/components/caretaker/CaretakerQuickAccess";
+import { PropertyDetailsCard } from "@/components/caretaker/PropertyDetailsCard";
+import { HomepageRulesFaqs } from "@/components/caretaker/HomepageRulesFaqs";
+import { CaretakerFooter } from "@/components/caretaker/CaretakerFooter";
+import { useCaretakerWorkspace } from "@/hooks/useCaretakerWorkspace";
+import { cn, ck } from "@/components/caretaker/caretaker-ui";
 
-type TabType =
-  | "overview"
-  | "units"
-  | "tenants"
-  | "issues"
-  | "leases"
-  | "photos"
-  | "announcements"
-  | "rules"
-  | "repairs"
-  | "applications"
-  | "facilities"
-  | "settings";
+const TAB_REDIRECTS: Record<string, string> = {
+  units: "/caretaker/units",
+  tenants: "/caretaker/tenants",
+  issues: "/caretaker/issues",
+  repairs: "/caretaker/repairs",
+  applications: "/caretaker/applications",
+  announcements: "/caretaker/announcements",
+  rules: "/caretaker/dashboard",
+  leases: "/caretaker/tenants",
+  photos: "/caretaker/photos",
+  facilities: "/caretaker/dashboard",
+  settings: "/caretaker/profile",
+};
 
-const VALID_TABS: TabType[] = [
-  "overview",
-  "units",
-  "tenants",
-  "issues",
-  "leases",
-  "photos",
-  "announcements",
-  "rules",
-  "repairs",
-  "applications",
-  "facilities",
-  "settings",
-];
-
-function CaretakerDashboardContent() {
+function CaretakerHomeContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const [activeTab, setActiveTabState] = useState<TabType>(
-    tabParam && VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview"
-  );
+  const tab = searchParams.get("tab");
 
-  const setActiveTab = (tab: TabType, scrollMenuToTop = false) => {
-    setActiveTabState(tab);
-
-    if (typeof window !== "undefined") {
-      const url = tab === "overview" ? "/caretaker/dashboard" : `/caretaker/dashboard?tab=${tab}`;
-      window.history.pushState({ tab }, "", url);
-    }
-
-    if (scrollMenuToTop) {
-      requestAnimationFrame(() => {
-        menuRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-      });
-    }
-  };
+  const workspace = useCaretakerWorkspace();
 
   useEffect(() => {
-    const nextTab = tabParam && VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview";
-    setActiveTabState(nextTab);
-  }, [tabParam]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const nextParams = new URLSearchParams(window.location.search);
-      const nextTab = nextParams.get("tab");
-      setActiveTabState(
-        nextTab && VALID_TABS.includes(nextTab as TabType) ? (nextTab as TabType) : "overview"
-      );
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  const [dashboardData, setDashboardData] = useState<CaretakerDashboardData | null>(null);
-  const [property, setProperty] = useState<CaretakerProperty | null>(null);
-  const [units, setUnits] = useState<CaretakerUnit[]>([]);
-  const [tenants, setTenants] = useState<CaretakerTenant[]>([]);
-  const [issues, setIssues] = useState<CaretakerIssue[]>([]);
-  const [leases, setLeases] = useState<CaretakerLease[]>([]);
-  const [announcements, setAnnouncements] = useState<{
-    incoming: CaretakerAnnouncement[];
-    outgoing: CaretakerAnnouncement[];
-  }>({ incoming: [], outgoing: [] });
-  const [rules, setRules] = useState<CaretakerRule[]>([]);
-  const [faqs, setFaqs] = useState<CaretakerFaq[]>([]);
-  const [repairs, setRepairs] = useState<CaretakerRepair[]>([]);
-  const [applications, setApplications] = useState<CaretakerApplication[]>([]);
-  const [facilities, setFacilities] = useState<CaretakerFacilities | null>(null);
-  const [inventory, setInventory] = useState<CaretakerInventoryItem[]>([]);
-  const [photoStatus, setPhotoStatus] = useState({
-    total_count: 0,
-    has_cover: false,
-    has_gate: false,
-    gallery_count: 0,
-  });
-  const [caretakerEmployeeId, setCaretakerEmployeeId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      setRefreshing(true);
-      setError(null);
-
-      const employee = await getCurrentCaretakerEmployee();
-      if (!employee || !employee.assigned_property_id) {
-        setError("No assigned property found. Contact administrator.");
-        setLoading(false);
-        setRefreshing(false);
-        return;
-      }
-
-      setCaretakerEmployeeId(employee.id);
-      const propertyId = employee.assigned_property_id;
-
-      let dashboard = await getCaretakerDashboardData();
-      if (!dashboard) {
-        dashboard = await getCaretakerDashboardDataFallback();
-      }
-      setDashboardData(dashboard);
-
-      const [
-        propertyData,
-        unitsData,
-        tenantsData,
-        issuesData,
-        leasesData,
-        announcementsData,
-        rulesData,
-        faqsData,
-        repairsData,
-        applicationsData,
-        facilitiesData,
-        inventoryData,
-        photoCountData,
-      ] = await Promise.all([
-        getCaretakerProperty(propertyId),
-        getCaretakerUnits(propertyId),
-        getCaretakerTenants(propertyId),
-        getCaretakerIssues(propertyId),
-        getCaretakerLeases(propertyId),
-        getCaretakerAnnouncements(propertyId, employee.id),
-        getCaretakerRules(propertyId),
-        getCaretakerFaqs(propertyId),
-        getCaretakerRepairs(propertyId),
-        getCaretakerApplications(propertyId),
-        getCaretakerFacilities(propertyId),
-        getCaretakerInventory(propertyId),
-        getPropertyPhotoCount(propertyId),
-      ]);
-
-      setProperty(propertyData);
-      setUnits(unitsData);
-      setTenants(tenantsData);
-      setIssues(issuesData);
-      setLeases(leasesData);
-      setAnnouncements(announcementsData);
-      setRules(rulesData);
-      setFaqs(faqsData);
-      setRepairs(repairsData);
-      setApplications(applicationsData);
-      setFacilities(facilitiesData);
-      setInventory(inventoryData);
-      setPhotoStatus(photoCountData);
-    } catch (err) {
-      console.error("Failed to load caretaker data:", err);
-      setError("Failed to load dashboard data. Please try again.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    if (tab && TAB_REDIRECTS[tab]) {
+      router.replace(TAB_REDIRECTS[tab]);
     }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleRefresh = async () => {
-    await loadData();
-  };
-
-  const propertyId = dashboardData?.assigned_property_id || property?.id || "";
-  const pendingIssues = dashboardData?.pending_issues_count ?? issues.filter((i) => i.status === "PENDING").length;
-  const pendingApps =
-    dashboardData?.pending_applications_count ?? applications.filter((a) => a.status === "WAITING").length;
+  }, [tab, router]);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -254,40 +47,31 @@ function CaretakerDashboardContent() {
     return "Good evening";
   };
 
-  const photosComplete =
-    photoStatus.total_count >= 10 &&
-    photoStatus.has_cover &&
-    photoStatus.has_gate &&
-    photoStatus.gallery_count >= 8;
-
-  const pendingIssueCount = issues.filter((i) => i.status === "PENDING").length;
-
-  const tabs: { id: TabType; label: string; badge?: number }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "units", label: `Units (${units.length})` },
-    { id: "tenants", label: `Tenants (${tenants.length})` },
-    { id: "issues", label: `Issues (${pendingIssueCount})`, badge: pendingIssueCount },
-    { id: "applications", label: `Applications (${applications.length})`, badge: pendingApps },
-    { id: "announcements", label: "Announcements", badge: announcements.incoming.length },
-    { id: "rules", label: "Rules & FAQ" },
-    { id: "facilities", label: "Property Content" },
-    { id: "settings", label: "Settings" },
-  ];
-
-  if (loading) {
+  if (tab && TAB_REDIRECTS[tab]) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0d3b66]/20 border-t-[#0d3b66]" />
       </div>
     );
   }
 
-  if (error) {
+  if (workspace.loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
-        <div className="caretaker-card p-6 max-w-md text-center border-l-4 border-error">
-          <p className="text-on-error-container font-medium">{error}</p>
-          <button type="button" onClick={handleRefresh} className={cn(ck.btnPrimary, "mt-4")}>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="caretaker-loading-shell flex flex-col items-center gap-4 px-10 py-12">
+          <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-[#0d3b66]/20 border-t-[#0d3b66]" />
+          <p className="text-sm font-semibold text-[#5c6b7a]">Loading your property dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (workspace.error) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6">
+        <div className="caretaker-overview-panel max-w-md border-l-4 border-l-red-500 text-center">
+          <p className="font-semibold text-red-800">{workspace.error}</p>
+          <button type="button" onClick={() => workspace.refresh()} className={cn(ck.btnPrimary, "mt-5")}>
             Retry
           </button>
         </div>
@@ -295,401 +79,82 @@ function CaretakerDashboardContent() {
     );
   }
 
+  const photosComplete =
+    workspace.photoStatus.total_count >= 10 &&
+    workspace.photoStatus.has_cover &&
+    workspace.photoStatus.has_gate &&
+    workspace.photoStatus.gallery_count >= 8;
+
   return (
-    <div className={ck.page}>
-      <section className="rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#1e3a8a_58%,#312e81_100%)] px-5 py-5 text-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] ring-1 ring-white/10 md:px-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h2 className="caretaker-display-lg text-white">
-            {greeting()}, {dashboardData?.caretaker_full_name?.split(" ")[0] || "Caretaker"}
-          </h2>
-          <div className="flex items-center gap-2 mt-2 text-blue-100/88">
-            <Home className="w-4 h-4 text-sky-200" />
-            <p className="text-sm">
-              {property?.name || dashboardData?.property_name || "Assigned property"} -{" "}
-              {property?.location || dashboardData?.property_location || "Location not set"}
-            </p>
+    <div className={cn(ck.page, "pb-2")}>
+      <section className={ck.hero}>
+        <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="caretaker-label-caps text-white/65">Property operations</p>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white md:text-[1.75rem]">
+              {greeting()}, {workspace.dashboardData?.caretaker_full_name?.split(" ")[0] || "Caretaker"}
+            </h1>
+            <div className="mt-3 flex items-center gap-2 text-sm text-blue-100/90">
+              <Home className="h-4 w-4 shrink-0 text-sky-200" />
+              <p>
+                {workspace.property?.name || workspace.dashboardData?.property_name || "Assigned property"}
+                <span className="mx-2 opacity-50">·</span>
+                {workspace.property?.location || workspace.dashboardData?.property_location || "Location not set"}
+              </p>
+            </div>
           </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setActiveTab("photos", true)}
-          className={cn(
-            "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition active:scale-[0.98] self-start md:self-auto",
-            photosComplete
-              ? "bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.28)] ring-1 ring-white/20 hover:bg-emerald-600"
-              : "bg-red-600 text-white shadow-[0_12px_24px_rgba(220,38,38,0.3)] ring-1 ring-white/20 hover:bg-red-700"
-          )}
-        >
-          <ImageIcon className="w-4 h-4" />
-          {photosComplete ? "Photos uploaded" : "Photos need to be uploaded"}
-        </button>
+          <Link
+            href="/caretaker/photos"
+            className={cn(
+              "relative z-10 inline-flex min-h-[44px] items-center justify-center gap-2 self-start rounded-xl px-5 py-2.5 text-sm font-bold transition duration-200 active:scale-[0.98] md:self-auto",
+              photosComplete
+                ? "bg-emerald-500 text-white shadow-[0_10px_24px_rgba(16,185,129,0.35)] ring-1 ring-white/25 hover:bg-emerald-600"
+                : "bg-white text-[#0d3b66] shadow-[0_10px_24px_rgba(0,0,0,0.15)] ring-1 ring-white/40 hover:bg-blue-50"
+            )}
+          >
+            <ImageIcon className="h-4 w-4" />
+            {photosComplete ? "Photos complete" : "Upload property photos"}
+          </Link>
         </div>
       </section>
 
-      <PriorityAlerts
-        pendingApplications={pendingApps}
-        pendingIssues={pendingIssues}
-        incomingAnnouncements={announcements.incoming.length}
-        onViewApplications={() => setActiveTab("applications")}
-        onViewIssues={() => setActiveTab("issues")}
-        onViewAnnouncements={() => setActiveTab("announcements")}
-      />
-
       <IdentityCard
-        caretaker={dashboardData}
-        property={property}
-        onRefresh={handleRefresh}
-        isRefreshing={refreshing}
+        caretaker={workspace.dashboardData}
+        property={workspace.property}
+        onRefresh={workspace.refresh}
+        isRefreshing={workspace.refreshing}
       />
 
-      <QuickStats
-        totalRooms={dashboardData?.total_rooms ?? 0}
-        occupiedRooms={dashboardData?.occupied_rooms ?? 0}
-        vacantRooms={dashboardData?.vacant_rooms ?? 0}
-        tenantsCount={dashboardData?.tenants_count ?? 0}
-        pendingIssues={pendingIssues}
-        resolvedIssues={dashboardData?.resolved_issues_count ?? 0}
-        pendingRepairs={dashboardData?.pending_repairs_count ?? 0}
-        solvedRepairs={dashboardData?.solved_repairs_count ?? 0}
-        pendingApplications={pendingApps}
-        incomingAnnouncements={announcements.incoming.length}
+      <CaretakerQuickAccess
+        counts={{
+          pendingApplications: workspace.pendingApplications,
+          pendingIssues: workspace.pendingIssues,
+          pendingRepairs: workspace.pendingRepairs,
+          unreadMessages: workspace.unreadMessages,
+          tenantsCount: workspace.dashboardData?.tenants_count ?? workspace.tenants.length,
+          totalUnits: workspace.dashboardData?.total_rooms ?? workspace.units.length,
+        }}
       />
 
-      <div ref={menuRef} className="caretaker-card sticky top-0 z-30 p-3 md:p-4 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(238,244,255,0.96))] backdrop-blur-xl shadow-[0_16px_34px_rgba(15,23,42,0.12)]">
-        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id, true)}
-              className={cn(
-                ck.tabButton,
-                activeTab === tab.id
-                  ? "bg-slate-950 text-white shadow-[0_10px_22px_rgba(15,23,42,0.18)]"
-                  : "bg-white/86 text-slate-600 ring-1 ring-slate-200 hover:text-slate-950 hover:bg-white hover:ring-blue-200 hover:shadow-sm"
-              )}
-            >
-              {tab.label}
-              {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="px-1.5 py-0.5 bg-error text-white text-[10px] rounded-full font-bold">
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      <div className="pb-8">
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            {property && (
-              <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-5">
-                <div className={cn(ck.card, "caretaker-info-card")}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={ck.iconTile}>
-                      <Home className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className={ck.sectionTitle}>Managed property</p>
-                      <h3 className={ck.headline}>{property.name}</h3>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className={ck.sectionTitle}>Property name</span>
-                      <p className="font-medium text-arena-on-surface mt-1">{property.name}</p>
-                    </div>
-                    <div>
-                      <span className={ck.sectionTitle}>Location</span>
-                      <p className="font-medium text-arena-on-surface mt-1">{property.location || "Not set"}</p>
-                    </div>
-                    <div>
-                      <span className={ck.sectionTitle}>Type</span>
-                      <p className="font-medium text-arena-on-surface mt-1">{property.property_type || "Not set"}</p>
-                    </div>
-                    <div>
-                      <span className={ck.sectionTitle}>Status</span>
-                      <p className="mt-1">
-                        <span className={statusChipClass(statusToneFromValue(property.verification_status))}>
-                          {property.verification_status}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="caretaker-card p-5 md:p-6 bg-[linear-gradient(135deg,#1d4ed8,#4f46e5)] text-white border-blue-500/30 overflow-hidden relative shadow-[0_22px_46px_rgba(37,99,235,0.22)]">
-                  <div className="relative z-10">
-                    <p className="caretaker-label-caps text-blue-100/82">Command readiness</p>
-                    <h3 className="caretaker-display-lg mt-1">
-                      {pendingIssues === 0 && pendingApps === 0 ? "All clear" : "Action needed"}
-                    </h3>
-                    <p className="text-sm text-blue-50/88 mt-2">
-                      {pendingIssues + pendingApps + announcements.incoming.length} item(s) need review across
-                      applications, issues, and admin notices.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      pendingApps > 0
-                        ? setActiveTab("applications")
-                        : pendingIssues > 0
-                        ? setActiveTab("issues")
-                        : setActiveTab("announcements")
-                    }
-                    className="relative z-10 mt-5 inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-[0_12px_24px_rgba(15,23,42,0.2)] ring-1 ring-white/70 transition hover:bg-blue-50 hover:shadow-[0_16px_30px_rgba(15,23,42,0.24)] active:scale-[0.98]"
-                  >
-                    {pendingIssues === 0 && pendingApps === 0 ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      <ShieldCheck className="w-4 h-4" />
-                    )}
-                    Review queue
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              <OverviewListCard
-                title="Recent applications"
-                empty="No pending applications"
-                onViewAll={() => setActiveTab("applications")}
-                items={applications.slice(0, 3).map((app) => ({
-                  id: app.id,
-                  title: app.full_name || "Applicant",
-                  subtitle: `Unit ${app.unit?.room_number || "TBD"}`,
-                  badge: app.status,
-                  tone: app.status === "WAITING" ? "warning" : "neutral",
-                }))}
-              />
-              <OverviewListCard
-                title="Recent issues"
-                empty="No issues reported"
-                onViewAll={() => setActiveTab("issues")}
-                items={issues.slice(0, 3).map((issue) => ({
-                  id: issue.id,
-                  title: issue.title,
-                  subtitle: `Room ${issue.unit?.room_number || "N/A"}`,
-                  badge: issue.status,
-                  tone:
-                    issue.status === "PENDING"
-                      ? "warning"
-                      : issue.priority === "URGENT"
-                      ? "danger"
-                      : "info",
-                }))}
-              />
-              <OverviewListCard
-                title="Recent tenants"
-                empty="No tenants"
-                onViewAll={() => setActiveTab("tenants")}
-                items={tenants.slice(0, 3).map((tenant) => ({
-                  id: tenant.id,
-                  title: tenant.full_name || "Unknown",
-                  subtitle: `Room ${tenant.room_number || tenant.unit?.room_number || "N/A"}`,
-                  badge: tenant.status,
-                  tone: tenant.status === "ACTIVE" ? "success" : "neutral",
-                }))}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-5">
-              <OverviewToolCard
-                title="Repairs queue"
-                subtitle={`${repairs.filter((r) => r.status !== "SOLVED").length} open repair(s) across assigned units.`}
-                icon={ShieldCheck}
-                action="View all repairs"
-                onClick={() => setActiveTab("repairs")}
-              />
-              <OverviewToolCard
-                title="Property content"
-                subtitle="Facilities, inventory, photos, and tenant-facing information."
-                icon={FileText}
-                action="Manage content"
-                onClick={() => setActiveTab("facilities")}
-              />
-              <OverviewToolCard
-                title="Rules and FAQ"
-                subtitle={`${rules.filter((rule) => rule.is_active).length} active rules, ${faqs.filter((faq) => faq.is_active).length} active FAQs.`}
-                icon={ClipboardList}
-                action="Update tenant guidance"
-                onClick={() => setActiveTab("rules")}
-              />
-              <OverviewToolCard
-                title="Announcements"
-                subtitle={`${announcements.incoming.length} admin notice(s), ${announcements.outgoing.length} broadcasts sent.`}
-                icon={Bell}
-                action="Open announcements"
-                onClick={() => setActiveTab("announcements")}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "units" && propertyId && (
-          <UnitsPanel
-            units={units}
-            repairs={repairs}
-            propertyId={propertyId}
-            onDataChange={handleRefresh}
-            onOpenApplications={() => setActiveTab("applications", true)}
-            onOpenPhotos={() => setActiveTab("photos", true)}
-          />
-        )}
-        {activeTab === "tenants" && propertyId && (
-          <TenantsPanel
-            tenants={tenants}
-            units={units}
-            leases={leases}
-            issues={issues}
-            applications={applications}
-            propertyId={propertyId}
-            onDataChange={handleRefresh}
-          />
-        )}
-        {activeTab === "issues" && propertyId && (
-          <IssuesPanel issues={issues} propertyId={propertyId} onDataChange={handleRefresh} />
-        )}
-        {(activeTab === "leases" || activeTab === "photos" || activeTab === "repairs") && propertyId && (
-          <div className="space-y-4">
-            <p className={ck.body}>
-              {activeTab === "leases"
-                ? "Lease records are available per tenant from Tenants → Actions → Lease. Use the property-wide list below when needed."
-                : activeTab === "photos"
-                ? "Unit photos are available from Units → Actions → Photos. Property media is managed below."
-                : "Unit repairs are available from Units → Actions → Repairs. All property repairs are listed below."}
-            </p>
-            {activeTab === "leases" && <LeasesPanel leases={leases} propertyId={propertyId} />}
-            {activeTab === "photos" && <PhotosPanel propertyId={propertyId} onDataChange={handleRefresh} />}
-            {activeTab === "repairs" && (
-              <RepairsPanel
-                repairs={repairs}
-                issues={issues}
-                propertyId={propertyId}
-                onDataChange={handleRefresh}
-              />
-            )}
-          </div>
-        )}
-        {activeTab === "announcements" && propertyId && (
-          <AnnouncementsPanel
-            incoming={announcements.incoming}
-            outgoing={announcements.outgoing}
-            propertyId={propertyId}
-            caretakerEmployeeId={caretakerEmployeeId}
-            onDataChange={handleRefresh}
-          />
-        )}
-        {activeTab === "rules" && propertyId && (
-          <RulesFaqsPanel rules={rules} faqs={faqs} propertyId={propertyId} onDataChange={handleRefresh} />
-        )}
-        {activeTab === "applications" && propertyId && (
-          <ApplicationsPanel
-            applications={applications}
-            propertyId={propertyId}
-            onDataChange={handleRefresh}
-          />
-        )}
-        {activeTab === "facilities" && propertyId && (
-          <FacilitiesInventoryPanel
-            facilities={facilities}
-            inventory={inventory}
-            propertyId={propertyId}
-            onDataChange={handleRefresh}
-          />
-        )}
-        {activeTab === "settings" && dashboardData && (
-          <SettingsPanel caretaker={dashboardData} property={property} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function OverviewListCard({
-  title,
-  empty,
-  onViewAll,
-  items,
-}: {
-  title: string;
-  empty: string;
-  onViewAll: () => void;
-  items: { id: string; title: string; subtitle: string; badge: string; tone: "warning" | "danger" | "info" | "success" | "neutral" }[];
-}) {
-  return (
-    <div className={cn(ck.card, "caretaker-info-card")}>
-      <div className="flex justify-between items-center mb-4">
-        <h4 className={ck.headline}>{title}</h4>
-        <button
-          type="button"
-          onClick={onViewAll}
-          className="inline-flex min-h-[34px] items-center justify-center rounded-lg bg-white px-3 py-1 text-xs font-bold uppercase text-primary shadow-sm ring-1 ring-primary/20 transition hover:bg-primary hover:text-white active:scale-[0.98]"
-        >
-          View all
-        </button>
-      </div>
-      {items.length === 0 ? (
-        <p className={ck.body}>{empty}</p>
-      ) : (
-        <div className="space-y-2">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-3 p-3 bg-white/86 rounded-xl border border-slate-200 shadow-sm transition hover:border-blue-200 hover:shadow-md"
-            >
-              <div>
-                <p className="font-semibold text-sm text-arena-on-surface">{item.title}</p>
-                <p className="text-xs text-arena-on-surface-variant">{item.subtitle}</p>
-              </div>
-              <span className={statusChipClass(item.tone)}>{item.badge}</span>
-            </div>
-          ))}
-        </div>
+      {workspace.property && (
+        <PropertyDetailsCard
+          property={workspace.property}
+          totalUnits={workspace.dashboardData?.total_rooms ?? workspace.units.length}
+          occupiedUnits={workspace.dashboardData?.occupied_rooms ?? 0}
+        />
       )}
-    </div>
-  );
-}
 
-function OverviewToolCard({
-  title,
-  subtitle,
-  icon: Icon,
-  action,
-  onClick,
-}: {
-  title: string;
-  subtitle: string;
-  icon: React.ElementType;
-  action: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        ck.card,
-        "caretaker-info-card group text-left active-tap hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+      {workspace.propertyId && (
+        <HomepageRulesFaqs
+          rules={workspace.rules}
+          faqs={workspace.faqs}
+          propertyId={workspace.propertyId}
+          onDataChange={workspace.refresh}
+        />
       )}
-    >
-      <div className="flex items-start gap-3">
-        <div className={ck.iconTile}>
-          <Icon className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <h4 className={ck.headline}>{title}</h4>
-          <p className={cn(ck.body, "mt-1")}>{subtitle}</p>
-          <span className="mt-4 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold uppercase text-white shadow-[0_10px_20px_rgba(37,99,235,0.24)] transition group-hover:bg-slate-950">
-            {action}
-          </span>
-        </div>
-      </div>
-    </button>
+
+      <CaretakerFooter />
+    </div>
   );
 }
 
@@ -697,12 +162,12 @@ export default function CaretakerDashboard() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-[#0d3b66]/20 border-t-[#0d3b66]" />
         </div>
       }
     >
-      <CaretakerDashboardContent />
+      <CaretakerHomeContent />
     </Suspense>
   );
 }

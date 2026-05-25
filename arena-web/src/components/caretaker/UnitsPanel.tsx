@@ -158,49 +158,9 @@ export const UnitsPanel = ({
         </div>
       )}
 
-      <div className={cn(ck.tableWrap, "hidden md:block")}>
-        <div className="caretaker-table-scroll">
-          <table className="w-full text-left border-collapse">
-            <thead className={ck.tableHead}>
-              <tr>
-                <th className={ck.tableHeader}>Room</th>
-                <th className={ck.tableHeader}>Type</th>
-                <th className={ck.tableHeader}>Price</th>
-                <th className={ck.tableHeader}>Capacity</th>
-                <th className={ck.tableHeader}>Status</th>
-                <th className={ck.tableHeader}>Deposit</th>
-                <th className={cn(ck.tableHeader, "text-right")}>Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-arena-outline-variant/60">
-              {filteredUnits.map((unit) => (
-                <UnitRow
-                  key={unit.id}
-                  unit={unit}
-                  isEditing={editingUnit === unit.id}
-                  isLoading={loading === unit.id}
-                  menuOpen={openMenuId === unit.id}
-                  onEdit={() => {
-                    setEditingUnit(unit.id);
-                    setOpenMenuId(null);
-                  }}
-                  onCancel={() => setEditingUnit(null)}
-                  onStatusChange={(status) => handleStatusChange(unit.id, status)}
-                  onToggleMenu={() => setOpenMenuId((current) => (current === unit.id ? null : unit.id))}
-                  onOpenModal={openUnitModal}
-                  onReserve={() => handleReserve(unit)}
-                  onOpenApplications={onOpenApplications}
-                  onOpenPhotos={onOpenPhotos}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="flex flex-col gap-2.5">
         {filteredUnits.map((unit) => (
-          <UnitCard
+          <UnitLateralRow
             key={unit.id}
             unit={unit}
             isEditing={editingUnit === unit.id}
@@ -265,7 +225,11 @@ const FilterButton = ({ active, onClick, label }: { active: boolean; onClick: ()
   </button>
 );
 
-const UnitRow = ({
+function unitMissingPhotos(unit: CaretakerUnit): boolean {
+  return !unit.photos || unit.photos.length === 0;
+}
+
+const UnitLateralRow = ({
   unit,
   isEditing,
   isLoading,
@@ -283,21 +247,39 @@ const UnitRow = ({
   isLoading: boolean;
   onCancel: () => void;
   onStatusChange: (status: string) => void;
-}) => {
-  return (
-    <tr className={ck.tableRow}>
-      <td className={ck.tableCell}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-arena-surface-container flex items-center justify-center">
-            <DoorOpen className="w-5 h-5 text-primary" />
-          </div>
-          <span className="font-bold">Room {unit.room_number || "Unknown"}</span>
-        </div>
-      </td>
-      <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>{unit.room_type}</td>
-      <td className={cn(ck.tableCell, "font-semibold")}>KES {unit.base_price.toLocaleString()}</td>
-      <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>{unit.capacity} person(s)</td>
-      <td className={ck.tableCell}>
+}) => (
+  <div
+    className={cn(
+      "caretaker-unit-row flex flex-col gap-3 rounded-2xl border border-[#0d3b66]/12 bg-white p-4 shadow-sm transition hover:border-[#0d3b66]/22 hover:shadow-md sm:flex-row sm:items-center sm:gap-4 sm:p-4"
+    )}
+  >
+    <div className="flex min-w-0 flex-1 items-center gap-3 sm:min-w-[140px] sm:max-w-[180px]">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e8f0fa] text-[#0d3b66]">
+        <DoorOpen className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="truncate font-bold text-[#0f1c2e]">Room {unit.room_number || "—"}</p>
+        <p className="truncate text-xs font-medium text-[#5c6b7a]">{unit.room_type}</p>
+      </div>
+    </div>
+
+    <div className="grid flex-1 grid-cols-2 gap-2 text-sm sm:grid-cols-4 sm:gap-3">
+      <div>
+        <p className="caretaker-label-caps text-[#8b9aab]">Price</p>
+        <p className="font-semibold text-[#0f1c2e]">KES {unit.base_price.toLocaleString()}</p>
+      </div>
+      <div>
+        <p className="caretaker-label-caps text-[#8b9aab]">Capacity</p>
+        <p className="font-medium text-[#5c6b7a]">{unit.capacity} pers.</p>
+      </div>
+      <div>
+        <p className="caretaker-label-caps text-[#8b9aab]">Deposit</p>
+        <p className="font-medium text-[#5c6b7a]">
+          {unit.deposit_amount ? `KES ${unit.deposit_amount.toLocaleString()}` : "—"}
+        </p>
+      </div>
+      <div>
+        <p className="caretaker-label-caps text-[#8b9aab]">Status</p>
         {isEditing ? (
           <InlineStatusEditor
             current={unit.availability_status}
@@ -310,26 +292,25 @@ const UnitRow = ({
             {formatStatus(unit.availability_status)}
           </span>
         )}
-      </td>
-      <td className={cn(ck.tableCell, "text-arena-on-surface-variant")}>
-        {unit.deposit_amount ? `KES ${unit.deposit_amount.toLocaleString()}` : "Not set"}
-      </td>
-      <td className={cn(ck.tableCell, "text-right")}>
-        <UnitActions
-          unit={unit}
-          menuOpen={menuOpen}
-          onToggleMenu={onToggleMenu}
-          onOpenModal={onOpenModal}
-          onEdit={onEdit}
-          onReserve={onReserve}
-          onOpenApplications={onOpenApplications}
-          onOpenPhotos={onOpenPhotos}
-          alignRight
-        />
-      </td>
-    </tr>
-  );
-};
+      </div>
+    </div>
+
+    <div className="shrink-0 sm:ml-auto">
+      <UnitActions
+        unit={unit}
+        menuOpen={menuOpen}
+        onToggleMenu={onToggleMenu}
+        onOpenModal={onOpenModal}
+        onEdit={onEdit}
+        onReserve={onReserve}
+        onOpenApplications={onOpenApplications}
+        onOpenPhotos={onOpenPhotos}
+        alignRight
+        photosMissing={unitMissingPhotos(unit)}
+      />
+    </div>
+  </div>
+);
 
 const UnitCard = ({
   unit,
@@ -418,7 +399,8 @@ const UnitActions = ({
   onOpenPhotos,
   alignRight,
   fullWidth,
-}: UnitActionProps & { alignRight?: boolean; fullWidth?: boolean }) => {
+  photosMissing,
+}: UnitActionProps & { alignRight?: boolean; fullWidth?: boolean; photosMissing?: boolean }) => {
   const canReserve = unit.availability_status === "AVAILABLE" && !unit.current_tenant_id;
 
   return (
@@ -431,7 +413,12 @@ const UnitActions = ({
         <div className={cn("absolute z-40 mt-2 w-56 rounded-xl border border-arena-outline-variant/70 bg-white p-2 text-left shadow-xl", alignRight && "right-0")}>
           <ActionButton icon={Eye} label="Overview" onClick={() => onOpenModal(unit, "overview")} />
           <ActionButton icon={Wrench} label="Repairs" onClick={() => onOpenModal(unit, "repairs")} />
-          <ActionButton icon={ImageIcon} label="Photos" onClick={() => onOpenModal(unit, "photos")} />
+          <ActionButton
+            icon={ImageIcon}
+            label="Photos"
+            onClick={() => onOpenModal(unit, "photos")}
+            showNotifyDot={photosMissing}
+          />
           <ActionButton icon={Edit2} label="Update status" onClick={onEdit} />
           <ActionButton icon={UserPlus} label="Assign via applications" onClick={onOpenApplications} />
           <ActionButton icon={Camera} label="Property photos" onClick={onOpenPhotos} />
@@ -449,14 +436,19 @@ const ActionButton = ({
   icon: Icon,
   label,
   onClick,
+  showNotifyDot,
 }: {
   icon: React.ElementType;
   label: string;
   onClick: () => void;
+  showNotifyDot?: boolean;
 }) => (
-  <button type="button" onClick={onClick} className={actionItemClass()}>
+  <button type="button" onClick={onClick} className={cn(actionItemClass(), "relative")}>
     <Icon className="w-4 h-4" />
     {label}
+    {showNotifyDot && (
+      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-600 ring-2 ring-white" aria-label="Photos required" />
+    )}
   </button>
 );
 

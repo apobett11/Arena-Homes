@@ -99,6 +99,101 @@ export async function getCaretakerDashboardData(): Promise<CaretakerDashboardDat
   return data as CaretakerDashboardData | null;
 }
 
+export interface CaretakerProfileRecord {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone_number: string | null;
+  avatar_url: string | null;
+  employee_id: string;
+}
+
+export async function getCaretakerProfile(): Promise<CaretakerProfileRecord | null> {
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
+  const supabase = getClient();
+  const { data: employee, error: employeeError } = await supabase
+    .from('employees')
+    .select('id, full_name, phone_number, email')
+    .eq('user_id', userId)
+    .eq('role_id', 'CARETAKER')
+    .eq('status', 'ACTIVE')
+    .maybeSingle();
+
+  if (employeeError || !employee) {
+    console.error('Error fetching caretaker employee profile:', employeeError);
+    return null;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('user_id, full_name, email, phone_number, avatar_url')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error('Error fetching caretaker profile:', profileError);
+    return null;
+  }
+
+  return {
+    user_id: userId,
+    full_name: profile?.full_name ?? employee.full_name,
+    email: profile?.email ?? employee.email,
+    phone_number: profile?.phone_number ?? employee.phone_number,
+    avatar_url: profile?.avatar_url ?? null,
+    employee_id: employee.id,
+  };
+}
+
+export async function updateCaretakerProfile(payload: {
+  email?: string;
+  phone_number?: string;
+  avatar_url?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { success: false, error: 'Not authenticated' };
+
+  const supabase = getClient();
+  const profileUpdate: Record<string, string | null> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.email !== undefined) profileUpdate.email = payload.email;
+  if (payload.phone_number !== undefined) profileUpdate.phone_number = payload.phone_number;
+  if (payload.avatar_url !== undefined) profileUpdate.avatar_url = payload.avatar_url;
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update(profileUpdate)
+    .eq('user_id', userId);
+
+  if (profileError) {
+    console.error('Error updating caretaker profile:', profileError);
+    return { success: false, error: profileError.message };
+  }
+
+  const employeeUpdate: Record<string, string | null> = {};
+  if (payload.email !== undefined) employeeUpdate.email = payload.email;
+  if (payload.phone_number !== undefined) employeeUpdate.phone_number = payload.phone_number;
+
+  if (Object.keys(employeeUpdate).length > 0) {
+    const { error: employeeError } = await supabase
+      .from('employees')
+      .update({ ...employeeUpdate, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('role_id', 'CARETAKER');
+
+    if (employeeError) {
+      console.error('Error syncing caretaker employee profile:', employeeError);
+      return { success: false, error: employeeError.message };
+    }
+  }
+
+  return { success: true };
+}
+
 // ============================================================================
 // PROPERTY MANAGEMENT
 // ============================================================================

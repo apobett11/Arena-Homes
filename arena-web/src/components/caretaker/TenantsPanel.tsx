@@ -330,7 +330,7 @@ const TenantActions = ({
         <ActionButton icon={FileText} label="Lease" onClick={() => onOpenModal(tenant, "lease")} />
         <ActionButton icon={AlertTriangle} label="Issues" onClick={() => onOpenModal(tenant, "issues")} />
         <ActionButton icon={ClipboardList} label="Applications" onClick={() => onOpenModal(tenant, "applications")} />
-        <Link href="/caretaker/dashboard?tab=applications" className={actionItemClass()}>
+        <Link href="/caretaker/applications" className={actionItemClass()}>
           <Home className="w-4 h-4" />
           Assign unit
         </Link>

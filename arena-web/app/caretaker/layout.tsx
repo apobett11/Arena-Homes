@@ -14,16 +14,18 @@ export default function CaretakerLayout({
 }) {
   return (
     <RoleGate allowedRoles={["CARETAKER", "ADMIN"]}>
-      <div className="caretaker-console m-0 flex min-h-screen bg-arena-surface text-arena-on-surface selection:bg-primary/20">
+      <div className="caretaker-console m-0 flex min-h-screen border-0 bg-transparent text-arena-on-surface selection:bg-primary/20">
         <Suspense fallback={<CaretakerNavFallback />}>
           <Sidebar />
         </Suspense>
 
-        <div className="flex-1 flex flex-col min-w-0 lg:pl-0">
+        <div className="flex-1 flex flex-col min-w-0 border-0 lg:pl-0">
           <Suspense fallback={null}>
             <TopBar />
           </Suspense>
-          <main className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#eef5ff_0%,#f6f9ff_45%,#eef7f4_100%)] p-4 md:p-6 pb-28 lg:pb-8">{children}</main>
+          <main className="flex-1 overflow-y-auto border-0 bg-transparent px-4 py-5 md:px-8 md:py-7 pb-28 lg:pb-10">
+            {children}
+          </main>
         </div>
 
         <Suspense fallback={null}>

@@ -5,16 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Stitch Arena caretaker console shared class tokens */
+/** Caretaker console shared class tokens (navy / property-management palette) */
 export const ck = {
-  page: "max-w-[1600px] mx-auto space-y-7",
+  page: "max-w-[1600px] mx-auto space-y-8",
   card: "caretaker-card p-5 md:p-6",
   statCard: "caretaker-stat-card",
-  sectionTitle: "caretaker-label-caps text-slate-500",
-  headline: "caretaker-headline-sm text-slate-950 font-semibold",
-  display: "caretaker-display-lg text-arena-on-surface",
-  displayMobile: "caretaker-display-lg-mobile text-arena-on-surface",
-  body: "text-sm leading-6 text-slate-600",
+  statNeutral: "caretaker-stat-card caretaker-stat-card--neutral",
+  statMuted: "caretaker-stat-card caretaker-stat-card--muted",
+  statNavy: "caretaker-stat-card caretaker-stat-card--navy",
+  statAlert: "caretaker-stat-card caretaker-stat-card--alert",
+  hero: "caretaker-hero relative overflow-hidden px-6 py-6 md:px-8 md:py-7",
+  tabNav: "caretaker-tab-nav sticky top-0 z-30 p-3 md:p-4 backdrop-blur-md",
+  tabActive: "caretaker-tab-nav__btn--active",
+  tabIdle: "caretaker-tab-nav__btn--idle",
+  identityCard: "caretaker-identity-card p-5 md:p-6",
+  overviewPanel: "caretaker-overview-panel p-5 md:p-6",
+  commandCard: "caretaker-command-card p-5 md:p-6",
+  sectionTitle: "caretaker-label-caps text-[#5c6b7a]",
+  headline: "caretaker-headline-sm text-[#0f1c2e] font-semibold tracking-tight",
+  display: "caretaker-display-lg text-[#0f1c2e] tracking-tight",
+  displayMobile: "caretaker-display-lg-mobile text-[#0f1c2e]",
+  body: "text-sm leading-6 text-[#5c6b7a]",
   input: "caretaker-input",
   btnPrimary: "caretaker-btn-primary disabled:opacity-50",
   btnGhost: "caretaker-btn-ghost disabled:opacity-50",
@@ -42,14 +53,16 @@ export const ck = {
   statGrid: "grid grid-cols-2 md:grid-cols-4 gap-5",
   actionGrid: "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3",
   quickActionBtn:
-    "flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-white to-blue-50 p-4 rounded-2xl border border-slate-200 shadow-[0_10px_22px_rgba(15,23,42,0.08)] hover:border-blue-300 hover:bg-blue-600 hover:from-blue-600 hover:to-indigo-600 hover:text-white hover:shadow-[0_18px_34px_rgba(37,99,235,0.24)] transition-all active:scale-[0.98] group min-h-[104px]",
+    "flex flex-col items-center justify-center gap-2 bg-white p-4 rounded-2xl border border-[#0d3b66]/12 shadow-[0_8px_20px_rgba(10,37,64,0.07)] hover:border-[#0d3b66]/28 hover:bg-[#0d3b66] hover:text-white hover:shadow-[0_16px_32px_rgba(13,59,102,0.22)] transition-all duration-200 active:scale-[0.98] group min-h-[108px]",
   tabBar: "flex flex-wrap gap-2 pb-1",
   tabButton:
     "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold whitespace-nowrap transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/30",
   modalBackdrop: "fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
   modalPanel: "caretaker-card w-full max-w-2xl max-h-[90vh] overflow-hidden p-0 shadow-2xl",
   iconTile:
-    "w-10 h-10 rounded-xl bg-blue-100 text-blue-700 ring-1 ring-blue-200/80 flex items-center justify-center shrink-0",
+    "w-11 h-11 rounded-xl bg-[#e8f0fa] text-[#0d3b66] ring-1 ring-[#0d3b66]/12 flex items-center justify-center shrink-0",
+  iconTileNavy:
+    "w-11 h-11 rounded-xl bg-white/12 text-white ring-1 ring-white/20 flex items-center justify-center shrink-0",
   fieldLabel: "caretaker-label-caps text-slate-500 mb-1 block",
 };
 
