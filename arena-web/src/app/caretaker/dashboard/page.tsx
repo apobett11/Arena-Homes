@@ -184,6 +184,32 @@ export default function CaretakerDashboard() {
     loadData();
   }, [loadData]);
 
+  const setDashboardTab = (tab: TabId) => {
+    setActiveTab(tab);
+
+    if (typeof window !== "undefined") {
+      const url = tab === "overview" ? "/caretaker/dashboard" : `/caretaker/dashboard?tab=${tab}`;
+      window.history.pushState({ tab }, "", url);
+    }
+  };
+
+  useEffect(() => {
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialTab = initialParams.get("tab");
+    if (initialTab && tabs.some((tab) => tab.id === initialTab)) {
+      setActiveTab(initialTab as TabId);
+    }
+
+    const handlePopState = () => {
+      const nextParams = new URLSearchParams(window.location.search);
+      const nextTab = nextParams.get("tab");
+      setActiveTab(nextTab && tabs.some((tab) => tab.id === nextTab) ? (nextTab as TabId) : "overview");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const handleRefresh = () => {
     loadData();
   };
@@ -251,7 +277,7 @@ export default function CaretakerDashboard() {
         />
       </div>
 
-      <div className="border-b border-slate-200 dark:border-white/10">
+      <div className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50/95 backdrop-blur dark:border-white/10 dark:bg-slate-950/95">
         <nav className="flex gap-1 overflow-x-auto pb-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -259,7 +285,7 @@ export default function CaretakerDashboard() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setDashboardTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg ${
                   isActive
                     ? "text-primary border-b-2 border-primary bg-primary/5"
@@ -305,21 +331,21 @@ export default function CaretakerDashboard() {
                 count={state.dashboard.pending_issues_count}
                 icon={Wrench}
                 color="rose"
-                onClick={() => setActiveTab("issues")}
+                onClick={() => setDashboardTab("issues")}
               />
               <QuickActionCard
                 title="Pending Applications"
                 count={state.dashboard.pending_applications_count}
                 icon={ClipboardList}
                 color="amber"
-                onClick={() => setActiveTab("applications")}
+                onClick={() => setDashboardTab("applications")}
               />
               <QuickActionCard
                 title="Vacant Units"
                 count={state.dashboard.vacant_rooms}
                 icon={DoorOpen}
                 color="emerald"
-                onClick={() => setActiveTab("units")}
+                onClick={() => setDashboardTab("units")}
               />
             </div>
 
@@ -328,7 +354,7 @@ export default function CaretakerDashboard() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Issues</h3>
                   <button
-                    onClick={() => setActiveTab("issues")}
+                    onClick={() => setDashboardTab("issues")}
                     className="text-sm text-primary hover:text-primary/80 font-medium"
                   >
                     View All
