@@ -547,6 +547,21 @@
 }
 
 @media (max-width: 767px) {
+  .caretaker-info-card {
+    padding: 1rem !important;
+    border-radius: 0.875rem;
+  }
+
+  .caretaker-info-card .caretaker-headline-sm {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .caretaker-info-card .caretaker-label-caps {
+    font-size: 10px;
+    line-height: 14px;
+  }
+
   .caretaker-card:hover,
   .caretaker-stat-card:hover {
     transform: none;

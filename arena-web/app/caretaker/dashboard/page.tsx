@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Bell,
@@ -95,16 +95,23 @@ const VALID_TABS: TabType[] = [
 function CaretakerDashboardContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [activeTab, setActiveTabState] = useState<TabType>(
     tabParam && VALID_TABS.includes(tabParam as TabType) ? (tabParam as TabType) : "overview"
   );
 
-  const setActiveTab = (tab: TabType) => {
+  const setActiveTab = (tab: TabType, scrollMenuToTop = false) => {
     setActiveTabState(tab);
 
     if (typeof window !== "undefined") {
       const url = tab === "overview" ? "/caretaker/dashboard" : `/caretaker/dashboard?tab=${tab}`;
       window.history.pushState({ tab }, "", url);
+    }
+
+    if (scrollMenuToTop) {
+      requestAnimationFrame(() => {
+        menuRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
     }
   };
 
@@ -300,7 +307,7 @@ function CaretakerDashboardContent() {
         </div>
         <button
           type="button"
-          onClick={() => setActiveTab("photos")}
+          onClick={() => setActiveTab("photos", true)}
           className={cn(
             "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition active:scale-[0.98] self-start md:self-auto",
             photosComplete
@@ -343,13 +350,13 @@ function CaretakerDashboardContent() {
         incomingAnnouncements={announcements.incoming.length}
       />
 
-      <div className="caretaker-card sticky top-0 z-30 p-3 md:p-4 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(238,244,255,0.96))] backdrop-blur-xl shadow-[0_16px_34px_rgba(15,23,42,0.12)]">
+      <div ref={menuRef} className="caretaker-card sticky top-0 z-30 p-3 md:p-4 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(238,244,255,0.96))] backdrop-blur-xl shadow-[0_16px_34px_rgba(15,23,42,0.12)]">
         <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => setActiveTab(tab.id, true)}
               className={cn(
                 ck.tabButton,
                 activeTab === tab.id

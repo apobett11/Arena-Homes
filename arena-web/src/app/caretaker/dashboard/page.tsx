@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { AlertCircle, RefreshCw, Home, DoorOpen, Users, Wrench, FileText, Bell, MessageSquare, ClipboardList, Settings } from "lucide-react";
 
 import {
@@ -80,6 +80,7 @@ const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
 
 export default function CaretakerDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<DashboardState>({
     dashboard: null,
     property: null,
@@ -184,12 +185,18 @@ export default function CaretakerDashboard() {
     loadData();
   }, [loadData]);
 
-  const setDashboardTab = (tab: TabId) => {
+  const setDashboardTab = (tab: TabId, scrollMenuToTop = false) => {
     setActiveTab(tab);
 
     if (typeof window !== "undefined") {
       const url = tab === "overview" ? "/caretaker/dashboard" : `/caretaker/dashboard?tab=${tab}`;
       window.history.pushState({ tab }, "", url);
+    }
+
+    if (scrollMenuToTop) {
+      requestAnimationFrame(() => {
+        menuRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
     }
   };
 
@@ -277,7 +284,7 @@ export default function CaretakerDashboard() {
         />
       </div>
 
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50/95 backdrop-blur dark:border-white/10 dark:bg-slate-950/95">
+      <div ref={menuRef} className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50/95 backdrop-blur dark:border-white/10 dark:bg-slate-950/95">
         <nav className="flex gap-1 overflow-x-auto pb-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -285,7 +292,7 @@ export default function CaretakerDashboard() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setDashboardTab(tab.id)}
+                onClick={() => setDashboardTab(tab.id, true)}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg ${
                   isActive
                     ? "text-primary border-b-2 border-primary bg-primary/5"
@@ -331,21 +338,21 @@ export default function CaretakerDashboard() {
                 count={state.dashboard.pending_issues_count}
                 icon={Wrench}
                 color="rose"
-                onClick={() => setDashboardTab("issues")}
+                onClick={() => setDashboardTab("issues", true)}
               />
               <QuickActionCard
                 title="Pending Applications"
                 count={state.dashboard.pending_applications_count}
                 icon={ClipboardList}
                 color="amber"
-                onClick={() => setDashboardTab("applications")}
+                onClick={() => setDashboardTab("applications", true)}
               />
               <QuickActionCard
                 title="Vacant Units"
                 count={state.dashboard.vacant_rooms}
                 icon={DoorOpen}
                 color="emerald"
-                onClick={() => setDashboardTab("units")}
+                onClick={() => setDashboardTab("units", true)}
               />
             </div>
 
@@ -354,7 +361,7 @@ export default function CaretakerDashboard() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Issues</h3>
                   <button
-                    onClick={() => setDashboardTab("issues")}
+                    onClick={() => setDashboardTab("issues", true)}
                     className="text-sm text-primary hover:text-primary/80 font-medium"
                   >
                     View All
