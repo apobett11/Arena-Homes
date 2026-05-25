@@ -240,6 +240,21 @@ export async function setUnitStatus(
   return updateUnitAvailability(unitId, { availability_status: availabilityStatus });
 }
 
+export async function reserveCaretakerUnit(unitId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = getClient();
+
+  const { data, error } = await supabase.rpc('reserve_caretaker_unit', {
+    p_unit_id: unitId,
+  });
+
+  if (error) {
+    console.error('Error reserving unit:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: Boolean(data?.success ?? true) };
+}
+
 // ============================================================================
 // TENANTS MANAGEMENT
 // ============================================================================
@@ -399,6 +414,26 @@ export async function markIssueAsInProgress(issueId: string): Promise<{ success:
   return updateCaretakerIssue(issueId, { status: 'IN_PROGRESS' });
 }
 
+export async function forwardCaretakerIssuesToAdmin(
+  issueIds: string[]
+): Promise<{ success: boolean; forwardedCount?: number; error?: string }> {
+  const supabase = getClient();
+
+  const { data, error } = await supabase.rpc('forward_caretaker_issues_to_admin', {
+    p_issue_ids: issueIds,
+  });
+
+  if (error) {
+    console.error('Error forwarding issues:', error);
+    return { success: false, error: error.message };
+  }
+
+  return {
+    success: Boolean(data?.success),
+    forwardedCount: data?.forwarded_count,
+  };
+}
+
 // ============================================================================
 // REPAIRS MANAGEMENT
 // ============================================================================
@@ -440,11 +475,28 @@ export async function createCaretakerRepair(
 
   // Get caretaker employee id
   const employee = await getCurrentCaretakerEmployee();
+  const repairPayload: CreateRepairPayload = { ...payload };
+
+  if (payload.issue_id && (!payload.unit_id || !payload.tenant_id)) {
+    const { data: issueData, error: issueError } = await supabase
+      .from('issues')
+      .select('unit_id, tenant_id')
+      .eq('id', payload.issue_id)
+      .maybeSingle();
+
+    if (issueError) {
+      console.error('Error fetching linked issue for repair:', issueError);
+      return { success: false, error: issueError.message };
+    }
+
+    repairPayload.unit_id = payload.unit_id ?? issueData?.unit_id ?? undefined;
+    repairPayload.tenant_id = payload.tenant_id ?? issueData?.tenant_id ?? undefined;
+  }
 
   const { data, error } = await supabase
     .from('repairs')
     .insert({
-      ...payload,
+      ...repairPayload,
       caretaker_employee_id: employee?.id,
       status: 'PENDING',
       created_at: new Date().toISOString(),

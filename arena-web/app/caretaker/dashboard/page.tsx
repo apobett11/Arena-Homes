@@ -257,6 +257,8 @@ function CaretakerDashboardContent() {
 
   const tabs: { id: TabType; label: string; badge?: number }[] = [
     { id: "overview", label: "Overview" },
+    { id: "units", label: `Units (${units.length})` },
+    { id: "tenants", label: `Tenants (${tenants.length})` },
     { id: "issues", label: `Issues (${issues.filter((i) => i.status === "PENDING").length})`, badge: issues.filter((i) => i.status === "PENDING").length },
     { id: "applications", label: `Applications (${applications.length})`, badge: pendingApps },
     { id: "repairs", label: `Repairs (${repairs.length})` },
@@ -518,10 +520,25 @@ function CaretakerDashboardContent() {
         )}
 
         {activeTab === "units" && propertyId && (
-          <UnitsPanel units={units} propertyId={propertyId} onDataChange={handleRefresh} />
+          <UnitsPanel
+            units={units}
+            repairs={repairs}
+            propertyId={propertyId}
+            onDataChange={handleRefresh}
+            onOpenApplications={() => setActiveTab("applications", true)}
+            onOpenPhotos={() => setActiveTab("photos", true)}
+          />
         )}
         {activeTab === "tenants" && propertyId && (
-          <TenantsPanel tenants={tenants} units={units} propertyId={propertyId} />
+          <TenantsPanel
+            tenants={tenants}
+            units={units}
+            leases={leases}
+            issues={issues}
+            applications={applications}
+            propertyId={propertyId}
+            onDataChange={handleRefresh}
+          />
         )}
         {activeTab === "issues" && propertyId && (
           <IssuesPanel issues={issues} propertyId={propertyId} onDataChange={handleRefresh} />

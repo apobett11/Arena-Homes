@@ -116,6 +116,7 @@ export type UnitAvailabilityStatus = 'AVAILABLE' | 'RESERVED' | 'OCCUPIED' | 'UN
 export interface CaretakerUnit {
   id: string;
   property_id: string;
+  current_tenant_id?: string | null;
   room_number: string | null;
   room_type: string;
   base_price: number;
