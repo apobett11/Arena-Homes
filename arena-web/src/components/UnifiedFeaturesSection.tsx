@@ -31,9 +31,8 @@ export const UnifiedFeaturesSection = () => {
   return (
     <section
       id="how-it-works"
-      className="public-home-light-zone relative bg-slate-50 py-6 [color-scheme:light] md:py-stack-lg"
+      className="public-home-light-zone relative py-6 [color-scheme:light] md:py-stack-lg"
     >
-      <div className="pointer-events-none absolute inset-0 h-16 bg-gradient-to-b from-slate-100 to-slate-50 md:h-40" />
 
       <div className="relative z-10 mx-auto max-w-[1280px] px-4 md:px-10">
         {/* How it works */}

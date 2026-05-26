@@ -363,8 +363,8 @@ export const Navbar = () => {
                             href={link.href}
                             className={`text-sm font-semibold uppercase tracking-wide transition-colors ${
                                 isActive(link.href)
-                                    ? "text-primary-fixed-dim"
-                                    : "text-outline-variant hover:text-gold-accent"
+                                    ? "text-gold-accent"
+                                    : "text-white/70 hover:text-gold-accent"
                             }`}
                         >
                             {link.name}
@@ -455,7 +455,11 @@ export const Navbar = () => {
                                     <Link
                                         href={link.href}
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className="block text-base font-medium text-white/70 hover:text-white hover:bg-white/10 px-4 py-3 rounded-xl transition-all"
+                                        className={`block text-base font-medium px-4 py-3 rounded-xl transition-all ${
+                                            isActive(link.href)
+                                                ? "text-gold-accent bg-gold-accent/10"
+                                                : "text-white/70 hover:text-white hover:bg-white/10"
+                                        }`}
                                     >
                                         {link.name}
                                     </Link>

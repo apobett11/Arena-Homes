@@ -187,7 +187,7 @@ function ListingsContent() {
     }, [filteredListings, loading]);
 
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-[#0066FF] selection:text-white">
+        <div className="min-h-screen bg-surface-navy text-slate-100 font-sans selection:bg-vibrant-blue selection:text-white">
             <Navbar />
 
             <main className="pt-24 pb-20">

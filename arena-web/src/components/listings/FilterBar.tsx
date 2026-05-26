@@ -81,8 +81,8 @@ export const FilterBar = ({
 
     return (
         <div className={cn(
-            "w-full z-40 transition-all duration-300 border-b border-slate-200 dark:border-white/10",
-            isSticky ? "fixed top-16 left-0 right-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-lg" : "relative bg-white dark:bg-zinc-950"
+            "w-full z-40 transition-all duration-300 border-b border-white/10",
+            isSticky ? "fixed top-16 left-0 right-0 bg-surface-navy/95 backdrop-blur-xl shadow-lg" : "relative bg-surface-navy"
         )}>
             <div className="container mx-auto px-4 py-4">
                 <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
@@ -92,10 +92,10 @@ export const FilterBar = ({
 
                         {/* Price Filter */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold text-slate-700 dark:text-white">
-                                <DollarSign size={14} className="text-[#0066FF]" />
-                                <span className="text-slate-700 dark:text-white">Price</span>
-                                <ChevronDown size={14} className="text-slate-400" />
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 hover:border-vibrant-blue transition-all text-sm font-semibold text-white">
+                                <DollarSign size={14} className="text-vibrant-blue" />
+                                <span>Price</span>
+                                <ChevronDown size={14} className="text-slate-300" />
                             </button>
 
                             {/* Dropdown Content */}
@@ -136,13 +136,13 @@ export const FilterBar = ({
 
                         {/* Location Filter */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold text-slate-700 dark:text-white">
-                                <MapPin size={14} className="text-[#0066FF]" />
-                                <span className="text-slate-700 dark:text-white">Location</span>
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 hover:border-vibrant-blue transition-all text-sm font-semibold text-white">
+                                <MapPin size={14} className="text-vibrant-blue" />
+                                <span>Location</span>
                                 {filters.locations.length > 0 && (
                                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#0066FF] text-white text-[10px]">{filters.locations.length}</span>
                                 )}
-                                <ChevronDown size={14} className="text-slate-400" />
+                                <ChevronDown size={14} className="text-slate-300" />
                             </button>
 
                             <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-2 w-56 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50">
@@ -173,13 +173,13 @@ export const FilterBar = ({
 
                         {/* Type Filter */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold text-slate-700 dark:text-white">
-                                <Home size={14} className="text-[#0066FF]" />
-                                <span className="text-slate-700 dark:text-white">Type</span>
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 hover:border-vibrant-blue transition-all text-sm font-semibold text-white">
+                                <Home size={14} className="text-vibrant-blue" />
+                                <span>Type</span>
                                 {filters.houseTypes.length > 0 && (
                                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#0066FF] text-white text-[10px]">{filters.houseTypes.length}</span>
                                 )}
-                                <ChevronDown size={14} className="text-slate-400" />
+                                <ChevronDown size={14} className="text-slate-300" />
                             </button>
 
                             <div className="hidden group-hover:block hover:block absolute top-full left-0 mt-2 p-2 w-56 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50">
@@ -214,11 +214,11 @@ export const FilterBar = ({
                     <div className="flex items-center gap-3">
                         {/* Sort By Dropdown */}
                         <div className="relative group">
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300">
-                                <SlidersHorizontal size={14} className="text-[#0066FF]" />
-                                <span className="text-xs uppercase tracking-wider text-slate-400">Sort by</span>
-                                <span className="capitalize">{filters.sortBy}</span>
-                                <ChevronDown size={14} className="text-slate-400" />
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 transition-all text-sm font-semibold text-white">
+                                <SlidersHorizontal size={14} className="text-vibrant-blue" />
+                                <span className="text-xs uppercase tracking-wider text-slate-300">Sort by</span>
+                                <span className="capitalize text-white">{filters.sortBy}</span>
+                                <ChevronDown size={14} className="text-slate-300" />
                             </button>
 
                             <div className="hidden group-hover:block hover:block absolute top-full right-0 mt-2 p-2 w-48 bg-zinc-900 rounded-2xl shadow-xl border border-slate-700 z-50">
@@ -250,10 +250,17 @@ export const FilterBar = ({
                         {/* Sort Direction Toggle */}
                         <button
                             onClick={toggleSortDirection}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-[#0066FF] transition-all text-sm font-semibold"
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/15 hover:border-vibrant-blue transition-all text-sm font-semibold text-white"
                             title={filters.sortDirection === 'asc' ? 'Ascending' : 'Descending'}
                         >
-                            {filters.sortDirection === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                            <span className="text-xs font-semibold text-white">
+                                {filters.sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+                            </span>
+                            {filters.sortDirection === 'asc' ? (
+                                <ArrowUp size={14} className="text-white" />
+                            ) : (
+                                <ArrowDown size={14} className="text-white" />
+                            )}
                         </button>
                     </div>
 
@@ -261,8 +268,8 @@ export const FilterBar = ({
 
                 {/* Active Filters Summary (Chips) */}
                 {(filters.locations.length > 0 || filters.houseTypes.length > 0) && (
-                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider self-center mr-2">Filters:</span>
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10">
+                        <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider self-center mr-2">Filters:</span>
 
                         {filters.locations.map(loc => (
                             <button key={loc} onClick={() => toggleLocation(loc)} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0066FF]/10 text-[#0066FF] text-xs font-bold hover:bg-[#0066FF]/20 transition-colors">

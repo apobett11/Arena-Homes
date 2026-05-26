@@ -133,7 +133,7 @@ export const HouseCard = ({
   if (!validId) {
     return (
       <div className="group block h-full cursor-not-allowed opacity-60">
-        <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-surface-navy/50 md:rounded-[32px]">
+        <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/15 bg-surface-navy md:rounded-[32px]">
           <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-slate-800">
             <span className="text-sm text-slate-500">Property not available</span>
           </div>
@@ -156,7 +156,7 @@ export const HouseCard = ({
         whileHover={{ y: -4 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
-        className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-surface-navy/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-vibrant-blue/10 md:rounded-[32px]"
+        className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/15 bg-surface-navy transition-all duration-300 hover:-translate-y-1 hover:border-vibrant-blue/40 hover:shadow-2xl hover:shadow-vibrant-blue/20 md:rounded-[32px]"
       >
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
@@ -214,70 +214,70 @@ export const HouseCard = ({
             <h3 className="line-clamp-2 w-full truncate font-semibold text-xs text-white md:w-auto md:text-lg">
               {title}
             </h3>
-            <div className="shrink-0 font-bold text-vibrant-blue text-sm md:text-base">
+            <div className="shrink-0 text-sm font-bold text-white md:text-base">
               KSh {price.toLocaleString()}
-              <span className="align-top text-[10px] font-normal text-outline-variant md:text-xs">
+              <span className="align-top text-[10px] font-normal text-slate-300 md:text-xs">
                 /mo
               </span>
             </div>
           </div>
 
-          <p className="mb-2 flex items-center gap-1 text-[10px] text-outline-variant md:mb-4 md:text-xs">
-            <MapPin className="h-3 w-3 shrink-0 md:h-4 md:w-4" />
+          <p className="mb-2 flex items-center gap-1 text-[10px] text-slate-200 md:mb-4 md:text-xs">
+            <MapPin className="h-3 w-3 shrink-0 text-white md:h-4 md:w-4" />
             {location}
           </p>
 
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[10px] md:text-xs">
-            <div className="flex items-center gap-1.5 text-outline-variant">
+            <div className="flex items-center gap-1.5 text-slate-200">
               <Home className="h-3.5 w-3.5 text-vibrant-blue" />
-              <span className="font-medium text-white/90">{type}</span>
+              <span className="font-medium text-white">{type}</span>
             </div>
-            <div className="flex items-center gap-1 text-outline-variant">
-              <Footprints className="h-3 w-3" />
+            <div className="flex items-center gap-1 text-slate-200">
+              <Footprints className="h-3 w-3 text-white" />
               {displayDistance}
             </div>
           </div>
 
           <div className="mb-2 flex flex-wrap gap-1.5">
             {(amenities?.water || water) && (
-              <div className="flex items-center gap-1 rounded bg-vibrant-blue/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-fixed-dim">
-                <Droplets size={8} />
+              <div className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <Droplets size={8} className="text-vibrant-blue" />
                 <span>Water</span>
               </div>
             )}
             {amenities?.electricity && (
-              <div className="flex items-center gap-1 rounded bg-gold-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-gold-accent">
-                <Zap size={8} />
+              <div className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <Zap size={8} className="text-gold-accent" />
                 <span>Power</span>
               </div>
             )}
             {amenities?.security && (
-              <div className="flex items-center gap-1 rounded bg-vibrant-blue/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-fixed-dim">
-                <Shield size={8} />
+              <div className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <Shield size={8} className="text-vibrant-blue" />
                 <span>Secure</span>
               </div>
             )}
             {amenities?.internet && (
-              <div className="flex items-center gap-1 rounded bg-success-emerald/15 px-1.5 py-0.5 text-[10px] font-medium text-success-emerald">
-                <Wifi size={8} />
+              <div className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <Wifi size={8} className="text-success-emerald" />
                 <span>WiFi</span>
               </div>
             )}
           </div>
 
           {depositAmount != null && depositAmount > 0 && (
-            <div className="mb-1 text-[10px] text-outline-variant">
+            <div className="mb-1 text-[10px] text-slate-300">
               Deposit: KSh {depositAmount.toLocaleString()}
             </div>
           )}
 
           {getLastUpdatedText() && (
-            <div className="mb-2 text-[9px] text-outline-variant md:mb-3">
+            <div className="mb-2 text-[9px] text-slate-400 md:mb-3">
               {getLastUpdatedText()}
             </div>
           )}
 
-          <div className="mt-auto w-full rounded-xl border border-white/10 bg-white/5 py-2 text-center text-[10px] font-semibold text-white transition-all group-hover:border-vibrant-blue group-hover:bg-vibrant-blue md:rounded-xl md:py-3 md:text-sm">
+          <div className="mt-auto w-full rounded-xl bg-vibrant-blue py-2 text-center text-[10px] font-semibold text-white shadow-md shadow-vibrant-blue/25 transition-all group-hover:bg-primary-marketing md:rounded-xl md:py-3 md:text-sm">
             View Details
           </div>
         </div>

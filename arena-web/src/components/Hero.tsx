@@ -94,18 +94,18 @@ export const Hero = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="mx-auto max-w-4xl"
           >
-            <div className="rounded-[24px] border border-slate-200/90 bg-white p-2 shadow-2xl md:rounded-[32px] md:p-3">
-              <div className="mb-2 grid grid-cols-3 gap-0 md:mb-0 md:gap-2">
-                <div className="flex flex-col gap-1 rounded-l-2xl border-r border-slate-200 bg-slate-50 p-2 md:rounded-2xl md:border md:border-slate-200 md:p-4">
-                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-slate-700 md:text-[10px]">
+            <div className="rounded-[24px] border border-white/15 bg-surface-navy p-2 shadow-2xl md:rounded-[32px] md:p-3">
+              <div className="mb-2 grid grid-cols-3 gap-2 md:mb-0 md:gap-2">
+                <div className="hero-search-glass-field flex flex-col gap-1 rounded-2xl p-2 md:p-4">
+                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-slate-900 md:text-[10px]">
                     Location
                   </span>
                   <div className="relative flex items-center gap-1 md:gap-2">
-                    <MapPin className="h-4 w-4 shrink-0 text-slate-800 md:h-5 md:w-5" aria-hidden />
+                    <MapPin className="h-4 w-4 shrink-0 text-gold-accent md:h-5 md:w-5" aria-hidden />
                     <select
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] font-medium text-slate-900 focus:ring-0 md:text-base"
+                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] font-semibold text-slate-900 focus:ring-0 md:text-base"
                     >
                       <option value="">All Locations</option>
                       {locations.map((loc) => (
@@ -115,22 +115,22 @@ export const Hero = () => {
                       ))}
                     </select>
                     <ChevronDown
-                      className="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-600 md:hidden"
+                      className="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-700 md:hidden"
                       aria-hidden
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1 border-r border-slate-200 bg-slate-50 p-2 md:rounded-2xl md:border md:border-slate-200 md:p-4">
-                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-slate-700 md:text-[10px]">
+                <div className="hero-search-glass-field flex flex-col gap-1 rounded-2xl p-2 md:p-4">
+                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-slate-900 md:text-[10px]">
                     Budget
                   </span>
                   <div className="relative flex items-center gap-1 md:gap-2">
-                    <DollarSign className="h-4 w-4 shrink-0 text-slate-800 md:h-5 md:w-5" aria-hidden />
+                    <DollarSign className="h-4 w-4 shrink-0 text-gold-accent md:h-5 md:w-5" aria-hidden />
                     <select
                       value={priceRange}
                       onChange={(e) => setPriceRange(e.target.value)}
-                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] font-medium text-slate-900 focus:ring-0 md:text-base"
+                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] font-semibold text-slate-900 focus:ring-0 md:text-base"
                     >
                       <option value="">Any Price</option>
                       <option value="Low">Under KSh 5k</option>
@@ -141,16 +141,16 @@ export const Hero = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1 rounded-r-2xl bg-slate-50 p-2 md:rounded-2xl md:border md:border-slate-200 md:p-4">
-                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-slate-700 md:text-[10px]">
+                <div className="hero-search-glass-field flex flex-col gap-1 rounded-2xl p-2 md:p-4">
+                  <span className="truncate text-[8px] font-semibold uppercase tracking-wider text-slate-900 md:text-[10px]">
                     Type
                   </span>
                   <div className="relative flex items-center gap-1 md:gap-2">
-                    <Home className="h-4 w-4 shrink-0 text-slate-800 md:h-5 md:w-5" aria-hidden />
+                    <Home className="h-4 w-4 shrink-0 text-gold-accent md:h-5 md:w-5" aria-hidden />
                     <select
                       value={type}
                       onChange={(e) => setType(e.target.value)}
-                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] font-medium text-slate-900 focus:ring-0 md:text-base"
+                      className="w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[12px] font-semibold text-slate-900 focus:ring-0 md:text-base"
                     >
                       <option value="">All Types</option>
                       <option value="Single Room">Single Room</option>

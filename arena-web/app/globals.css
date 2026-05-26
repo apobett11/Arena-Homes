@@ -314,12 +314,48 @@
   scrollbar-width: none;
 }
 
-/* Homepage: How it works → FAQ — always light (both themes) */
+/* Homepage: How it works → FAQ — light navy-tinted surface (both themes) */
+.public-home-light-zone {
+  background: linear-gradient(
+    180deg,
+    #dce6f4 0%,
+    #e4edf7 38%,
+    #eaf1fa 72%,
+    #eef4fb 100%
+  );
+}
+
 .dark .public-home-light-zone {
   color-scheme: light;
+  background: linear-gradient(
+    180deg,
+    #dce6f4 0%,
+    #e4edf7 38%,
+    #eaf1fa 72%,
+    #eef4fb 100%
+  );
 }
+
 .dark .public-home-light-zone .public-glass {
   background: rgba(255, 255, 255, 0.95);
+}
+
+/* Hero search — glass fields on navy panel */
+.hero-search-glass-field {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.hero-search-glass-field select {
+  color: #0f172a;
+}
+
+.hero-search-glass-field select option {
+  color: #0f172a;
+  background: #ffffff;
 }
 
 @keyframes pulse-blue {

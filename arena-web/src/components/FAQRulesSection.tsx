@@ -140,8 +140,6 @@ export const FAQRulesSection = () => {
 
   return (
     <section id="faqs" className="public-home-light-zone relative overflow-hidden py-12 [color-scheme:light] md:py-16">
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100" />
-
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-600">
@@ -157,7 +155,7 @@ export const FAQRulesSection = () => {
         </div>
 
         {/* Subtle enclosing card — visible on white page background */}
-        <div className="rounded-[28px] border border-slate-200/90 bg-[#eef2f7] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] md:p-8 lg:p-10">
+        <div className="rounded-[28px] border border-slate-200/90 bg-white/60 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm md:p-8 lg:p-10">
           <div className="mb-6 flex gap-2 lg:hidden">
             <button
               onClick={() => setActiveTab("faq")}
