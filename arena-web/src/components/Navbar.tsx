@@ -405,7 +405,7 @@ export const Navbar = () => {
                             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                                 <Link
                                     href="/auth/login"
-                                    className="flex items-center gap-2 font-semibold text-white transition-colors hover:text-gold-accent"
+                                    className="flex items-center gap-2 rounded-xl bg-gold-accent px-4 py-2.5 text-sm font-bold text-slate-900 shadow-md shadow-gold-accent/30 transition-colors hover:bg-[#f5c842]"
                                 >
                                     <User size={16} />
                                     Login

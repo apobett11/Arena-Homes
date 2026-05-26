@@ -314,6 +314,14 @@
   scrollbar-width: none;
 }
 
+/* Homepage: How it works → FAQ — always light (both themes) */
+.dark .public-home-light-zone {
+  color-scheme: light;
+}
+.dark .public-home-light-zone .public-glass {
+  background: rgba(255, 255, 255, 0.95);
+}
+
 @keyframes pulse-blue {
   0% {
     transform: scale(0.95);

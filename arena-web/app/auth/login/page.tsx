@@ -217,7 +217,7 @@ function LoginPageContent() {
 
                         <Button 
                             type="submit" 
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold transition-all shadow-lg hover:shadow-blue-500/25 hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                            className="w-full h-12 rounded-xl bg-gold-accent text-slate-900 font-bold transition-all shadow-lg shadow-gold-accent/35 hover:bg-[#f5c842] hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                             disabled={loading}
                         >
                             {loading ? (
@@ -236,15 +236,15 @@ function LoginPageContent() {
                         </Button>
                     </form>
 
-                    <div className="mt-8 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                        <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
-                            <strong>New here?</strong> You need to apply for a property first.
+                    <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
+                        <p className="text-base font-medium leading-relaxed text-slate-800">
+                            <strong className="font-bold text-slate-900">New here?</strong> You need to apply for a property first.
                         </p>
                         <Link 
                             href="/listings" 
-                            className="mt-2 flex items-center justify-center gap-2 text-sm text-primary hover:underline font-semibold"
+                            className="mt-3 inline-flex items-center justify-center gap-2 text-base font-bold text-gold-accent hover:text-[#d4a017] underline-offset-4 hover:underline"
                         >
-                            <Send size={14} />
+                            <Send size={18} className="text-gold-accent" />
                             Browse Properties & Apply
                         </Link>
                     </div>
