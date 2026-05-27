@@ -4,7 +4,6 @@ import { Search, MapPin, Home, DollarSign, Sparkles, ChevronDown, CheckCircle, S
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export const Hero = () => {
@@ -43,22 +42,8 @@ export const Hero = () => {
     router.push(`/listings?${params.toString()}`);
   };
 
-  const heroImage = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80";
-
   return (
     <section className="relative flex min-h-[95vh] items-center overflow-hidden pt-24 md:min-h-[90vh]">
-      <div className="absolute inset-0 z-0">
-        <Image
-          src={heroImage}
-          alt="Modern student housing near Egerton University"
-          fill
-          className="object-cover"
-          priority
-          quality={100}
-        />
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/40 to-background" />
-      </div>
-
       <div className="relative z-20 mx-auto w-full max-w-[1280px] px-4 md:px-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
