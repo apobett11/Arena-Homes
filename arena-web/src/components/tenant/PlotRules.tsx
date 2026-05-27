@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Shield, Clock, Trash2, Users, Volume2, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { Clock, Trash2, Users, Volume2, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface TenantRuleItem {
@@ -31,24 +31,24 @@ const PlotRules = ({ rules, loading }: PlotRulesProps) => {
             {/* Header */}
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 cursor-pointer hover:shadow-sm transition-all"
+                className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-[#141f35] to-[#0f192d] border border-[#2a3f61] cursor-pointer hover:border-[#415e86] transition-all"
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                        <BookOpen size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <div className="w-9 h-9 rounded-lg bg-[#f5c978]/15 border border-[#f5c978]/30 flex items-center justify-center">
+                        <BookOpen size={16} className="text-[#f8ddad]" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-white">House Rules</h3>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <h3 className="text-sm font-semibold text-[#edf2fb]">House Rules</h3>
+                        <p className="text-[11px] text-[#9fb0c9]">
                             {loading ? 'Loading...' : `${rules.length} rules & guidelines`}
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1f304b] text-[#b8c8de] border border-[#2f4566]">
                         {isOpen ? 'Hide' : 'View'}
                     </span>
-                    {isOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                    {isOpen ? <ChevronUp size={16} className="text-[#9fb0c9]" /> : <ChevronDown size={16} className="text-[#9fb0c9]" />}
                 </div>
             </div>
 
@@ -64,9 +64,9 @@ const PlotRules = ({ rules, loading }: PlotRulesProps) => {
                     >
                         <div className="pt-2 space-y-2">
                             {loading ? (
-                                <div className="text-xs text-slate-400 py-3 text-center">Loading rules...</div>
+                                <div className="text-xs text-[#9fb0c9] py-3 text-center">Loading rules...</div>
                             ) : rules.length === 0 ? (
-                                <div className="text-xs text-slate-400 py-3 text-center">No rules available</div>
+                                <div className="text-xs text-[#9fb0c9] py-3 text-center">No rules available</div>
                             ) : (
                                 rules.map((rule, index) => {
                                     const Icon = iconSet[index % iconSet.length];
@@ -74,14 +74,14 @@ const PlotRules = ({ rules, loading }: PlotRulesProps) => {
                                     return (
                                         <div 
                                             key={rule.id} 
-                                            className={`flex gap-3 p-3 rounded-xl bg-white dark:bg-slate-800/60 border ${colors.border} shadow-sm`}
+                                            className={`flex gap-3 p-3 rounded-xl bg-[#121f35] border ${colors.border} shadow-sm`}
                                         >
                                             <div className={`shrink-0 w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
                                                 <Icon size={16} className={colors.color} />
                                             </div>
                                             <div className="min-w-0">
-                                                <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-200">{rule.title}</h4>
-                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+                                                <h4 className="text-xs font-semibold text-[#edf2fb]">{rule.title}</h4>
+                                                <p className="text-[11px] text-[#a8b9d0] mt-0.5 line-clamp-2">
                                                     {rule.desc}
                                                 </p>
                                             </div>

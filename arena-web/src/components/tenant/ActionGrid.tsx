@@ -6,18 +6,19 @@ import gsap from 'gsap';
 
 interface ActionGridProps {
     onAction: (action: string) => void;
+    notificationCounts?: Partial<Record<string, number>>;
 }
 
 const actions = [
-    { id: 'pay', label: 'Pay Rent', icon: CreditCard, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/20' },
-    { id: 'report', label: 'Report Issue', icon: Wrench, gradient: 'from-orange-500 to-amber-500', shadow: 'shadow-orange-500/20' },
-    { id: 'lease', label: 'View Lease', icon: FileText, gradient: 'from-purple-500 to-pink-500', shadow: 'shadow-purple-500/20' },
-    { id: 'announcements', label: 'Announcements', icon: Bell, gradient: 'from-red-500 to-rose-500', shadow: 'shadow-red-500/20' },
-    { id: 'community', label: 'Community', icon: Users, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-500/20' },
-    { id: 'feedback', label: 'Feedback', icon: Star, gradient: 'from-yellow-500 to-amber-500', shadow: 'shadow-yellow-500/20' },
+    { id: 'pay', label: 'Pay Rent', icon: CreditCard, gradient: 'from-[#224a7d] to-[#173454]' },
+    { id: 'report', label: 'Report Issue', icon: Wrench, gradient: 'from-[#6b4c1f] to-[#4f371a]' },
+    { id: 'lease', label: 'Lease', icon: FileText, gradient: 'from-[#2f345d] to-[#242848]' },
+    { id: 'announcements', label: 'Announcements', icon: Bell, gradient: 'from-[#6f2b33] to-[#54212a]' },
+    { id: 'community', label: 'Community', icon: Users, gradient: 'from-[#27495a] to-[#1f3647]' },
+    { id: 'feedback', label: 'Feedback', icon: Star, gradient: 'from-[#5c4a2b] to-[#44361f]' },
 ];
 
-const ActionGrid: React.FC<ActionGridProps> = ({ onAction }) => {
+const ActionGrid: React.FC<ActionGridProps> = ({ onAction, notificationCounts = {} }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -31,19 +32,24 @@ const ActionGrid: React.FC<ActionGridProps> = ({ onAction }) => {
     }, []);
 
     return (
-        <div ref={containerRef} className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+        <div ref={containerRef} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
             {actions.map((action) => (
                 <button
                     key={action.id}
                     onClick={() => onAction(action.id)}
-                    className={`action-card group relative overflow-hidden rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 p-3 transition-all duration-300 hover:shadow-lg ${action.shadow} hover:-translate-y-1 active:scale-95`}
+                    className={`action-card group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 hover:-translate-y-1 active:scale-[0.985] bg-gradient-to-br from-[#141f35] to-[#101a2f] border-[#223655] shadow-[0_14px_36px_rgba(5,12,24,0.4)] ${notificationCounts[action.id] ? 'ring-1 ring-rose-400/45 shadow-[0_0_0_1px_rgba(244,63,94,0.26),0_18px_40px_rgba(5,12,24,0.45)]' : ''}`}
                 >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                    <div className="relative flex flex-col items-center gap-2">
-                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-sm`}>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-35 group-hover:opacity-55 transition-opacity duration-300`} />
+                    {notificationCounts[action.id] ? (
+                        <span className="absolute top-2.5 right-2.5 min-w-5 h-5 px-1 rounded-full bg-rose-500 text-[10px] font-semibold text-white grid place-items-center border border-rose-200/50">
+                            {notificationCounts[action.id]}
+                        </span>
+                    ) : null}
+                    <div className="relative flex flex-col items-center gap-2.5">
+                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-[0_10px_20px_rgba(7,11,20,0.35)] border border-white/10`}>
                             <action.icon size={18} className="text-white" />
                         </div>
-                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight">
+                        <span className="text-[11px] font-semibold text-[#d7e0ef] text-center leading-tight tracking-wide">
                             {action.label}
                         </span>
                     </div>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { User, MapPin, Calendar, CreditCard, MessageSquare, Home, Shield } from 'lucide-react';
+import { User, Calendar, MessageSquare, Home } from 'lucide-react';
 
 interface CompactTenantCardProps {
   tenantName: string;
@@ -47,33 +47,27 @@ const CompactTenantCard: React.FC<CompactTenantCardProps> = ({
     );
   }, []);
 
-  const getDaysColor = () => {
-    if (daysRemaining === null) return 'text-gray-400 bg-gray-100/50 dark:bg-gray-800/50';
-    if (daysRemaining > 14) return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20';
-    if (daysRemaining > 7) return 'text-amber-600 bg-amber-50 dark:bg-amber-900/20';
-    return 'text-rose-600 bg-rose-50 dark:bg-rose-900/20';
-  };
-
   return (
     <div
       ref={cardRef}
-      className="relative overflow-hidden rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-300"
+      className="relative overflow-hidden rounded-[26px] border border-[#2a3f61] bg-gradient-to-br from-[#172540] via-[#121d33] to-[#0f192d] shadow-[0_24px_60px_rgba(6,12,24,0.48)] transition-all duration-300"
     >
-      {/* Gradient Header */}
-      <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-4 py-3">
-        <div className="absolute inset-0 bg-black/10" />
-        <div className="relative flex items-center justify-between">
+      <div className="absolute -right-20 -top-16 h-60 w-60 rounded-full bg-[#f5c978]/15 blur-3xl" />
+      <div className="absolute -left-20 bottom-0 h-44 w-44 rounded-full bg-[#3f89db]/10 blur-3xl" />
+      <div className="relative px-5 py-5 md:px-7 md:py-6">
+        <div className="relative flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/25">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full rounded-lg object-cover" />
               ) : (
-                <User size={18} className="text-white" />
+                <User size={20} className="text-[#eff3fb]" />
               )}
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">{tenantName}</h2>
-              <div className="flex items-center gap-1 text-xs text-white/80">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-[#f5c978]">Tenant Profile</p>
+              <h2 className="text-lg md:text-xl font-semibold text-[#f7f9fe] mt-1">{tenantName}</h2>
+              <div className="flex items-center gap-1 text-xs text-[#c4d0e3] mt-1">
                 <Home size={12} />
                 <span>{propertyName}</span>
                 <span className="text-white/60">•</span>
@@ -83,71 +77,56 @@ const CompactTenantCard: React.FC<CompactTenantCardProps> = ({
           </div>
           <button 
             onClick={onMessageCaretaker}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
+            className="p-2.5 rounded-xl bg-[#f5c978]/10 hover:bg-[#f5c978]/20 border border-[#f5c978]/30 transition-colors text-[#f8ddad]"
             title="Message caretaker"
           >
             <MessageSquare size={16} />
           </button>
         </div>
-      </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-px bg-slate-100 dark:bg-slate-700/50">
-        <div className="bg-white dark:bg-slate-800/80 px-3 py-2.5 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <Calendar size={12} />
-            <span>Lease</span>
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-[#324766] bg-[#112038]/75 px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[#9fb0c9] mb-1.5">
+              <Calendar size={12} />
+              <span>Lease Window</span>
+            </div>
+            <p className="text-sm font-medium text-[#ebf0fa]">
+              {leaseStart} - {leaseEnd}
+            </p>
           </div>
-          <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-            {leaseStart} - {leaseEnd}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-slate-800/80 px-3 py-2.5 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <CreditCard size={12} />
-            <span>Paid</span>
+          <div className="rounded-2xl border border-[#324766] bg-[#112038]/75 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#9fb0c9] mb-1.5">Paid Months</div>
+            <p className="text-sm font-medium text-[#f5c978]">{monthsPaid} month(s)</p>
           </div>
-          <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            {monthsPaid} months
-          </p>
-        </div>
-        <div className={`px-3 py-2.5 text-center ${getDaysColor()}`}>
-          <div className="flex items-center justify-center gap-1.5 text-xs opacity-80 mb-1">
-            <Shield size={12} />
-            <span>Due</span>
-          </div>
-          <p className="text-xs font-semibold">
-            {daysRemaining === null ? 'N/A' : daysRemaining > 0 ? `${daysRemaining}d` : 'Overdue'}
-          </p>
-        </div>
-      </div>
-
-      {/* Caretaker & Actions */}
-      <div className="px-3 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-            <User size={14} className="text-slate-500" />
-          </div>
-          <div className="text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Caretaker:</span>
-            <span className="ml-1 font-medium text-slate-700 dark:text-slate-300">{caretakerName}</span>
-            {caretakerStatus && caretakerStatus !== 'ACTIVE' && (
-              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
+          <div className="rounded-2xl border border-[#324766] bg-[#112038]/75 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#9fb0c9] mb-1.5">Caretaker</div>
+            <p className="text-sm font-medium text-[#ebf0fa]">{caretakerName}</p>
+            {caretakerStatus && caretakerStatus !== 'ACTIVE' ? (
+              <span className="inline-flex mt-2 rounded-full border border-rose-300/25 bg-rose-500/10 px-2 py-0.5 text-[10px] text-rose-200">
                 {caretakerStatus}
               </span>
-            )}
+            ) : null}
+            {caretakerPhone && caretakerPhone !== 'Not assigned yet' ? (
+              <p className="text-xs text-[#9fb0c9] mt-1">{caretakerPhone}</p>
+            ) : null}
+          </div>
+          <div className="rounded-2xl border border-[#324766] bg-[#112038]/75 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#9fb0c9] mb-1.5">Lease Status</div>
+            <p className="text-sm font-medium text-[#ebf0fa]">
+              {daysRemaining === null ? 'Schedule pending' : daysRemaining > 0 ? `${daysRemaining} days remaining` : 'Needs renewal'}
+            </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="mt-5 flex gap-2">
           <button 
             onClick={onReportIssue}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold border border-[#3c4f6e] bg-[#182640] hover:bg-[#20314f] text-[#d3dded] transition-all"
           >
             Report Issue
           </button>
           <button 
             onClick={onPayRent}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all"
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#2c5e9a] to-[#1f4673] text-[#f3f7ff] border border-[#4d76ab] shadow-[0_10px_20px_rgba(13,42,78,0.4)] hover:-translate-y-0.5 transition-all"
           >
             Pay Rent
           </button>

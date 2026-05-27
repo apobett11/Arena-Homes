@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useRouter } from 'next/navigation';
+import { CalendarClock, CreditCard, MapPin, ShieldAlert } from 'lucide-react';
 import { MobileNav, DesktopSidebar, TopBar } from '@/components/tenant/Navigation';
 import CompactTenantCard from '@/components/tenant/CompactTenantCard';
 import LiveMap from '@/components/tenant/LiveMap';
@@ -25,9 +26,15 @@ import {
   getTenantActivityItems,
   logTenantActivity,
 } from '@/lib/tenant/dashboard';
-import type { TenantDashboardData, TenantPropertyReview } from '@/lib/tenant/types';
+import type {
+    TenantDashboardData,
+    TenantNotification,
+    TenantPropertyFaq,
+    TenantPropertyReview,
+    TenantAnnouncement,
+} from '@/lib/tenant/types';
 
-type ModalType = null | 'pay_dashboard' | 'pay_sidebar' | 'complaint' | 'lease' | 'announcements' | 'community' | 'feedback' | 'activity' | 'settings' | 'share';
+type ModalType = null | 'pay_dashboard' | 'pay_sidebar' | 'complaint' | 'lease' | 'announcements' | 'community' | 'feedback' | 'activity' | 'settings' | 'share' | 'notifications';
 
 export default function TenantDashboard() {
     const router = useRouter();
@@ -38,13 +45,13 @@ export default function TenantDashboard() {
     const [dashboardError, setDashboardError] = useState<string | null>(null);
     
     // Related data
-    const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [announcements, setAnnouncements] = useState<TenantAnnouncement[]>([]);
     const [rules, setRules] = useState<TenantRuleItem[]>([]);
-    const [faqs, setFaqs] = useState<any[]>([]);
+    const [faqs, setFaqs] = useState<TenantPropertyFaq[]>([]);
     const [reviews, setReviews] = useState<TenantPropertyReview[]>([]);
     const [existingReview, setExistingReview] = useState<TenantPropertyReview | null>(null);
     const [activities, setActivities] = useState<TenantActivityItem[]>([]);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<TenantNotification[]>([]);
     
     // UI state
     const [loading, setLoading] = useState(true);
@@ -55,6 +62,7 @@ export default function TenantDashboard() {
     const [shareLoading, setShareLoading] = useState(false);
     const [shareCode, setShareCode] = useState<string | null>(null);
     const [globalMessage, setGlobalMessage] = useState<string>("");
+    const [nowTick, setNowTick] = useState(() => Date.now());
     
     // Form state
     const [issueHeading, setIssueHeading] = useState("");
@@ -70,9 +78,19 @@ export default function TenantDashboard() {
     
     const daysRemaining = useMemo(() => {
         if (!dashboardData?.leaseEndDate) return null;
-        const diff = new Date(dashboardData.leaseEndDate).getTime() - Date.now();
-        return diff >= 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
-    }, [dashboardData?.leaseEndDate]);
+        const diff = new Date(dashboardData.leaseEndDate).getTime() - nowTick;
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }, [dashboardData?.leaseEndDate, nowTick]);
+
+    const unreadNotifications = useMemo(
+        () => notifications.filter((n) => !n.readAt),
+        [notifications]
+    );
+
+    useEffect(() => {
+        const id = window.setInterval(() => setNowTick(Date.now()), 60000);
+        return () => window.clearInterval(id);
+    }, []);
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -230,8 +248,8 @@ export default function TenantDashboard() {
             setIssueDescription('');
             setGlobalMessage('Complaint submitted successfully.');
             setActiveModal(null);
-        } catch (error: any) {
-            setGlobalMessage(error?.message || 'Failed to submit complaint. Check your policy setup.');
+        } catch (error: unknown) {
+            setGlobalMessage(error instanceof Error ? error.message : 'Failed to submit complaint. Check your policy setup.');
         } finally {
             setSubmittingComplaint(false);
         }
@@ -264,8 +282,8 @@ export default function TenantDashboard() {
             // Refresh existing review
             const review = await getTenantExistingReview(dashboardData.tenantId, dashboardData.propertyId || '');
             setExistingReview(review);
-        } catch (error: any) {
-            setGlobalMessage(error?.message || 'Failed to submit feedback.');
+        } catch (error: unknown) {
+            setGlobalMessage(error instanceof Error ? error.message : 'Failed to submit feedback.');
         } finally {
             setSubmittingFeedback(false);
         }
@@ -276,11 +294,16 @@ export default function TenantDashboard() {
         try {
             // Use direct Supabase for profile update
             const { getSupabaseClient } = await import('@/lib/supabase/client');
-            const supabase = getSupabaseClient() as any;
+            const supabase = getSupabaseClient();
             const { data: authData } = await supabase.auth.getUser();
             if (!authData.user) throw new Error('Session expired. Please log in again.');
-            
-            const { error } = await supabase.from('profiles').update({ 
+
+            const profilesTable = supabase.from('profiles') as unknown as {
+                update: (payload: { full_name: string | null; phone_number: string | null }) => {
+                    eq: (column: string, value: string) => Promise<{ error: { message?: string } | null }>;
+                };
+            };
+            const { error } = await profilesTable.update({
                 full_name: profileName.trim() || null, 
                 phone_number: profilePhone.trim() || null 
             }).eq('user_id', authData.user.id);
@@ -289,8 +312,8 @@ export default function TenantDashboard() {
             await logTenantActivity('PROFILE', 'Profile updated', 'Tenant profile details were updated.');
             setGlobalMessage('Profile updated.');
             setActiveModal(null);
-        } catch (error: any) {
-            setGlobalMessage(error?.message || 'Failed to update profile.');
+        } catch (error: unknown) {
+            setGlobalMessage(error instanceof Error ? error.message : 'Failed to update profile.');
         } finally {
             setSavingProfile(false);
         }
@@ -302,12 +325,21 @@ export default function TenantDashboard() {
         setShareLoading(true);
         try {
             const { getSupabaseClient } = await import('@/lib/supabase/client');
-            const supabase = getSupabaseClient() as any;
+            const supabase = getSupabaseClient();
             const { data: authData } = await supabase.auth.getUser();
             if (!authData.user) throw new Error('Session expired. Please log in again.');
             
             const code = Math.random().toString(36).slice(2, 8).toUpperCase();
-            const { error } = await supabase.from('location_share_codes').insert({
+            const shareCodesTable = supabase.from('location_share_codes') as unknown as {
+                insert: (payload: {
+                    code: string;
+                    tenant_user_id: string;
+                    property_id: string | null;
+                    unit_id: string | null;
+                    expires_at: null;
+                }) => Promise<{ error: { message?: string } | null }>;
+            };
+            const { error } = await shareCodesTable.insert({
                 code,
                 tenant_user_id: authData.user.id,
                 property_id: dashboardData.propertyId,
@@ -319,8 +351,8 @@ export default function TenantDashboard() {
             await logTenantActivity('LOCATION_SHARE', 'Location code generated', `Share code ${code} created.`, { code });
             setShareCode(code);
             setActiveModal('share');
-        } catch (error: any) {
-            setGlobalMessage(error?.message || 'Unable to generate share code.');
+        } catch (error: unknown) {
+            setGlobalMessage(error instanceof Error ? error.message : 'Unable to generate share code.');
         } finally {
             setShareLoading(false);
         }
@@ -381,58 +413,25 @@ export default function TenantDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#020617] text-gray-900 dark:text-gray-100 font-sans pb-20 md:pb-0">
-            <TopBar />
+        <div className="min-h-screen bg-gradient-to-br from-[#0e172a] via-[#0b1426] to-[#131c2f] text-[#e8eef9] font-sans pb-20 md:pb-0">
+            <TopBar unreadCount={unreadNotifications.length} onOpenNotifications={() => setActiveModal('notifications')} />
             <DesktopSidebar onAction={handleAction} />
             <MobileNav onAction={handleAction} />
 
-            <main ref={mainRef} className="pt-20 px-4 md:px-8 md:ml-64 max-w-7xl mx-auto transition-all duration-300">
-                <div className="max-w-4xl mx-auto">
-                    {globalMessage && <div className="mb-4 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800">{globalMessage}</div>}
-
-                    {!loading && notifications.filter((n) => !n.readAt).length > 0 && (
-                        <div className="mb-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 p-4">
-                            <div className="flex items-center justify-between gap-3 mb-2">
-                                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Notifications</h3>
-                                <button
-                                    type="button"
-                                    onClick={() => router.push('/tenant/messages')}
-                                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Open messages
-                                </button>
-                            </div>
-                            <ul className="space-y-2">
-                                {notifications.filter((n) => !n.readAt).slice(0, 3).map((n) => (
-                                    <li key={n.id}>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                void markNotificationRead(n.id, n.messageId);
-                                                router.push('/tenant/messages');
-                                            }}
-                                            className="w-full text-left text-sm text-blue-900 dark:text-blue-100 hover:opacity-80"
-                                        >
-                                            <span className="font-medium">{n.title}</span>
-                                            {n.body && (
-                                                <span className="text-blue-700/80 dark:text-blue-300/80"> — {n.body}</span>
-                                            )}
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+            <main ref={mainRef} className="pt-20 px-4 md:px-8 md:ml-72 max-w-7xl mx-auto transition-all duration-300">
+                <div className="max-w-5xl mx-auto space-y-6">
+                    {globalMessage && <div className="rounded-xl border border-[#395784] bg-[#162847] px-4 py-3 text-sm text-[#d7e3f7]">{globalMessage}</div>}
 
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
                             <div className="text-center">
-                                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                                <p className="text-gray-500 dark:text-gray-400">Loading your dashboard...</p>
+                                <div className="w-8 h-8 border-4 border-[#4978b2] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <p className="text-[#95a6c0]">Loading your dashboard...</p>
                             </div>
                         </div>
                     ) : dashboardData ? (
                         <>
+                            <section>
                             <CompactTenantCard
                                 tenantName={dashboardData.tenantFullName || dashboardData.tenantEmail?.split('@')[0] || "Tenant"}
                                 propertyName={dashboardData.propertyName || "Not assigned yet"}
@@ -449,6 +448,52 @@ export default function TenantDashboard() {
                                 onReportIssue={() => handleAction("report")}
                                 onMessageCaretaker={() => router.push('/tenant/chat')}
                             />
+                            </section>
+                            <section className="rounded-[24px] border border-[#2b4063] bg-gradient-to-br from-[#141f35] via-[#111b31] to-[#10192e] p-5 md:p-6 shadow-[0_20px_50px_rgba(4,11,22,0.45)]">
+                                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                                    <div>
+                                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#f5c978]">Tenant Status</p>
+                                        <h3 className="text-xl font-semibold mt-2 text-[#f4f7fd]">Lease and Payment Health</h3>
+                                        <p className="text-sm text-[#a7b7ce] mt-1">Track due date urgency, payment readiness, and lease progress.</p>
+                                    </div>
+                                    <div className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${daysRemaining === null ? 'border-[#365276] bg-[#15233b] text-[#c9d7ea]' : daysRemaining > 10 ? 'border-[#896a32] bg-[#2a2418] text-[#f6dcae]' : daysRemaining > 0 ? 'border-[#7a5324] bg-[#302414] text-[#f0bf7b]' : 'border-[#7a3240] bg-[#311621] text-[#f2bcc8]'}`}>
+                                        <CalendarClock size={16} />
+                                        {daysRemaining === null ? 'Due date unavailable' : daysRemaining > 0 ? `${daysRemaining} days remaining` : `${Math.abs(daysRemaining)} days overdue`}
+                                    </div>
+                                </div>
+                                <div className="mt-5 grid gap-3 md:grid-cols-4">
+                                    <StatusItem label="Lease status" value={dashboardData.leaseStatus || 'Active'} />
+                                    <StatusItem label="Paid months" value={`${monthsPaid} month(s)`} />
+                                    <StatusItem label="Due amount" value={dashboardData.roomPrice ? `KES ${dashboardData.roomPrice.toLocaleString()}` : 'Pending'} />
+                                    <StatusItem label="Due date" value={dashboardData.leaseEndDate || 'Unavailable'} />
+                                </div>
+                                <div className="mt-5 flex flex-wrap gap-3">
+                                    <button onClick={() => handleAction('pay')} className="inline-flex items-center gap-2 rounded-xl border border-[#4b72a8] bg-gradient-to-r from-[#2b5f9c] to-[#214a79] px-5 py-2.5 text-sm font-semibold text-[#f3f7ff] shadow-[0_14px_28px_rgba(11,38,72,0.38)] transition hover:-translate-y-0.5">
+                                        <CreditCard size={16} />
+                                        Pay Rent
+                                    </button>
+                                    <button onClick={() => handleAction('report')} className="inline-flex items-center gap-2 rounded-xl border border-[#3f5477] bg-[#182741] px-5 py-2.5 text-sm font-semibold text-[#dce6f5] transition hover:bg-[#213557]">
+                                        <ShieldAlert size={16} />
+                                        Report Issue
+                                    </button>
+                                </div>
+                            </section>
+                            <section>
+                                <h3 className="text-lg font-semibold mb-3 px-1 text-[#edf2fb]">Quick Actions</h3>
+                                <ActionGrid
+                                    onAction={handleAction}
+                                    notificationCounts={{
+                                        announcements: dashboardData.announcementsCount || 0,
+                                        report: dashboardData.pendingIssuesCount || 0,
+                                        community: unreadNotifications.length,
+                                    }}
+                                />
+                            </section>
+                            <section className="rounded-[24px] border border-[#2b4063] bg-[#101a2f]/95 p-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-lg font-semibold text-[#edf2fb]">Property Map</h3>
+                                    <span className="inline-flex items-center gap-1 text-xs text-[#9fb0c9]"><MapPin size={12} /> Navigation & sharing</span>
+                                </div>
                             <LiveMap
                                 gateLabel="School gate"
                                 plotLabel={dashboardData.propertyName || 'Property'}
@@ -459,14 +504,15 @@ export default function TenantDashboard() {
                                 onShareLocation={generateShareCode}
                                 sharing={shareLoading}
                             />
-                            <h3 className="text-lg font-bold mb-4 px-1">Quick Actions</h3>
-                            <ActionGrid onAction={handleAction} />
+                            </section>
                             <RecentActivity activities={activities.slice(0, 8)} onViewAll={() => setActiveModal('activity')} />
-                            <PlotRules rules={rules} loading={loading} />
+                            <section className="rounded-[24px] border border-[#2b4063] bg-[#101a2f]/95 p-5">
+                                <PlotRules rules={rules} loading={loading} />
+                            </section>
                             
                             {/* Property Rating Section */}
                             {reviews.length > 0 && (
-                                <div className="mt-6 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <div className="mt-6 p-4 bg-[#101a2f] rounded-xl border border-[#2b4063]">
                                     <h4 className="font-semibold mb-2">Property Rating</h4>
                                     <div className="flex items-center gap-2">
                                         <span className="text-2xl font-bold text-yellow-500">
@@ -480,13 +526,13 @@ export default function TenantDashboard() {
                             {/* FAQ Section */}
                             {faqs.length > 0 && (
                                 <div className="mt-6">
-                                    <h3 className="text-lg font-bold mb-4 px-1">Frequently Asked Questions</h3>
+                                    <h3 className="text-lg font-semibold mb-4 px-1 text-[#edf2fb]">Frequently Asked Questions</h3>
                                     <div className="space-y-2">
                                         {faqs.map((faq) => (
-                                            <div key={faq.id} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                                                <p className="font-medium text-sm">{faq.question}</p>
+                                            <div key={faq.id} className="p-4 bg-[#121f35] rounded-xl border border-[#2d4365]">
+                                                <p className="font-medium text-sm text-[#e7eefb]">{faq.question}</p>
                                                 {faq.answer && (
-                                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{faq.answer}</p>
+                                                    <p className="text-sm text-[#a8b9d0] mt-2">{faq.answer}</p>
                                                 )}
                                             </div>
                                         ))}
@@ -497,12 +543,39 @@ export default function TenantDashboard() {
                     ) : (
                         <div className="flex items-center justify-center h-64">
                             <div className="text-center">
-                                <p className="text-gray-500 dark:text-gray-400">No dashboard data available.</p>
+                                <p className="text-[#95a6c0]">No dashboard data available.</p>
                             </div>
                         </div>
                     )}
                 </div>
             </main>
+            <TenantModal open={activeModal === 'notifications'} onClose={() => setActiveModal(null)} title="Notifications">
+                {unreadNotifications.length === 0 ? (
+                    <p className="text-sm text-slate-300">No unread notifications right now.</p>
+                ) : (
+                    <div className="space-y-3">
+                        {unreadNotifications.map((n) => (
+                            <button
+                                type="button"
+                                key={n.id}
+                                onClick={() => {
+                                    void markNotificationRead(n.id, n.messageId);
+                                    if (/announcement|notice|rule|faq/i.test(`${n.title} ${n.body || ''}`)) {
+                                        setActiveModal('announcements');
+                                        return;
+                                    }
+                                    setActiveModal(null);
+                                    router.push('/tenant/messages');
+                                }}
+                                className="w-full rounded-xl border border-[#2f4567] bg-[#121f35] p-3 text-left hover:bg-[#172845] transition"
+                            >
+                                <p className="text-sm font-semibold text-[#e7eefb]">{n.title}</p>
+                                {n.body ? <p className="text-xs text-[#a9b7cb] mt-1">{n.body}</p> : null}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </TenantModal>
 
             <TenantModal open={activeModal === 'pay_dashboard'} onClose={() => setActiveModal(null)} title="Pay Rent">
                 <p className="text-sm">Use the payment method given by Arena Homes.</p>
@@ -604,6 +677,15 @@ export default function TenantDashboard() {
             <div className="md:ml-64">
                 <Footer />
             </div>
+        </div>
+    );
+}
+
+function StatusItem({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-xl border border-[#304663] bg-[#12213a] p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[#93a7c3]">{label}</p>
+            <p className="text-sm font-semibold text-[#edf2fb] mt-1">{value}</p>
         </div>
     );
 }
